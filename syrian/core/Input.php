@@ -96,12 +96,28 @@
     }
     
     /**
+     * normally return the value mapping with the specifile key
+     *
+     * @param   $_key
+     * @return  Mixed(string, false)
+    */
+    public function get( $_key )
+    {
+        if ( isset($this->_source[$_key]) )
+        {
+            return $this->_source[$_key];
+        }
+        
+        return false;
+    }
+    
+    /**
      * get a argument filter with a specifial filter model
      *
      * @param   $_key
      * @return  Mixed(String or false)
     */
-    public function get( $_key, $_model )
+    public function getModel( $_key, $_model )
     {
         //check and load the filter class
         if ( self::$_filterLoaded == false )

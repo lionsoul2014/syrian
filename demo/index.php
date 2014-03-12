@@ -7,5 +7,6 @@ require '../syrian/core/Syrian.php';
 
 import('util.filter.Filter');
 $input = new Input();
-echo $input->get->get('id', array(OP_STRING, OP_LIMIT(3, 11), OP_SANITIZE_INT) );
+echo $input->get->getModel('id', array(OP_STRING, OP_LIMIT(3, 11), OP_SANITIZE_INT) ) , "\n<br />";
+echo $input->server->get('REQUEST_URI');
 ?>
