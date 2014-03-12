@@ -1,0 +1,15 @@
+.ui-page-box {overflow: hidden;zoom:1;font-size: 12px;}
+.ui-page-box a {float: left;height: 28px;line-height: 28px;padding: 0px 8px;
+	border: 1px solid #E5E5E5;border-right: none;color:#999;text-decoration: none;background-color: #EFEFEF;}
+.ui-page-box .ui-page-able {color:#2953A6;background-color: #FFF;}
+.ui-page-box .ui-page-able:hover {background-color: #EFEFEF;text-decoration: underline;}
+.ui-page-box .ui-page-last {border-right: 1px solid #E5E5E5;margin-right: 10px;}
+.ui-page-box .ui-page-nobb {background-color: #FFF;border: none;}
+.ui-page-box .ui-page-lb {border-left: 1px solid #E5E5E5;}
+.ui-page-box .ui-page-total {background-color: #FFF;}
+.ui-page-box .ui-page-info {background-color: #FFF;}
+
+.ui-page-box .ui-input-box {background-color: #FFF;border: none;}
+.ui-page-input {border: 1px solid #EEE;outline: none;text-align: center;background-color: #FFF;width: 30px;height: 20px;line-height: 20px;color: #555;}
+.ui-page-box .ui-submit-box {background-color: #FFF;border: none;}
+.ui-page-button {width: 50px;height: 20px; line-height: 20px;color: #555;}

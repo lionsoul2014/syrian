@@ -1,0 +1,7 @@
+* {padding: 0px;margin: 0px;}
+body {text-align: center;font-size: 12px;background-color: #EEEEEE;}
+
+#list-box {padding: 10px;color: #555;background-color: #FFF;}
+#list-box p, #list-box h3 {padding: 5px 0px;}
+#list-box p b, #list-box h3 {color: #0C3D5F;}
+#list-box p a {color: #00F;text-decoration: underline;}

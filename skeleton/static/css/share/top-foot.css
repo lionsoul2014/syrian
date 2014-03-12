@@ -1,0 +1,13 @@
+* {padding: 0px;margin: 0px;}
+body {text-align: center;font-size: 12px;}
+
+#banner {margin: auto;text-align: center;width: 800px;height: 80px;line-height: 80px;border: 1px solid #CCC;font-size: 18px;font-weight: 600;}
+
+/*navi*/
+#navi {margin: auto;width: 800px;border: 1px solid #CCC;border-top: none;}
+#navi-box {overflow: hidden;zoom:1;}
+#navi-box li {float: left;list-style-type: none;width: 80px;height: 26px;line-height: 26px;}
+#navi-box a {color:#00F;text-decoration: none;font-size: 12px;font-weight:bold;}
+#navi-box a:hover {text-decoration: underline;color:#000;}
+
+#foot {margin: auto;border: 1px solid #CCC;width: 800px;margin-top: 10px;font-size: 13px;height: 30px;line-height: 30px;}

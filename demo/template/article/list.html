@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <title><?=${title}?></title>
+    <link rel="stylesheet" type="text/css" href="<?=${USR.sta.css}?>/article/list.css"/>
+    <link rel="stylesheet" type="text/css" href="<?=${USR.sta.css}?>/share/top-foot.css"/>
+    <link rel="stylesheet" type="text/css" href="<?=${USR.sta.css}?>/share/page.css"/>
+</head>
+<body>
+<?include ../share/head.html?>
+<div id="main">
+    <div id="left">
+        <h3 id="at-h3"><?=${at_title}?></h3>
+        <ul id="at-list">
+        <?foreach ( ${type} as $val ) {?>
+            <li><a href="<?=${SELF}?>?tid=<?=$val.Id?>"><?=$val.title?></a></li>
+        <?}?>
+        </ul>
+    </div>
+    
+    <div id="right">
+        <h3 id="aa-h3"><?=${aa_title}?></h3>
+        <ul id="aa-list">
+        <?if ( ${data} != FALSE ) {?>
+            <?for ( $val : ${data} ) {?>
+            <div class="list-item">
+                <h3 class="li-title"><a href="<?=$val.url?>" target="_blank"><?=$val.title?></a></h3>
+                <div class="li-info">作者：<?=$val.author?>, 建立时间：<?=$val.addtime?>, 下载量：<?=$val.hits?></div>
+                <div class="li-brief"><?=$val.brief?></div>
+            </div>
+            <?}?>
+        <?}?>
+        </ul>
+        
+        <div id="page-box"><?=${pagemenu}?></div>
+    </div>
+</div>
+<?include ../share/foot.html?>
+</body>
+</html>
