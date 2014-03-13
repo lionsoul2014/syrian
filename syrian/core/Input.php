@@ -1,4 +1,4 @@
-<?php if ( ! defined('APPPATH') ) exit('No Direct Access Allowed!');
+<?php if ( ! defined('BASEPATH') ) exit('No Direct Access Allowed!');
 /**
  * Syrian Input Manager Class
  * Offer interface to:
@@ -11,129 +11,277 @@
  */
 
  //--------------------------------------------------------------
- 
+
 class Input
 {
-    //input method and data source mapping
-    private $_mapping = NULL;
-    
-    //input method and instance mapping
-    private $_inputs = array(
-       'get'           => NULL,
-       'post'          => NULL,
-       'session'       => NULL,
-       'cookie'        => NULL,
-       'request'       => NULL,
-       'server'        => NULL,
-       'env'           => NULL
-    );
-   
-   
-    /**
-     * construct method
-     *      initialize the source of all inputs 
-    */
-    public function __construct()
-    {
-        $this->_mapping = new stdClass();
-        //input method and data source mapping
-        $this->_mapping->get 		= &$_GET;
-        $this->_mapping->post		= &$_POST;
-        $this->_mapping->session	= &$_SESSION;
-        $this->_mapping->cookie	    = &$_COOKIE;
-        $this->_mapping->request	= &$_REQUEST;
-        $this->_mapping->server	    = &$_SERVER;
-        $this->_mapping->env		= &$_ENV;
-    }
+	private static $_filterLoaded = false;
+	
+	public function __construct()
+	{
+	   //Do nothing here
+	}
+	
+	/**
+	 * check and load the Filter class if it is not load
+	 *
+	 * @see	lib.util.filter.Filter
+	*/
+	private static function checkAndLoadFilter()
+	{
+		//check the load status of Filter class
+		if ( self::$_filterLoaded == false )
+		{
+			//echo 'Filter class loaded';
+			import('util.filter.Filter');
+			self::$_filterLoaded = true;
+		}
+	}
    
    /**
-	* class attributes access interceptor
-	*
-	* @param   $_key
-	* @return  Object
+    * fetch item from $_GET data source
+    *
+    * @param	$_key
+    * @param	$_model
+    * @param	$_errno
+    * @return	Mixed(Array, String, Bool)
    */
-    public function __get( $_key )
-    {
-        if ( ! isset($this->_mapping->{$_key}) )
-        {
-            return;
-        }
-       
-       //check and create the specifile input source
-        if ( $this->_inputs[$_key] == NULL )
-        {
-            //echo $_key . ', initialized';
-            //var_dump($this->_mapping->{$_key});
-            $this->_inputs[$_key] = new InputSource($this->_mapping->{$_key});
-        }
-         
-        //return the instance
-        return $this->_inputs[$_key];
-    }
-}
-
-
-/**
- * Input Source class
- *
- * @author chenxin <chenxin619315@gmail.com>
-*/
-class InputSource
-{
-    private static $_filterLoaded = false;	//flag of load the Filter class
-    
-    private $_source = NULL;                //input source
-    
-    public function __construct( &$_source )
-    {
-        $this->_source = &$_source;
-    }
-   
-   /**
-	* get int from current input
-	*
-	* @param   $_key
-	* @return  Mixed(Integer or false)
-   */
-    public function getInt( $_key )
-    {
-        if ( ! isset( $this->_source[$_key] ) )
-            return false;
-       
-        return intval($this->_source[$_key]);
-    }
-   
-   /**
-	* normally return the value mapping with the specifile key
-	*
-	* @param   $_key
-	* @return  Mixed(string, false)
-   */
-    public function get( $_key )
-    {
-        if ( isset($this->_source[$_key]) )
-        {
-            return $this->_source[$_key];
-        }
-       
-        return false;
-    }
-   
-   /**
-	* get a argument filter with a specifial filter model
-	*
-	* @param   $_key
-	* @return  Mixed(String or false)
-   */
-    public function getModel( $_key, $_model )
-    {
-        //check and load the filter class
-        if ( self::$_filterLoaded == false )
-        {
-            import('util.filter.Filter');
-        }
-       
-        return Filter::get( $this->_source, $_key, $_model, $_errno );
-    }
+	public function get( $_key, $_model = NULL, &$_errno = NULL )
+	{
+		if ( ! isset( $_GET[$_key] ) ) return false;
+		
+		//apply the model if it is not null
+		if ( $_model != NULL )
+		{
+			//check the load status of Filter class
+			self::checkAndLoadFilter();
+			
+			return Filter::get( $_GET, $_key, $_model, $_errno );
+		}
+		
+		//normal string fetch
+		return $_GET[$_key];
+	}
+	
+	/**
+	 * fetch item from $_GET with a specifiel model
+	 *
+	 * @param	$_model
+	 * @param	$_errno
+	 * @return	Mixed
+	*/
+	public function getModel( $_model, &$_errno )
+	{
+		//check the load status of Filter class
+		self::checkAndLoadFilter();
+			
+		return Filter::loadFromModel($_GET, $_model, $_errno);
+	}
+	
+	//----------------------------------------------------------
+	
+	/**
+	 * fetch item from $_POST data source
+	 *
+	 * @param	$_key
+	 * @param	$_model
+	 * @param	$_errno
+	 * @return	Mixed
+	*/
+	public function post( $_key, $_model = NULL, &$_errno = NULL )
+	{
+		if ( ! isset($_POST[$_key]) ) return false;
+		
+		//apply the model if it is not null
+		if ( $_model != NULL )
+		{
+			//check the load status of Filter class
+			self::checkAndLoadFilter();
+			
+			return Filter::get( $_POST, $_key, $_model, $_errno );
+		}
+		
+		//normal string fetch
+		return $_POST[$_key];
+	}
+	
+	/**
+	 * fetch item from $_POST with a specifiel model
+	 *
+	 * @param	$_model
+	 * @param	$_errno
+	 * @return	Mixed
+	*/
+	public function postModel( $_model, &$_errno )
+	{
+		//check the load status of Filter class
+		self::checkAndLoadFilter();
+		
+		return Filter::loadFromModel($_POST, $_model, $_errno);
+	}
+	
+	//----------------------------------------------------------
+	
+	/**
+	 * fetch item from $_COOKIE data source
+	 *
+	 * @param	$_key
+	 * @param	$_model
+	 * @param	$_errno
+	 * @return	Mixed
+	*/
+	public function cookie( $_key, $_model = NULL, &$_errno = NULL )
+	{
+		if ( ! isset($_COOKIE[$_key]) ) return false;
+		
+		//apply the model if it is not null
+		if ( $_model != NULL )
+		{
+			//check the load status of Filter class
+			self::checkAndLoadFilter();
+			
+			return Filter::get( $_COOKIE, $_key, $_model, $_errno );
+		}
+		
+		//normal string fetch
+		return $_COOKIE[$_key];
+	}
+	
+	/**
+	 * fetch item from $_COOKIE with a specifiel model
+	 *
+	 * @param	$_model
+	 * @param	$_errno
+	 * @return	Mixed
+	*/
+	public function cookieModel( $_model, &$_errno )
+	{
+		//check the load status of Filter class
+		self::checkAndLoadFilter();
+			
+		return Filter::loadFromModel($_COOKIE, $_model, $_errno);
+	}
+	
+	//----------------------------------------------------------
+	
+	/**
+	 * fetch item from $_SESSION data source
+	 *
+	 * @param	$_key
+	 * @param	$_model
+	 * @param	$_errno
+	 * @return	Mixed
+	*/
+	public function session( $_key, $_model = NULL, &$_errno = NULL )
+	{
+		if ( ! isset($_SESSION[$_key]) ) return false;
+		
+		//apply the model if it is not null
+		if ( $_model != NULL )
+		{
+			//check the load status of Filter class
+			self::checkAndLoadFilter();
+			
+			return Filter::get( $_SESSION, $_key, $_model, $_errno );
+		}
+		
+		//normal string fetch
+		return $_SESSION[$_key];
+	}
+	
+	//----------------------------------------------------------
+	
+	/**
+	 * fetch item from $_REQUEST data source
+	 *
+	 * @param	$_key
+	 * @param	$_model
+	 * @param	$_errno
+	 * @return	Mixed
+	*/
+	public function request( $_key, $_model = NULL, &$_errno = NULL )
+	{
+		if ( ! isset($_REQUEST[$_key]) ) return false;
+		
+		//apply the model if it is not null
+		if ( $_model != NULL )
+		{
+			//check the load status of Filter class
+			self::checkAndLoadFilter();
+			
+			return Filter::get( $_REQUEST, $_key, $_model, $_errno );
+		}
+		
+		//normal string fetch
+		return $_REQUEST[$_key];
+	}
+	
+	/**
+	 * fetch item from $_REQUEST with a specifiel model
+	 *
+	 * @param	$_model
+	 * @param	$_errno
+	 * @return	Mixed
+	*/
+	public function requestModel( $_model, &$_errno )
+	{
+		//check the load status of Filter class
+		self::checkAndLoadFilter();
+			
+		return Filter::loadFromModel($_REQUEST, $_model, $_errno);
+	}
+	
+	//----------------------------------------------------------
+	
+	/**
+	 * fetch item from $_SERVER data source
+	 *
+	 * @param	$_key
+	 * @param	$_model
+	 * @param	$_errno
+	 * @return	Mixed
+	*/
+	public function server( $_key, $_model = NULL, &$_errno = NULL )
+	{
+		if ( ! isset($_SERVER[$_key]) ) return false;
+		
+		//apply the model if it is not null
+		if ( $_model != NULL )
+		{
+			//check the load status of Filter class
+			self::checkAndLoadFilter();
+			
+			return Filter::get( $_SERVER, $_key, $_model, $_errno );
+		}
+		
+		//normal string fetch
+		return $_SERVER[$_key];
+	}
+	
+	//---------------------------------------------------------
+	
+	/**
+	 * fetch item from $_SERVER data source
+	 *
+	 * @param	$_key
+	 * @param	$_model
+	 * @param	$_errno
+	 * @return	Mixed
+	*/
+	public function env( $_key, $_model = NULL, &$_errno = NULL )
+	{
+		if ( ! isset($_ENV[$_key]) ) return false;
+		
+		//apply the model if it is not null
+		if ( $_model != NULL )
+		{
+			//check the load status of Filter class
+			self::checkAndLoadFilter();
+			
+			return Filter::get( $_ENV, $_key, $_model, $_errno );
+		}
+		
+		//normal string fetch
+		return $_ENV[$_key];
+	}
 }
 ?>

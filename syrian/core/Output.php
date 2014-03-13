@@ -1,4 +1,4 @@
-<?php if ( ! defined('APPPATH') ) exit('No Direct Access Allowed!');
+<?php if ( ! defined('BASEPATH') ) exit('No Direct Access Allowed!');
 /**
  * Syrian output manager class
  * section:

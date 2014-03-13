@@ -181,7 +181,9 @@ class Filter
                 $_errno = array($_name, $_errno);
                 return FALSE;
             }
-            $_data[$_name] = &$_ret;
+			
+			//store the returnd item
+            $_data[$_name] = $_ret;
         }
         
         return $_data;

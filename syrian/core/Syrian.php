@@ -12,7 +12,7 @@
  /**
   * Syrian Version Number
   */
- define('SR_VERSION', '1.0.0');
+ define('VERSION', '1.0.0');
  
  /**
   * Base Path.
@@ -40,4 +40,9 @@
   *     offer qucik interface to access the request uri
  */
  require(BASEPATH . 'core/Uri.php');
+ 
+ /**
+  * Load the parent Model class
+ */
+ require(BASEPATH . 'core/Model.php');
 ?>

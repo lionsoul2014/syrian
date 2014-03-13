@@ -1,4 +1,4 @@
-<?php if ( ! defined('APPPATH') ) exit('No Direct Access Allowed!');
+<?php if ( ! defined('BASEPATH') ) exit('No Direct Access Allowed!');
 /**
  * Opert Application Controller Class.
  * And this is the super class of the module controller class.

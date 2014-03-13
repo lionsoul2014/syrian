@@ -1,4 +1,4 @@
-<?php if ( ! defined('APPPATH') ) exit('No Direct Access Allowed!');
+<?php if ( ! defined('BASEPATH') ) exit('No Direct Access Allowed!');
 /**
  * Syrian Template Manager Class
  * This class is the view part of the so-called MVC

@@ -41,8 +41,7 @@ if ( ! function_exists('import') )
 			}
 		}
 		
-		//exit('Syrian: Unable to load class ' . $_class);
-		return false;
+		exit('Syrian: Unable to load class ' . $_class);
 	}
 }
 
@@ -69,7 +68,52 @@ if ( ! function_exists('load') )
 		}
 		
 		//throw new Exception('No such file or directory');
-		return false;
+		exit('Error: Unable to load resource ' . $_cfile);
+	}
+}
+
+/**
+ * function to load the specifile model maybe from the
+ * 		specifile path and return the instance of the model
+ *
+ * @param	$_model
+ * @param	$_dir
+ * @return	Object
+*/
+if ( ! function_exists('loadModel') )
+{
+	function loadModel( $_model, $_dir = '' )
+	{
+		//loaded model
+		static $_loadedModel = array();
+		
+		$_model = ucfirst($_model);
+		
+		//check the loaded of the class
+		$_class = ($_dir == NULL) ? $_model : $_dir . '/' . $_model;
+		if ( isset( $_loadedModel[$_class] ) )
+		{
+			return $_loadedModel[$_class];
+		}
+		
+		//model base directory
+		$_baseDir = APPPATH . (defined('MODELDIR') ? MODELDIR : 'model') . '/';
+			
+		foreach ( array( $_baseDir . $_class . '.model.php',
+					$_baseDir . $_class . 'Model.php' ) as $_file )
+		{
+			if ( file_exists( $_file ) )
+			{
+				include $_file;				//include the model class file
+				
+				$_cls = $_model.'Model';
+				if ( class_exists($_cls) ) return new $_cls();
+				
+				return new $_model();
+			}
+		}
+		
+		exit('Error: Unable to load model ' . $_model);
 	}
 }
 ?>
