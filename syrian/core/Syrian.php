@@ -31,6 +31,13 @@
  
  /**
   * Load the input class
+  *     manage the input of the controller
  */
  require(BASEPATH . 'core/Input.php');
+ 
+ /**
+  * Load the Uri class
+  *     offer qucik interface to access the request uri
+ */
+ require(BASEPATH . 'core/Uri.php');
 ?>

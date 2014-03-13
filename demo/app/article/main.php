@@ -11,48 +11,72 @@ class ArticleController extends Controller
 	private $_cache = NULL;
 	private $_db = NULL;
 	
-	public function init()
+	public function __construct()
 	{
-		#$this->delMask(CTRL_LOAD_VIEW);
-		#$this->addMask(CTRL_LOAD_CACHE);
-		$this->setGVar('_TABLE', Opert::load('config.db.db-table'));
-		#$this->_gvars['_TABLE']	= Opert::load('config.db.db-table');
+		parent::__construct();
+		//$this->load->model('StreamModel');
+		$this->model = $this->loadModel('StreamModel', 'stream');
+	}
+	
+	public function run()
+	{
+		//$this->uri->module;		//request module
+		//$this->uri->page;			//request page
 		
-		$view = $this->getView();
-		$view->assign('navi', Opert::load('config.navi.navi-data'));
+		//user logic file to handler the request
+		$_logicFile = $this->uri->page . '.logic.php';
+		if ( file_exists($_logicFile) )
+			include $_logicFile;
+		else
+			redirect('/error/404');
+			
+		//invoke a method to handler the request
+		if ( $this->uri->page == 'insert' )
+			$this->index();
+		$this->index();
 	}
 	
-	public function getLogicScript( $_page )
+	public function index()
 	{
-		$_dir = dirname(__FILE__);
-		if ( strcmp($_page, 'view') == 0 ) return $_dir . '/view.php';
-		return $_dir . '/list.php';
+		//$_model = $this->loadModel('StreamModel', 'stream');
+		$_ret = $this->model->getPageList($this->input->get('pageno'));
+		$this->output->assign('data', $_ret);
+		$this->output->setDataType($this->input->get('dataType'));
+		$this->output->display('list');
 	}
 	
-	//@Override
-	public function getCache()
+	public function insert()
 	{
-		if ( $this->_cache == NULL )
+		//if ( $this->StreamModel->insert() )
+		if ( $this->input->post('_act') != FALSE )
 		{
-			Opert::import('lib.cache.dynamic.CacheFactory');
-			$this->_cache =  CacheFactory::create('file',
-				array('cache_dir'=>Opert::$_sysInfo['cac_dir'].'/'));
+			$_model = array(
+				'name'		=> array(OP_STRING, OP_LIMIT(6, 120), OP_SANITIZE_HTML),
+				'age'		=> array(OP_INT, OP_SIZE(10, 120), OP_SANITIZE_INT),
+				'brief'		=> array(OP_STRING, NULL, OP_SANITIZE_HTML)
+			);
+			$_errmsg = array(
+				'name'		=> array(NULL, '长度必须为6-120个字符'),
+				'sex'		=> array('年龄必须为整数', '年龄大小必须为10-120'),
+				'brief'		=> array(NULL, $this->lang->InvalidBriefContent)
+			);
+			
+			//$name = $this->input->post('name');
+			//$body = $this->input->post('sex');
+			
+			if ( ($_ret = $this->input->post($_model, $_erridx) ) )
+			{
+				//$_errno = $this->StreamModel->insert($name, $body);
+				$_errno = $this->model->update($_ret,
+					'id='.$this->get('id').' and user_id='.$this->session('user_id'));
+			}
+			else
+			{
+				$_errno = $_errmsg[$_erridx[0]][$_erridx[1]];
+			}
+			
+			$this->output->assign('errno', $_errno);
 		}
-		return $this->_cache;
-	}
-	
-	//@Override
-	public function getDatabase( $idx = 0 )
-	{
-		if ( $this->_db == NULL )
-		{
-			Opert::import('lib.db.Dbfactory');
-			$_host = Opert::load('config.db.db-host');
-			$this->_db = Dbfactory::create('mysql', $_host[$idx]);
-		}
-		return $this->_db;
 	}
 }
-
-return new ArticleController();
 ?>
