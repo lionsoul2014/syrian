@@ -1,9 +1,7 @@
 <?php
 /**
- * common interface for article module.
- * 		you can access the instance of the this class
- * 	throught $_COM at any logic script file.
- *
+ * ArticleController form stream module
+ * 
  * @author chenxin <chenxin619315@gmail.com>
 */
 class ArticleController extends Controller
@@ -12,7 +10,7 @@ class ArticleController extends Controller
 	{
 		parent::__construct();
 		//$this->load->model('StreamModel');
-		$this->model = loadModel('StreamModel', 'stream');
+		$this->model = loadModel('Article', 'stream');
 	}
 	
 	public function run()
@@ -25,7 +23,7 @@ class ArticleController extends Controller
 		if ( file_exists($_logicFile) )
 			include $_logicFile;
 		else
-			redirect('/error/404');
+			redirect('/error/404', 'src_page=' . $this->uri->url);
 			
 		//invoke a method to handler the request
 		if ( $this->uri->page == 'insert' )
@@ -53,7 +51,7 @@ class ArticleController extends Controller
 				'brief'		=> array(OP_STRING, NULL, OP_SANITIZE_HTML)
 			);
 			$_errmsg = array(
-				'name'		=> array(NULL, '长度必须为6-120个字符'),
+				'name'		=> array('姓名尚未填写', '长度必须为6-120个字符'),
 				'sex'		=> array('年龄必须为整数', '年龄大小必须为10-120'),
 				'brief'		=> array(NULL, $this->lang->InvalidBriefContent)
 			);

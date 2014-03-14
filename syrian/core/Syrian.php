@@ -9,40 +9,41 @@
 
  //--------------------------------------------------------------
  
- /**
-  * Syrian Version Number
-  */
- define('VERSION', '1.0.0');
- 
- /**
-  * Base Path.
+/**
+ * Syrian Version Number
  */
- define('BASEPATH', dirname( dirname(__FILE__) ) . '/');
- 
- /**
-  * Library directory name
- */
- define('LIBDIR',  'lib');
+define('VERSION', '1.0.0');
 
- /**
-  * Load The Common Global Functions
-  */
- require(BASEPATH . 'core/Common.php');
- 
- /**
-  * Load the input class
-  *     manage the input of the controller
+/**
+ * Load The Common Global Functions
  */
- require(BASEPATH . 'core/Input.php');
- 
- /**
-  * Load the Uri class
-  *     offer qucik interface to access the request uri
- */
- require(BASEPATH . 'core/Uri.php');
- 
- /**
-  * Load the parent Model class
- */
- require(BASEPATH . 'core/Model.php');
+//require(BASEPATH . 'core/Common.php');
+
+/**
+ * Load the common resource loader
+*/
+require(BASEPATH . 'core/Loader.php');
+
+/**
+ * Load the input class
+ *     manage the input of the controller
+*/
+require(BASEPATH . 'core/Input.php');
+
+/**
+ * Load the Uri class
+ *     offer qucik interface to access the request uri
+*/
+require(BASEPATH . 'core/Uri.php');
+
+$URI = new Uri();
+$URI->parse_url();
+$URI->redirect('stream', 'list');
+echo $URI->makeStyleUrl('stream', 'list', array('id'=>12, 'str'=>'123456abc'));
+echo '<br />';
+
+/**
+ * Load the parent Model class
+*/
+require(BASEPATH . 'core/Model.php');
 ?>

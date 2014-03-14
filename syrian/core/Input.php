@@ -14,7 +14,7 @@
 
 class Input
 {
-	private static $_filterLoaded = false;
+	private static $_loaded = false;
 	
 	public function __construct()
 	{
@@ -29,11 +29,11 @@ class Input
 	private static function checkAndLoadFilter()
 	{
 		//check the load status of Filter class
-		if ( self::$_filterLoaded == false )
+		if ( self::$_loaded == false )
 		{
 			//echo 'Filter class loaded';
-			import('util.filter.Filter');
-			self::$_filterLoaded = true;
+			Loader::import('Filter');
+			self::$_loaded = true;
 		}
 	}
    
