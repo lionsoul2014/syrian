@@ -10,7 +10,7 @@ class ArticleController extends Controller
 	{
 		parent::__construct();
 		//$this->load->model('StreamModel');
-		$this->model = loadModel('Article', 'stream');
+		$this->model = Loader::model('Article', 'stream');
 	}
 	
 	public function run()
@@ -33,6 +33,8 @@ class ArticleController extends Controller
 	
 	public function index()
 	{
+		$this->uri->parse_url_get('nid/tid/pageno');
+		
 		//$_model = $this->loadModel('StreamModel', 'stream');
 		$_ret = $this->model->getPageList($this->input->get('pageno'));
 		$this->output->assign('data', $_ret);

@@ -4,6 +4,9 @@
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
+
+//-----------------------------------------------------
+
 define('_CACHE_HOME_', dirname(__FILE__));
 
 class CacheFactory

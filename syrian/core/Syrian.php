@@ -36,12 +36,6 @@ require(BASEPATH . 'core/Input.php');
 */
 require(BASEPATH . 'core/Uri.php');
 
-$URI = new Uri();
-$URI->parse_url();
-$URI->redirect('stream', 'list');
-echo $URI->makeStyleUrl('stream', 'list', array('id'=>12, 'str'=>'123456abc'));
-echo '<br />';
-
 /**
  * Load the parent Model class
 */

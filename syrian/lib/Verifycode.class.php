@@ -1,10 +1,12 @@
 <?php
 /**
- * Verify code class. <br />
+ * Verify code class
  * this will need the extension of the gb library.
  *
  * @author	chenxin <chenxin619315@gmail.com>
 */
+
+//--------------------------------------------------------------------
 
 class Verifycode
 {

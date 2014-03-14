@@ -1,9 +1,12 @@
 <?php
 /**
- * image thumb class. <br />
+ * image thumb class
  * 
  * @author	chenxin<chenxin619315@gmail.com>
  */
+
+ //------------------------------------------------
+ 
 class Thumb
 {
 	

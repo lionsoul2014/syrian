@@ -4,6 +4,9 @@
  *
  * @author chenxin<chenxin619315@gmail.com>
 */
+
+//-----------------------------------------------------------
+
 define('UI_TOTAL', 1 << 0);
 define('UI_PAGES', 1 << 1);         /*pageno / pages*/
 define('UI_FIRST', 1 << 2);

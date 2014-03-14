@@ -1,9 +1,12 @@
 <?php
 /**
- * class for file upload. <br />
+ * class for file upload
  * 
  * @anthor	chenxin<chenxin619315@gmail.com>
  */
+
+ //------------------------------------------------------
+ 
 class Upload
 {
 	

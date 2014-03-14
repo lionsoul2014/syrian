@@ -1,9 +1,12 @@
 <?php
 /**
- * GPC data filter class .
+ * GPC data filter class
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
+
+//-----------------------------------------------------------
+
 //normal data type
 define('OP_NULL', 1 << 0);
 define('OP_LATIN', 1 << 1);

@@ -1,13 +1,16 @@
 <?php
 /**
-Database handling instance factory class . <br />
-
-@author	chenxin<chenxin619315@gmail.com>
-@see	Idb.class.php
+ * Database handling instance factory class
+ *
+ * @author	chenxin<chenxin619315@gmail.com>
+ * @see		Idb.class.php
 */
+
+//-------------------------------------------------------
+
 defined('DB_LIB_HOME')	or	define('DB_LIB_HOME', dirname(__FILE__) . DIRECTORY_SEPARATOR);
 
-class Dbfactory
+class DbFactory
 {
 	private static $_classes = NULL;
 	

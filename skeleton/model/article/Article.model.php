@@ -6,11 +6,11 @@ class ArticleModel extends Model
         parent::__construct();
         
         //load and create the database
-        Loader::import('Dbfactory', 'db');
+        Loader::import('DbFactory', 'db');
         
         $_host = Loader::config('hosts', 'db');
         
-        $this->db = Dbfactory::create('Mysql', $_host['main']);
+        $this->db = DbFactory::create('Mysql', $_host['main']);
     }
     
     public function run()

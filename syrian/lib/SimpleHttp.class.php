@@ -1,9 +1,12 @@
 <?php
 /**
- * php http client
+ * php simple http client
  * 
  * @author chenxin<chenxin619315@gmail.com>
  */
+
+ //-------------------------------------------------
+ 
 class SimpleHttp
 {
     public static $time_out = 30;
