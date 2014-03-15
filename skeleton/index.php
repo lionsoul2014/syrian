@@ -42,5 +42,12 @@ echo '<br />';
 echo $input->server('REQUEST_URI'), '<br />';
 
 $_instance = Loader::model('Article', 'article');
-echo $_instance->run();
+echo $_instance->run(), '<br />';
+
+/*
+foreach ( $_SERVER as $_key => $_val )
+{
+    echo $_key, '=>', $_val, '<br />';
+}
+*/
 ?>

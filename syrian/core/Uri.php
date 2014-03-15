@@ -12,9 +12,9 @@
 
  //---------------------------------------------------------
  
-//link style constants
-defined('URI_DIR_STYLE')    or define('URI_DIR_STYLE', 0);
-defined('URI_CON_STYLE')    or define('URI_CON_STYLE', 1);
+ //link style constants
+ defined('URI_DIR_STYLE')    or define('URI_DIR_STYLE', 0);
+ defined('URI_CON_STYLE')    or define('URI_CON_STYLE', 1);
 
  //---------------------------------------------------------
  
@@ -27,20 +27,39 @@ class Uri
     */
     private static $_connector = array('/', '-');
     
-    //request url with arguments
+    //request url
     public $url         = NULL;
+    public $self        = NULL;
     
-    //request arguments
-    public $args        = NULL;
-    
-    //request path
-    public $request     = NULL;
-    
-    //request module
+    //request module/page
     public $module      = NULL;
-    
-    //request page
     public $page        = NULL;
+    
+    /**
+     * request base part of the uri before the script file
+     *      like    /syrian/skeleton/ of /syrian/skeleton/index.php
+     *
+     * @access  private
+    */
+    private $_base      = '/';
+    
+    /**
+     * require script file name, It will always be NULL
+     *      if we start the url rewrite and access the page
+     *  like syrian/skeleton/article/list/:navid/:tid/:pageno
+     *
+     * @access  private
+    */
+    private $_file      = NULL;
+    
+    /**
+     * require rounter part of the url, eg:
+     *  article/list or article-list of
+     *      syrian/skeleton/index.php/article/list.html
+     *
+     * @access  private
+    */
+    private $_request   = NULL;
     
     //link style
     private $_style     = NULL;
@@ -51,7 +70,11 @@ class Uri
     public function __construct( $_style = URI_DIR_STYLE )
     {
         $this->url      = $_SERVER['REQUEST_URI'];
-        $this->args     = $_SERVER['QUERY_STRING'];
+        $this->self     = $_SERVER['PHP_SELF'];
+        
+        //normalized the url and make sure it start with /
+        if ( $this->url[0] != '/' )
+            $this->url = '/' . $this->url;
         
         //set the link style
         $this->_style = $_style;
@@ -69,7 +92,20 @@ class Uri
         
         //check and determine the start index
         if ( ($pos = stripos($this->url, '.php')) !== FALSE )
+        {
+            $i = $pos - 1;
+            while ( $this->url[$i] != '/' ) $i--;
+            
+            /*
+             * get the filename and the base part
+             *  start position is $i + 1 and the length
+             * is $pos - $i - 1 + 4 = $pos - $i + 3
+            */
+            $this->_file = substr($this->url, $i + 1, $pos - $i + 3);
+            if ( $i >= 0 ) $this->_base = substr($this->url, 0, $i + 1);
+            
             $_spos = $pos + 4;
+        }
         
         if ( $_spos < strlen( $this->url ) ) $_spos++;
         
@@ -85,14 +121,12 @@ class Uri
         
         //mark the final end position
         if ( $_epos == FALSE ) $_epos = strlen($this->url);
+        $this->_request = substr($this->url, $_spos, $_epos - $_spos);
         
-        //echo 'end: ', $_spos, ', ' . $_epos, '<br />';
-        $this->request = substr($this->url, $_spos, $_epos - $_spos);
-        
-        if ( $this->request == '' ) return false;
+        if ( $this->_request == '' ) return false;
         
         //parse to get the module and page info
-        $_ret = explode(self::$_connector[$this->_style], $this->request);
+        $_ret = explode(self::$_connector[$this->_style], $this->_request);
         
         //make the mdoule and the page
         $this->module = $_ret[0];
@@ -126,7 +160,9 @@ class Uri
     */
     public function makeStyleUrl($_module, $_page, $_args = NULL, $_ext = '.html')
     {
-        $_url  = $_module . self::$_connector[$this->_style];
+        $_url  = $this->_base;
+        if ( $this->_file != NULL ) $_url .= $this->_file . '/';
+        $_url .= $_module . self::$_connector[$this->_style];
         $_url .= $_page . $_ext;
         
         //check and append the arguments as needed

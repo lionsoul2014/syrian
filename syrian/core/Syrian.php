@@ -36,6 +36,10 @@ require(BASEPATH . 'core/Input.php');
 */
 require(BASEPATH . 'core/Uri.php');
 
+$URI = new Uri();
+$URI->parse_url();
+echo $URI->makeStyleUrl('article', 'list');
+
 /**
  * Load the parent Model class
 */
