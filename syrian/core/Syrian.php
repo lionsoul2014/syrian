@@ -39,8 +39,9 @@ require(BASEPATH . 'core/Uri.php');
 $URI = new Uri(false, URI_DIR_STYLE);
 //$URI->setFileExt('.do');
 $URI->parseUrl();
+$URI->parseArgsGet('id/str');
 $_url = $URI->makeStyleUrl('article/list', array('id'=>12, 'str'=>'123456abc'));
-echo '<a href="'.$_url.'">'.$_url.'</a>';
+echo '<a href="'.$_url.'">'.$_url.'</a><br />';
 
 /**
  * Load the parent Model class

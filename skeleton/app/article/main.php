@@ -33,7 +33,7 @@ class ArticleController extends Controller
 	
 	public function index()
 	{
-		$this->uri->parse_url_get('nid/tid/pageno');
+		$this->uri->parse_args_get('nid/tid/pageno');
 		
 		//$_model = $this->loadModel('StreamModel', 'stream');
 		$_ret = $this->model->getPageList($this->input->get('pageno'));

@@ -13,11 +13,13 @@ define('APPPATH', dirname(__FILE__) . '/');
 
 /**
   * Library directory name
+  *     used in Loader#import
  */
 define('LIBDIR',  'lib');
 
 /**
  * Application model directory
+ *      used in Loader#model
 */
 define('MODELDIR', 'model');
 
@@ -26,9 +28,9 @@ require(BASEPATH . '/core/Syrian.php');
 //Usage demo
 Loader::import('Filter');
 $input = new Input();
-echo $input->get('id') , "\n<br />";
-echo $input->get('str'), "\n<br />";
-echo $input->get('str',
+echo 'get(id): '.$input->get('id') , "\n<br />";
+echo 'get(str): '.$input->get('str'), "\n<br />";
+echo 'get(str, model): '.$input->get('str',
     array(OP_STRING, OP_LIMIT(3, 11), OP_SANITIZE_INT), $_errno ) , "\n<br />";
 
 //model fetch
@@ -37,9 +39,10 @@ $_model = array(
     'str'       => array(OP_STRING, OP_LIMIT(3, 12), OP_SANITIZE_HTML)
 );
 $_ret = $input->getModel($_model, $_errno);
+echo 'getModel(model): ';
 var_dump($_ret);
 echo '<br />';
-echo $input->server('REQUEST_URI'), '<br />';
+echo 'server(REQUEST_URI): '.$input->server('REQUEST_URI'), '<br />';
 
 $_instance = Loader::model('Article', 'article');
 echo $_instance->run(), '<br />';

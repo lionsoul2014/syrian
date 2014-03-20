@@ -215,5 +215,37 @@ class Uri
     {
         $this->_ext = &$_ext;
     }
+    
+    /**
+     * parse the directory style http get arguments
+     *      to the global $_GET array with a specifial template
+     *
+     * @param   $_temp style like nid/tid/pageno
+     * @return  Integer - number of successfully parsed arguments 
+    */
+    public function parseArgsGet( $_temp )
+    {
+        //check and make sure the uri style is URI_DIR_STYLE
+        if ( $this->_style != URI_DIR_STYLE ) return 0;
+        
+        $_counter = 2;
+        $_length = count($this->_parts);
+        
+        $_keys = explode('/', $_temp);
+        foreach ( $_keys as $_key )
+        {
+            //mapping NULL with the $_key in $_GET
+            if ( $_counter >= $_length )
+            {
+                $_GET[$_key] = NULL;
+                continue;
+            }
+            
+            //mapping $_counter's value of _parts with key $_key
+            //  in global $_GET array
+            $_GET[$_key] = $this->_parts[$_counter];
+            $_counter++;
+        }
+    }
 }
 ?>
