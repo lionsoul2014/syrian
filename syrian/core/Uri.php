@@ -67,7 +67,18 @@ class Uri
         $this->self     = $_SERVER['PHP_SELF'];
         
         //normalized the url and make sure it start with /
-        if ( $this->url[0] != '/' ) $this->url = '/' . $this->url;
+        if ( $this->url[0] != '/' )     $this->url = '/' . $this->url;
+        if ( $this->self[0] != '/' )    $this->self = '/' . $this->self;
+        
+        /*
+         * Analysis and initialize the base
+        */
+        if ( ($pos = stripos($this->self, '.php')) !== FALSE )
+        {
+            while ( $this->self[$pos] != '/' ) $pos--;
+             //get the base part, include the '/' mark at $i
+            if ( $pos > 0 ) $this->_base = substr($this->self, 0, $pos + 1);
+        }
         
         $this->_rewrite = $_rewrite;
         $this->_style = $_style;
@@ -81,21 +92,20 @@ class Uri
     */
     public function parseUrl()
     {
-        $_spos  = 0;     //start position
-        $_epos  = 0;     //end position
+        $_spos  = 0;     //start position to determine the request
+        $_epos  = 0;     //end position to determine the request
         $pos    = 0;     //temp variable
+        $_len   = strlen($this->url);
         
         if ( ($pos = stripos($this->url, '.php')) !== FALSE )
-        {
-            $i = $pos - 1;
-            while ( $this->url[$i] != '/' ) $i--;
-            
-            //get the base part, include the '/' mark at $i
-            if ( $i > 0 ) $this->_base = substr($this->url, 0, $i + 1);
             $_spos = $pos + 4;
-        }
         
-        if ( $_spos < strlen( $this->url ) ) $_spos++;
+        /*
+         * move forward the start position, cause:
+         * 1. exclude the '/' punctuation at 0 when match no '.php'
+         * 2. skip the '/' punctuation after '.php' if available
+        */
+        if ( $_spos < $_len ) $_spos++;
         
         //check and find the end index
         $_args = stripos($this->url, '?', $_spos);
@@ -107,8 +117,12 @@ class Uri
         else
             $_epos = max($_args, $_extp);
         
-        //mark the final end position
-        if ( $_epos == FALSE ) $_epos = strlen($this->url);
+        /*
+         * mark the final end position
+         *  And clear the last '/' punctuation if it is
+        */
+        if ( $_epos == FALSE ) $_epos = $_len;
+        if ( $this->url[$_len - 1] == '/' ) $_epos--;
         $this->_request = substr($this->url, $_spos, $_epos - $_spos);
         if ( $this->_request == '' ) return false;
         
