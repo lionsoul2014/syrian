@@ -4,7 +4,7 @@ header('Content-Type: text/html; charset=UTF-8');
 $_show = false;
 if ( isset($_GET['_act']) && $_GET['_act'] == 'go' )
 {
-	require (dirname(__FILE__) . '/Extractor.class.php');
+	require (dirname(dirname(__FILE__)) . '/nlp/Extractor.class.php');
 	
     $_url = trim($_GET['url']);
 	$_threshold = intval($_GET['threshold']);
@@ -44,7 +44,7 @@ if ( isset($_GET['_act']) && $_GET['_act'] == 'go' )
 <body>
 <div id="main">
 	<div id="input">
-		<form name="test" action="index.php" method="get">
+		<form name="test" action="#" method="get">
 			<div><input type="text" name="url" value="<?=$_show?$_url:''?>" id="url"/><input type="submit" value="Go" /></div>
 			<div>threshold: <input type="text" name="threshold" value="<?=$_show?$_threshold:'225'?>" class="input-item"/></div>
 			<div>linkrates: <input type="text" name="linkrates" value="<?=$_show?$_linkrates:'0.30'?>" class="input-item"/></div>

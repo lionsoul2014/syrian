@@ -87,8 +87,8 @@ class Extractor
     private     $_startblocks   = 2;       //start position to determinate check rows
     private     $_linkRate      = 0.30;    //link rate to ignore the line
     private     $_steplines     = 6;       //maximum whitespace line for the next text block
-    private     $_terminalwords = array('正文已结束');
-    private     $_continuewords = array('相关阅读', '相关专题', '推荐阅读', '热点阅读', '版权所有', 'Copyright');
+    private     $_terminalrules = array('/^\s{0,}正文已结束/', '/^\s(0,)评论/i', '/^\s{0,}tag:/i');
+    private     $_continuerules = array('/^\s{0,}相关阅读/', '/^\s{0,}相关专题/', '/^\s{0,}分享到/');
     
     /**
      * the construct method
@@ -234,6 +234,16 @@ class Extractor
     }
     
     /**
+     * Add a terminal rule to the terminal global rule array
+     *
+     * @param   $_rule
+    */
+    public function addTerminalRule( $_rule )
+    {
+        $this->_terminalrules[] = $_rule;
+    }
+    
+    /**
      * get the rate of the link words in a string
      *      And it base on the clear up of $this->_html first
      *
@@ -290,18 +300,18 @@ class Extractor
     
     /**
      * Aditional keywords check
-     *  internal method to check the specifiled line contains the
+     *  internal method to check the specifiled line matches the
      *      words in $_array
      *
      * @param   $_linestr
      * @return  $_array
      * @return  bool
     */
-    private static function contains( $_linestr, $_array )
+    private static function matches( $_linestr, $_array )
     {
         foreach ( $_array as $_val )
         {
-            if ( stripos($_linestr, $_val) !== FALSE ) return true;
+            if ( preg_match($_val, $_linestr ) == 1 ) return true;
         }
         
         return false;
@@ -507,15 +517,15 @@ class Extractor
             for ( $t = $_block[0]; $t < $_block[1]; $t++ )
             {
                 //check the terminal words
-                if ( self::contains($_lines[$t], $this->_terminalwords) )
+                if ( self::matches($_lines[$t], $this->_terminalrules) )
                 {
                     $_keepgoing = false;
                     break;
                 }
                 
                 //check the continue words
-                //if ( self::contains($_lines[$t], $this->_continuewords) )
-                //    continue;
+                if ( self::matches($_lines[$t], $this->_continuerules) )
+                    continue;
                 
                 $_blockstr .= $_lines[$t] . "\n";
             }
