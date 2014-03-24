@@ -36,8 +36,8 @@ require(BASEPATH . 'core/Input.php');
 */
 require(BASEPATH . 'core/Uri.php');
 
-$URI = new Uri(false, URI_DIR_STYLE);
-//$URI->setFileExt('.do');
+$URI = new Uri(false, URI_STD_STYLE);
+$URI->setFileExt('.fuck');
 $URI->parseUrl();
 $URI->parseArgsGet('id/str');
 $_url = $URI->makeStyleUrl('article/list', array('id'=>12, 'str'=>'123456abc'));
