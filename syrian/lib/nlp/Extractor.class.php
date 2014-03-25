@@ -415,7 +415,7 @@ class Extractor
                 }
                 
                 if ( ( isset($_href[0]) && $_href[0] == '#')       //start with '#'
-                    || stripos($_href, 'javascript:') !== FALSE )
+                        || stripos($_href, 'javascript:') !== FALSE )
                     $_html = str_replace($_val, "\n", $_html);
             }
         }
@@ -511,7 +511,8 @@ class Extractor
         for ( $i = 0; $_keepgoing && $i < $_textblockscount; $i++ )
         {
             $_block = $_textblocks[$i];
-            $_blockstr = '';    
+            $_blockstr = '';
+            
             //append the text of the current
             //      text block the final text string
             for ( $t = $_block[0]; $t < $_block[1]; $t++ )
@@ -525,7 +526,9 @@ class Extractor
                 
                 //check the continue words
                 if ( self::matches($_lines[$t], $this->_continuerules) )
+                {
                     continue;
+                }
                 
                 $_blockstr .= $_lines[$t] . "\n";
             }

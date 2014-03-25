@@ -8,25 +8,25 @@
 //-----------------------------------------------------------
 
 //normal data type
-define('OP_NULL', 1 << 0);
-define('OP_LATIN', 1 << 1);
-define('OP_URL', 1 << 2);
-define('OP_EMAIL', 1 << 3);
-define('OP_QQ', 1 << 4);
-define('OP_DATE', 1 << 5);
-define('OP_NUMERIC', 1 << 6);
-define('OP_STRING', 1 << 7);
-define('OP_ZIP', 1 << 8);
-define('OP_CELLPHONE', 1 << 9);
-define('OP_TEL', 1 << 10);
-define('OP_IDENTIRY', 1 << 11);
+define('OP_NULL', 		1 <<  0);
+define('OP_LATIN', 		1 <<  1);
+define('OP_URL', 		1 <<  2);
+define('OP_EMAIL', 		1 <<  3);
+define('OP_QQ', 		1 <<  4);
+define('OP_DATE', 		1 <<  5);
+define('OP_NUMERIC', 	1 <<  6);
+define('OP_STRING', 	1 <<  7);
+define('OP_ZIP', 		1 <<  8);
+define('OP_CELLPHONE', 	1 <<  9);
+define('OP_TEL', 		1 << 10);
+define('OP_IDENTIRY', 	1 << 11);
 
 //santilize type
-define('OP_SANITIZE_TRIM', 1 << 0);
-define('OP_SANITIZE_SCRIPT', 1 << 1);
-define('OP_SANITIZE_HTML', 1 << 2);
-define('OP_MAGIC_QUOTES', 1 << 3);
-define('OP_SANITIZE_INT', 1 << 4);
+define('OP_SANITIZE_TRIM', 		1 << 0);
+define('OP_SANITIZE_SCRIPT', 	1 << 1);
+define('OP_SANITIZE_HTML', 		1 << 2);
+define('OP_MAGIC_QUOTES', 		1 << 3);
+define('OP_SANITIZE_INT', 		1 << 4);
 function OP_LIMIT( $s, $e = -1 ) {return ( $e == -1 ? array(0, $s) : array(0, $s, $e) );}
 function OP_SIZE( $s, $e = -1 ) {return ($e == -1 ? array(1, $s) : array(1, $s, $e));}
 
