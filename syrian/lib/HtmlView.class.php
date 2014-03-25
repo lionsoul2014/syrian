@@ -10,7 +10,7 @@
 
 //-------------------------------------------------------------------
 
-class View
+class HtmlView
 {
 
     public  $_tpl_dir       = NULL;         //template directory. end with '/'
@@ -19,44 +19,51 @@ class View
     private $_symbol        = array();      //template symtab
     
     private $_rules         = array(
-        '/<\?([^=])/' => '<?php $1',
+        '/<\?([^=])/'           => '<?php $1',
         //<?=
-        '/<\?=/'    => '<?php echo ',
+        '/<\?=/'                => '<?php echo ',
         //for ( val : {array} )
         '/for\s*\(\s*\$([a-z0-9_]+)\s*:\s*\$\{([a-z0-9_]+)\}\s*\)/i'
-                        => 'foreach ( \$this->_symbol[\'$2\'] as \$$1 )',
+                                => 'foreach ( \$this->_symbol[\'$2\'] as \$$1 )',
         
         //${arr}
-        '/\$\{(\$?[a-z0-9_]+)\}/i'    => '\$this->_symbol["$1"]',
+        '/\$\{(\$?[a-z0-9_]+)\}/i'
+                                => '\$this->_symbol["$1"]',
         //${arr.key}
-        '/\$\{(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)\}/i'  => '\$this->_symbol["$1"]["$2"]',
+        '/\$\{(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)\}/i'
+                                => '\$this->_symbol["$1"]["$2"]',
         //${arr.key1.key2}
         '/\$\{(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)\}/i'
-                        => '\$this->_symbol["$1"]["$2"]["$3"]',
+                                => '\$this->_symbol["$1"]["$2"]["$3"]',
         
         //#{class:method(args)}
-        '/#\{([a-z0-9_]+):([a-z0-9_]+)\((.*?)\)\s*\}/i' => '$1::$2($3)',
+        '/#\{([a-z0-9_]+):([a-z0-9_]+)\((.*?)\)\s*\}/i'
+                                => '$1::$2($3)',
         //#{${object}.method(args)}
         //#{$object.method(args)}
-        '/#\{\$(.*?)\.([a-z0-9_]+)\((.*?)\)\s*\}/i' => '\$$1->$2($3)',
+        '/#\{\$(.*?)\.([a-z0-9_]+)\((.*?)\)\s*\}/i'
+                                => '\$$1->$2($3)',
         //#{func(args)}, ${$func(args)}, #{${func}(args)}
         '/#\{(.*?)\((.*?)\)\}/' => '$1($2)',
         
         //$arr.key1.key2
-        '/(\$[a-z0-9_]+)\.(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)/i' => '$1["$2"]["$3"]',
+        '/(\$[a-z0-9_]+)\.(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)/i'
+                                => '$1["$2"]["$3"]',
         //$arr.key
-        '/(\$[a-z0-9_]+)\.(\$?[a-z0-9_]+)/i' => '$1["$2"]',
+        '/(\$[a-z0-9_]+)\.(\$?[a-z0-9_]+)/i'
+                                => '$1["$2"]',
                         
         //include|require file
-        '/(include|require)\s+([a-z0-9\.\/-]+)/i'  => '$1 \$this->getIncludeFile(\'$2\')'
+        '/(include|require)\s+([a-z0-9\.\/-]+)/i'
+                                => '$1 \$this->getIncludeFile(\'$2\')'
     );
 
     public function __construct( $_cache_time = 0,
-                    $_tpl_dir = NULL, $_cache_dir = NULL )
+            $_tpl_dir = NULL, $_cache_dir = NULL )
     {
         $this->_cache_time = $_cache_time;
-        if ( $_tpl_dir != NULL ) $this->_tpl_dir = $_tpl_dir;
-        if ( $_cache_dir != NULL ) $this->_cache_dir = $_cache_dir;
+        if ( $_tpl_dir != NULL )    $this->_tpl_dir = $_tpl_dir;
+        if ( $_cache_dir != NULL )  $this->_cache_dir = $_cache_dir;
     }
 
     private function compile( $_tpl_file, $_cache_file )
@@ -141,7 +148,7 @@ class View
     }
 
     /**
-     * display the data to the specified view template .
+     * display the data to the specified view template
      *
      * @param   $_tpl_file
     */
@@ -159,7 +166,7 @@ class View
         require $_cache_file;
     }
     
-    public function getExecutedHtml( $_tpl_file )
+    public function getHtml( $_tpl_file )
     {
         ob_start();     //create a buffer.
         $this->display($_tpl_file);
@@ -168,5 +175,4 @@ class View
         return $_ret;
     }
 }
-
 ?>
