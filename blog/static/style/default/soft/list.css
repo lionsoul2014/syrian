@@ -1,0 +1,17 @@
+* {padding: 0px;margin: 0px;}
+body {text-align: center;font-size: 12px;}
+
+#list-box {}
+/*content*/
+.list-item {border-bottom: 1px dashed #CCC;margin-bottom: 10px;background-color: #FFF;padding: 10px;}
+.li-title {height: 36px;line-height: 36px;}
+.li-brief {padding: 10px 0px;color: #555;text-indent: 24px;}
+.li-title a {font-size: 14px;font-weight: bold;text-decoration: none;color: #333;}
+.li-title a:hover {text-decoration: underline}
+.li-box {overflow: hidden;zoom:1;padding: 10px 0px;}
+.li-box a {float: left;width: 130px;height: 28px; line-height: 28px;text-align: center;}
+.button-link {text-decoration: none;font-size: 14px;font-weight: bold;color: #FFF;}
+.lb-index {background-color: #5DA800;margin-right: 25px;}
+.lb-index:hover {background-color: #78D01B;}
+.lb-git {background-color: #0072C6;margin-right: 10px;}
+.lb-git:hover {background-color: #1493F1;}
