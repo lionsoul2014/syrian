@@ -10,36 +10,35 @@ class ArticleController extends Controller
 	{
 		parent::__construct();
 		//$this->load->model('StreamModel');
-		$this->model = Loader::model('Article', 'stream');
+		$this->model = Loader::model('Article', 'article');
 	}
 	
 	public function run()
 	{
 		//$this->uri->module;		//request module
 		//$this->uri->page;			//request page
-		
-		//user logic file to handler the request
-		$_logicFile = $this->uri->page . '.logic.php';
-		if ( file_exists($_logicFile) )
-			include $_logicFile;
-		else
-			redirect('/error/404', 'src_page=' . $this->uri->url);
 			
 		//invoke a method to handler the request
 		if ( $this->uri->page == 'insert' )
+		{
+			$this->insert();
+		}
+		else
+		{
 			$this->index();
-		$this->index();
+		}
 	}
 	
 	public function index()
 	{
-		$this->uri->parse_args_get('nid/tid/pageno');
+		//$this->uri->parseArgsGet('nid/tid/pageno');
 		
-		//$_model = $this->loadModel('StreamModel', 'stream');
-		$_ret = $this->model->getPageList($this->input->get('pageno'));
-		$this->output->assign('data', $_ret);
-		$this->output->setDataType($this->input->get('dataType'));
-		$this->output->display('list');
+		//$_model = $this->loadModel('StreamModel', 'article');
+		//$_ret = $this->model->getPageList($this->input->get('pageno'));
+		//$this->output->assign('data', $_ret);
+		//$this->output->setDataType($this->input->get('dataType'));
+		//$this->output->display('list');
+		echo 'ArticleController#index()';
 	}
 	
 	public function insert()
@@ -72,7 +71,7 @@ class ArticleController extends Controller
 				$_errno = $_errmsg[$_erridx[0]][$_erridx[1]];
 			}
 			
-			$this->output->assign('errno', $_errno);
+			$this->view->assign('errno', $_errno);
 		}
 	}
 }

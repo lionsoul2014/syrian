@@ -1,56 +1,22 @@
 <?php
-header('Content-Type:text/html; charset=utf-8');
+header('Content-Type: text/html; charset=utf-8');
 
-/**
-  * System Base Path
- */
-define('BASEPATH', dirname( dirname(__FILE__) ) . '/syrian/');
+//System Base Path
+define('BASEPATH',      dirname( dirname(__FILE__) ) . '/syrian/');
  
-/**
- * Application base dir
-*/
-define('APPPATH', dirname(__FILE__) . '/');
+//Application base dir
+define('APPPATH',       dirname(__FILE__) . '/');
 
-/**
-  * Library directory name
-  *     used in Loader#import
- */
-define('LIBDIR',  'lib');
+define('SR_LIBDIR',        'lib');      //library directory name
+define('SR_CONFIGDIR',     'config');   //config directory name
+define('SR_MODELDIR',      'model');    //model directory name
+define('SR_CTRLDIR',       'app');      //controller directory name
+define('SR_DEFAULT_CTRL',  'article');  //default controller
 
-/**
- * Application model directory
- *      used in Loader#model
-*/
-define('MODELDIR', 'model');
+//system link style constants 1 for STD style, 0 for DIR style
+define('SR_LINK_STYLE',    1);
+define('SR_URI_REWRITE',   false);
 
+//require the framework entrance file
 require(BASEPATH . '/core/Syrian.php');
-
-//Usage demo
-Loader::import('Filter');
-$input = new Input();
-echo 'get(id): '.$input->get('id') , "\n<br />";
-echo 'get(str): '.$input->get('str'), "\n<br />";
-echo 'get(str, model): '.$input->get('str',
-    array(OP_STRING, OP_LIMIT(3, 11), OP_SANITIZE_INT), $_errno ) , "\n<br />";
-
-//model fetch
-$_model = array(
-    'id'        => array(OP_NUMERIC, OP_LIMIT(1, 3), OP_SANITIZE_INT),
-    'str'       => array(OP_STRING, OP_LIMIT(3, 12), OP_SANITIZE_HTML)
-);
-$_ret = $input->getModel($_model, $_errno);
-echo 'getModel(model): ';
-var_dump($_ret);
-echo '<br />';
-echo 'server(REQUEST_URI): '.$input->server('REQUEST_URI'), '<br />';
-
-$_instance = Loader::model('Article', 'article');
-echo $_instance->run(), '<br />';
-
-/*
-foreach ( $_SERVER as $_key => $_val )
-{
-    echo $_key, '=>', $_val, '<br />';
-}
-*/
 ?>
