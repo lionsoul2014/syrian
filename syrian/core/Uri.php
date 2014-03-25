@@ -5,6 +5,7 @@
  *
  * 1. parse the request url
  * 2. make the style request url
+ * 3. redirect to the specifield url
  *
  * @author	chenxin <chenxin619315@gmail.com>
  * @link	http://www.lionsoul.org/Syrian
@@ -134,8 +135,8 @@ class Uri
         $this->_parts = &$_ret;
             
         //make the mdoule and the page
-        $this->module = $_ret[0];
-        if ( isset($_ret[1]) )  $this->page = $_ret[1];
+        $this->module = strtolower($_ret[0]);
+        if ( isset($_ret[1]) )  strtolower($this->page = $_ret[1]);
         
         return true;
     }
@@ -151,7 +152,7 @@ class Uri
     public function redirect( $_url, $_args = NULL )
     {
         $_url = $this->makeStyleUrl($_url, $_args);
-        @header('Location: ' . $_url);
+        header('Location: ' . $_url);
         exit();
     }
     
@@ -213,7 +214,7 @@ class Uri
     */
     public function setFileExt( $_ext )
     {
-        $this->_ext = &$_ext;
+        $this->_ext = $_ext;
     }
     
     /**

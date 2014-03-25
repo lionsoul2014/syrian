@@ -1,6 +1,7 @@
 <?php if ( ! defined('BASEPATH') ) exit('No Direct Access Allowed!');
 /**
- * Super Loader manager class
+ * Super Loader manager class, offer
+ *      quick interface to load model/config/class
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
@@ -35,7 +36,7 @@ class Loader
         //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
         //Or check the APPPATH/lib 
         $_dir  = (($_inc) ? BASEPATH : APPPATH);
-        $_dir .= (defined(LIBDIR) ? LIBDIR : 'lib') . '/';
+        $_dir .= (defined(SR_LIBDIR) ? SR_LIBDIR : 'lib') . '/';
         
         //append the class name
         $_dir .= $_cls;
@@ -67,7 +68,7 @@ class Loader
     {
         //make the included file name
         $_dir = (($_inc) ? BASEPATH : APPPATH);
-        $_dir .= (defined('CONFIGDIR') ? CONFIGDIR : 'config') . '/';
+        $_dir .= (defined('SR_CONFIGDIR') ? SR_CONFIGDIR : 'config') . '/';
         
         //append the section
         if ( $_section != NULL )
@@ -113,7 +114,7 @@ class Loader
         }
         
         //model base directory
-        $_dir = APPPATH . (defined('MODELDIR') ? MODELDIR : 'model') . '/';
+        $_dir = APPPATH . (defined('SR_MODELDIR') ? SR_MODELDIR : 'model') . '/';
         
         //append the class
         $_dir .= $_cls;
