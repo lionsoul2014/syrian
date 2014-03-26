@@ -36,8 +36,8 @@ require(BASEPATH . 'core/Controller.php');
  * Intiailze the system and fetch the controller of the
  *  current request and then invoke the it#run method to handler the request
 */
-$URI = new Uri(defined('URI_REWRITE') ? URI_REWRITE : false,
-        defined('URI_LINK_STYLE') ? URI_LINK_STYLE : URI_STD_STYLE);
+$URI = new Uri(defined('SR_URI_REWRITE') ? true : false,
+        defined('SR_LINK_STYLE') ? SR_LINK_STYLE : URI_STD_STYLE);
 $URI->parseUrl();
 
 //get the module main file

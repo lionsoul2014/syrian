@@ -14,7 +14,7 @@
 </div>
 <div  id="navi">
     <div id="navi-box">
-        <a href="/index.php/article/list.html">开源软件</a>
-        <a href="/index.php/article/about.html">狮子的魂</a>
+        <a href="/article/list.html">开源软件</a>
+        <a href="/article/about.html">狮子的魂</a>
     </div>
 </div>
