@@ -50,6 +50,7 @@ class ArticleController extends Controller
 	
 	public function insert()
 	{
+		$this->input->get('id', array(OP_INT, OP_SIZE(2,10), OP_SANTILIZE_SCRIPT));
 		if ( $this->input->post('_act') != FALSE )
 		{
 			$_model = array(

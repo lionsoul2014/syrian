@@ -96,9 +96,11 @@ class Uri
         $_spos  = 0;     //start position to determine the request
         $_epos  = 0;     //end position to determine the request
         $pos    = 0;     //temp variable
-        $_len   = strlen($this->url);
         
-        if ( ($pos = stripos($this->url, '.php')) !== FALSE )
+        $_url   = substr_replace($this->url, '/', 0, strlen($this->_base));
+        $_len   = strlen($_url);
+        
+        if ( ($pos = stripos($_url, '.php')) !== FALSE )
             $_spos = $pos + 4;
         
         /*
@@ -109,8 +111,8 @@ class Uri
         if ( $_spos < $_len ) $_spos++;
         
         //check and find the end index
-        $_args = stripos($this->url, '?', $_spos);
-        $_extp = stripos($this->url, '.', $_spos);
+        $_args = stripos($_url, '?', $_spos);
+        $_extp = stripos($_url, '.', $_spos);
         
         //determine the end index
         if ( $_args !== FALSE && $_extp !== FALSE )
@@ -123,8 +125,8 @@ class Uri
          *  And clear the last '/' punctuation if it is
         */
         if ( $_epos == FALSE ) $_epos = $_len;
-        if ( $this->url[$_len - 1] == '/' ) $_epos--;
-        $this->_request = substr($this->url, $_spos, $_epos - $_spos);
+        if ( $_url[$_len - 1] == '/' ) $_epos--;
+        $this->_request = substr($_url, $_spos, $_epos - $_spos);
         if ( $this->_request == '' ) return false;
         
         /*
