@@ -1,7 +1,10 @@
 <?php if ( ! defined('BASEPATH') ) exit('No Direct Access Allowed!');
 /**
- * Json view manager class
- *      base on json_decode/json_encode
+ * Json Viewer manager class
+ *      base on function json_decode/json_encode
+ *
+ * change the handler function throught $_config['encode'=>, 'decode'=>]
+ *      --Not implemented yet...
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
@@ -31,6 +34,8 @@ class JsonView implements IView
 	public function assign( $_name, $_value )
     {
         $this->_data[$_name] = &$_value;
+        
+        return $this;
     }
     
     /**
@@ -43,6 +48,22 @@ class JsonView implements IView
 	public function assoc( $_name, &$_value )
     {
         $this->_data[$_name] = &$_value;
+        
+        return $this;
+    }
+    
+    /**
+     * Load data from a array, take the key as the new key
+     *      and the value as the new value.
+     *
+     * @param   $_array
+    */
+    public function load( $_array )
+    {
+        if ( ! empty($_array) )
+            $this->_data = array_merge($this->_data, $_array);
+            
+        return $this;
     }
     
     /**
@@ -51,10 +72,9 @@ class JsonView implements IView
      * @param   $_tpl_file
      * @return  string the executed html text
     */
-	public function getContent( $_tpl_file = NULL )
+	public function getContent( $_output = NULL )
     {
         return json_encode( $this->_data );
     }
 }
-
 ?>

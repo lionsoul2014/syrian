@@ -8,6 +8,7 @@ interface IView
 {
 	public function assign( $_name, $_value );
 	public function assoc( $_name, &$_value );
+    public function load( $_array );
 	public function getContent( $_tpl_file = NULL );
 }
 
@@ -35,7 +36,7 @@ class ViewFactory
      * @param   $_class class key
      * @param   $_args  arguments to initialize the instance
     */
-	public static function create( $_class, &$_conf )
+	public static function create( $_class, &$_conf = NULL )
 	{
 		if ( self::$_classes == NULL ) self::$_classes = array();
 		

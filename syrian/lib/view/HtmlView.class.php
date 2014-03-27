@@ -12,7 +12,6 @@
 
 class HtmlView implements IView
 {
-
     public  $_tpl_dir       = NULL;         //template directory. end with '/'
     public  $_cache_dir     = NULL;         //cache directory, end with '/'
     public  $_cache_time    = 0;            //template compile cache time in second
@@ -146,6 +145,8 @@ class HtmlView implements IView
     public function assign( $_name, $_value )
     {
         $this->_symbol[$_name] = &$_value;
+        
+        return $this;
     }
     
     /**
@@ -158,6 +159,22 @@ class HtmlView implements IView
     public function assoc( $_name, &$_value )
     {
         $this->_symbol[$_name] = &$_value;
+        
+        return $this;
+    }
+    
+    /**
+     * Load data from a array, take the key as the new key
+     *      and the value as the new value.
+     *
+     * @param   $_array
+    */
+    public function load( $_array )
+    {
+        if ( ! empty($_array) )
+            $this->_symbol = array_merge($this->_symbol, $_array);
+            
+        return $this;
     }
     
     /**
