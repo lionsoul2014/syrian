@@ -2,21 +2,37 @@
 header('Content-Type: text/html; charset=utf-8');
 
 //System Base Path
-define('BASEPATH',      dirname( dirname(__FILE__) ) . '/syrian/');
+define('BASEPATH',      dirname(dirname(__FILE__)) . '/syrian/');
  
-//Application base dir
+//Application base path
 define('APPPATH',       dirname(__FILE__) . '/');
 
-define('SR_LIBDIR',        'lib');      //library directory name
-define('SR_CONFIGDIR',     'config');   //config directory name
-define('SR_MODELDIR',      'model');    //model directory name
-define('SR_CTRLDIR',       'app');      //controller directory name
-define('SR_DEFAULT_CTRL',  'article');  //default controller
-
-//system link style constants 1 for STD style, 0 for DIR style
-define('SR_LINK_STYLE',    1);
-define('SR_URI_REWRITE',   false);
+define('SR_LIBPATH',    APPPATH.'lib/');      //library directory name
+define('SR_CONFPATH',   APPPATH.'config/');   //config directory name
+define('SR_MODELPATH',  APPPATH.'model/');    //model directory name
+define('SR_CTRLPATH',   APPPATH.'app/');      //controller directory name
+define('SR_VIEWPATH',   APPPATH.'template/'); //template directory name
+define('SR_CACHEPATH',  APPPATH.'cache/');    //cache directory name
 
 //require the framework entrance file
-require(BASEPATH . '/core/Syrian.php');
+require(BASEPATH . 'core/Syrian.php');
+
+//system link style constants 1 for STD style, 0 for DIR style
+define('SR_LINK_STYLE',    URI_STD_STYLE);
+define('SR_URI_REWRITE',   true);
+
+
+//---------------------------------------------------
+
+/*
+ * Intiailze the system and fetch the controller of the
+ *  current request and then invoke the it#run method to handler the request
+*/
+Loader::import('STDUri');
+$URI = new STDUri(SR_URI_REWRITE, SR_LINK_STYLE);
+$URI->parseUrl();
+$_CTRL = $URI->getController('article');
+if ( $_CTRL == NULL ) $URI->redirect('error/404');
+
+$_CTRL->run();      //run the project
 ?>

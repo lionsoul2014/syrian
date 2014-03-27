@@ -35,10 +35,7 @@ class Loader
         
         //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
         //Or check the APPPATH/lib 
-        $_dir  = (($_inc) ? BASEPATH : APPPATH);
-        $_dir .= (defined(SR_LIBDIR) ? SR_LIBDIR : 'lib') . '/';
-        
-        //append the class name
+        $_dir  = (($_inc) ? BASEPATH . '/lib/' : SR_LIBPATH);
         $_dir .= $_cls;
         
         foreach( array($_dir . '.class.php', $_dir . '.php') as $_file )
@@ -67,15 +64,10 @@ class Loader
     public static function config( $_config, $_section = NULL, $_inc = false )
     {
         //make the included file name
-        $_dir = (($_inc) ? BASEPATH : APPPATH);
-        $_dir .= (defined('SR_CONFIGDIR') ? SR_CONFIGDIR : 'config') . '/';
+        $_dir = (($_inc) ? BASEPATH . '/config/' : SR_CONFPATH);
         
         //append the section
-        if ( $_section != NULL )
-        {
-            $_dir .= $_section . '/';
-        }
-        
+        if ( $_section != NULL ) $_dir .= $_section . '/';
         $_dir .= $_config;
         
         //search the config file and include it
@@ -114,10 +106,7 @@ class Loader
         }
         
         //model base directory
-        $_dir = APPPATH . (defined('SR_MODELDIR') ? SR_MODELDIR : 'model') . '/';
-        
-        //append the class
-        $_dir .= $_cls;
+        $_dir = SR_MODELPATH . $_cls;
             
         foreach ( array( $_dir . '.model.php', $_dir . '.php' ) as $_file )
         {

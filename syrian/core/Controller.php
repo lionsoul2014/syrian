@@ -55,8 +55,8 @@ class Controller extends stdClass
     {
 		Loader::import('HtmlView');
 		$view  = new HtmlView($timer);
-		$view->_tpl_dir		= APPPATH.SR_TEMPDIR.'/'.$this->uri->module.'/';
-	    $view->_cache_dir	= APPPATH.SR_CACHEDIR.'/temp/'.$this->uri->module.'/';
+		$view->_tpl_dir		= SR_VIEWPATH .$this->uri->module.'/';
+	    $view->_cache_dir	= SR_CACHEPATH.'temp/'.$this->uri->module.'/';
 		
 		return $view;
     }

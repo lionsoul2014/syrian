@@ -1,5 +1,0 @@
-#url rewrite rule
-RewriteEngine On
-RewriteBase /
-
-RewriteRule ^\w+/\w+(\.(html|htm|do|ls))?(\?[^\?]+)?$ index.php

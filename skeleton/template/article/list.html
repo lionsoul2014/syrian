@@ -1,39 +1,30 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-    "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
+<html>
 <head>
     <title><?=${title}?></title>
-    <link rel="stylesheet" type="text/css" href="<?=${USR.sta.css}?>/article/list.css"/>
-    <link rel="stylesheet" type="text/css" href="<?=${USR.sta.css}?>/share/top-foot.css"/>
-    <link rel="stylesheet" type="text/css" href="<?=${USR.sta.css}?>/share/page.css"/>
+    <meta name="Keywords" content=""/>
+    <meta name="Description" content=""/>
+    <link rel="stylesheet" type="text/css" href="/static/style/dark/soft/list.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/style/dark/top-foot.css"/>
 </head>
 <body>
 <?include ../share/head.html?>
-<div id="main">
-    <div id="left">
-        <h3 id="at-h3"><?=${at_title}?></h3>
-        <ul id="at-list">
-        <?foreach ( ${type} as $val ) {?>
-            <li><a href="<?=${SELF}?>?tid=<?=$val.Id?>"><?=$val.title?></a></li>
-        <?}?>
-        </ul>
-    </div>
-    
-    <div id="right">
-        <h3 id="aa-h3"><?=${aa_title}?></h3>
-        <ul id="aa-list">
+<div class="main">
+    <div class="c-box">
+        <h3 class="p-h3">开源软件：</h3>
+        <div id="list-box">
         <?if ( ${data} != FALSE ) {?>
             <?for ( $val : ${data} ) {?>
             <div class="list-item">
                 <h3 class="li-title"><a href="<?=$val.url?>" target="_blank"><?=$val.title?></a></h3>
-                <div class="li-info">作者：<?=$val.author?>, 建立时间：<?=$val.addtime?>, 下载量：<?=$val.hits?></div>
                 <div class="li-brief"><?=$val.brief?></div>
+                <div class="li-box">
+                    <a href="<?=$val.url?>" target="_blank" class="lb-index button-link">软件官方网站</a>
+                    <a href="<?=$val.git?>" target="_blank" class="lb-git button-link">查看Git源码托管</a>
+                </div>
             </div>
             <?}?>
         <?}?>
-        </ul>
-        
-        <div id="page-box"><?=${pagemenu}?></div>
+        </div>
     </div>
 </div>
 <?include ../share/foot.html?>

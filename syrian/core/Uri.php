@@ -19,13 +19,14 @@
 
  //---------------------------------------------------------
  
-class Uri
+abstract class Uri
 {
     //request url
     public $url         = NULL;
     public $self        = NULL;
     
     //request module/page
+    public $section     = NULL;
     public $module      = NULL;
     public $page        = NULL;
     
@@ -33,27 +34,27 @@ class Uri
      * request base part of the uri before the script file
      *      like    /syrian/skeleton/ of /syrian/skeleton/index.php
      *
-     * @access  private
+     * @access  protected
     */
-    private $_base      = '/';
+    protected $_base      = '/';
     
     /**
      * require rounter part of the url, eg: article/list
      *      of syrian/skeleton/index.php/article/list.html
      *
-     * @access  private
+     * @access  protected
     */
-    private $_request   = NULL;
+    protected $_request   = NULL;
     
     //link style (@see Uri#style constants)
-    private $_style     = NULL;
+    protected $_style     = NULL;
     
     //request script file extension
-    private $_ext       = NULL;
+    protected $_ext       = NULL;
     
     //use url rewrite, hide the 'index.php' in request url
-    private $_rewrite   = false;
-    private $_parts     = NULL;
+    protected $_rewrite   = false;
+    protected $_parts     = NULL;
     
     /**
      * construct method to initialize the class
@@ -82,7 +83,7 @@ class Uri
         }
         
         $this->_rewrite = $_rewrite;
-        $this->_style = $_style;
+        $this->_style   = $_style;
     }
     
     /**
@@ -91,7 +92,7 @@ class Uri
      *
      * @return  bool
     */
-    public function parseUrl()
+    protected function parseUrl()
     {
         $_spos  = 0;     //start position to determine the request
         $_epos  = 0;     //end position to determine the request
@@ -134,11 +135,7 @@ class Uri
          *      also, initialize the _parts globals variable here
         */
         $_ret = explode('/', $this->_request);
-        $this->_parts = &$_ret;
-            
-        //make the mdoule and the page
-        $this->module = strtolower($_ret[0]);
-        if ( isset($_ret[1]) )  strtolower($this->page = $_ret[1]);
+        $this->_parts       = &$_ret;
         
         return true;
     }
@@ -223,32 +220,43 @@ class Uri
      * parse the directory style http get arguments
      *      to the global $_GET array with a specifial template
      *
+     * Note: argments parse start from the back
+     *
      * @param   $_temp style like nid/tid/pageno
-     * @return  Integer - number of successfully parsed arguments 
+     * @return  Integer - number of successfully parsed arguments  or false for failed
     */
     public function parseArgsGet( $_temp )
     {
         //check and make sure the uri style is URI_DIR_STYLE
         if ( $this->_style != URI_DIR_STYLE ) return 0;
         
-        $_counter = 2;
-        $_length = count($this->_parts);
-        
+        $_plen = count($this->_parts);
         $_keys = explode('/', $_temp);
+        $_klen = count($_keys);
+        
+        /*the module and the page part is need so, $_klen + 2*/
+        if ( $_klen + 2 > $_plen  ) return false;
+        $_idx  = $_plen - $_klen - 1;
+        
         foreach ( $_keys as $_key )
         {
-            //mapping NULL with the $_key in $_GET
-            if ( $_counter >= $_length )
-            {
-                $_GET[$_key] = NULL;
-                continue;
-            }
-            
             //mapping $_counter's value of _parts with key $_key
             //  in global $_GET array
-            $_GET[$_key] = $this->_parts[$_counter];
-            $_counter++;
+            $_GET[$_key] = $this->_parts[$_idx];
+            $_idx++;
         }
+        
+        return true;
     }
+    
+    /**
+     * method to fetch the controll class file
+     *  and return a valid instance of the controll class throught
+     *  the current request url pattern
+     *
+     * @param   $_module    default module
+     * @return  Object or NULL when failed
+    */
+    protected abstract function getController( $_module );
 }
 ?>

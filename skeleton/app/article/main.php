@@ -6,44 +6,51 @@
 */
 class ArticleController extends Controller
 {	
-	public function __construct()
+	public function __construc( )
 	{
 		parent::__construct();
-		//$this->load->model('StreamModel');
-		$this->model = Loader::model('Article', 'article');
+		
+		//Better not do any initialize work here
 	}
 	
 	public function run()
 	{
-		//$this->uri->module;		//request module
-		//$this->uri->page;			//request page
-			
+		//Load article model
+		$this->model = Loader::model('Article', 'article');
+		
+		$this->view  = $this->getHtmlView();
+		$this->view->assign('title', '开源软件 - 平凡 | 执著');
+		
 		//invoke a method to handler the request
-		if ( $this->uri->page == 'insert' )
-		{
-			$this->insert();
-		}
-		else
-		{
-			$this->index();
-		}
+		if ( $this->uri->page == 'about' ) $this->about();
+		else $this->index();
 	}
 	
 	public function index()
 	{
-		//$this->uri->parseArgsGet('nid/tid/pageno');
+		$this->view->assoc('data', $this->model->getList(1));
 		
-		//$_model = $this->loadModel('StreamModel', 'article');
-		//$_ret = $this->model->getPageList($this->input->get('pageno'));
-		//$this->output->assign('data', $_ret);
-		//$this->output->setDataType($this->input->get('dataType'));
-		//$this->output->display('list');
-		echo 'ArticleController#index()';
+		//get the executed html content
+		$_html = $this->view->getHtml('list.html');
+		
+		$this->output->compress(9);		//set the compress level
+		$this->output->display($_html);
+	}
+	
+	public function about()
+	{
+		$this->view->assoc('about', $this->model->getItem());
+		
+		//get the executed html content
+		$_html = $this->view->getHtml('about.html');
+		
+		$this->output->compress(9);		//set the compress level
+		$this->output->display($_html);
 	}
 	
 	public function insert()
 	{
-		//if ( $this->StreamModel->insert() )
+		$this->input->get('id', array(OP_INT, OP_SIZE(2,10), OP_SANTILIZE_SCRIPT));
 		if ( $this->input->post('_act') != FALSE )
 		{
 			$_model = array(
