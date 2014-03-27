@@ -1,31 +1,55 @@
 <?php
+/*
+ * database handling class common interface.
+ * 
+ * @author	chenxin<chenxin619315@gmail.com>
+ */
+interface Idb
+{
+	public function insert( $_table, &$_array );
+	public function delete( $_table, $_where );
+	public function getList( $_query, $_type = NULL );
+	public function getOneRow( $_query, $_type = NULL );
+	public function update( $_table, &$_array, $_where );
+	public function getRowNum( $_query, $_res = false );
+	public function count( $_table, $_field = 0, $_where = NULL );
+}
+
+ //------------------------------------------------------------------
+
 /**
  * Database handling instance factory class
+ * 	Quick way to lanch all kinds of DBMS client with just a key
+ * like: Mysql, Postgresql, Oracle, eg...
  *
  * @author	chenxin<chenxin619315@gmail.com>
- * @see		Idb.class.php
 */
 
-//-------------------------------------------------------
+ //-------------------------------------------------------------------
 
-defined('DB_LIB_HOME')	or	define('DB_LIB_HOME', dirname(__FILE__) . DIRECTORY_SEPARATOR);
+define('DB_LIB_HOME', dirname(__FILE__) . DIRECTORY_SEPARATOR);
 
 class DbFactory
 {
 	private static $_classes = NULL;
 	
+	/**
+     * Load and create the instance of a specifield db class
+     *      with a specifield key, then return the instance
+     *  And it will make sure the same class will only load once
+     *
+     * @param   $_class class key
+     * @param   $_args  arguments to initialize the instance
+    */
 	public static function create( $_class, &$_host )
 	{
-		if ( self::$_classes == NULL )
-		{
-			self::$_classes = array();
-			require DB_LIB_HOME . 'Idb.class.php';
-		}
+		if ( self::$_classes == NULL ) self::$_classes = array();
 		
+		//Fetch the class
 		$_class = ucfirst( $_class );
 		if ( ! isset( self::$_classes[$_class] ) )
 		{
-			require DB_LIB_HOME . $_class . '.class.php';
+			require dirname(__FILE__).'/'.$_class.'.class.php';
 			self::$_classes[$_class] = true;
 		}
 		

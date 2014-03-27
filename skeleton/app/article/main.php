@@ -18,7 +18,7 @@ class ArticleController extends Controller
 		//Load article model
 		$this->model = Loader::model('Article', 'article');
 		
-		$this->view  = $this->getHtmlView();
+		$this->view  = $this->getView();
 		$this->view->assign('title', '开源软件 - 平凡 | 执著');
 		
 		//invoke a method to handler the request
@@ -31,10 +31,10 @@ class ArticleController extends Controller
 		$this->view->assoc('data', $this->model->getList(1));
 		
 		//get the executed html content
-		$_html = $this->view->getHtml('list.html');
+		$_content = $this->view->getContent('list.html');
 		
 		$this->output->compress(9);		//set the compress level
-		$this->output->display($_html);
+		$this->output->display($_content);
 	}
 	
 	public function about()
@@ -42,10 +42,10 @@ class ArticleController extends Controller
 		$this->view->assoc('about', $this->model->getItem());
 		
 		//get the executed html content
-		$_html = $this->view->getHtml('about.html');
+		$_content = $this->view->getContent('about.html');
 		
 		$this->output->compress(9);		//set the compress level
-		$this->output->display($_html);
+		$this->output->display($_content);
 	}
 	
 	public function insert()
@@ -80,6 +80,42 @@ class ArticleController extends Controller
 			
 			$this->view->assign('errno', $_errno);
 		}
+	}
+	
+	/**
+     * get the View component instance for the current request
+     * 	it is an initialized lib/view/IView instance
+     *
+     * @param	$_timer	template compile cache time
+     * 			(0 for no cace, and -1 for permanent always)
+     * @param	resource	instance of syrian/lib/view/IView
+    */
+	public function getView( $timer = 0 )
+    {
+		Loader::import('ViewFactory', 'view');
+		
+		$_conf = array(
+			'cache_time'	=> $timer,
+			'tpl_dir'		=> SR_VIEWPATH .$this->uri->module.'/',
+			'cache_dir'		=> SR_CACHEPATH.'temp/'.$this->uri->module.'/'
+		);
+		
+		//return the html view
+		return ViewFactory::create('Html', $_conf);
+    }
+	
+	/**
+     * get the Database component instance for the current reques
+     *      it is an initialized syrian/lib/db/Idb instance 
+     *
+     * @param   $idx  - connection index, use for cluster or distributed.
+     * @return  resouce - instance of syrian/lib/db/Idb
+    */
+    public function getDatabase( $idx = 'main' )
+	{
+		Loader::import('Dbfactory', 'db');
+		$_host = Loader::config('hosts', 'db');
+		return Dbfactory::create('mysql', $_host[$idx]);
 	}
 }
 ?>
