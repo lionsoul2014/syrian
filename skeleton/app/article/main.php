@@ -19,7 +19,7 @@ class ArticleController extends Controller
 		$this->model = Loader::model('Article', 'article');
 		
 		$this->view  = $this->getView();
-		$this->view->assign('title', '开源软件 - 平凡 | 执著');
+		$this->view->assoc('site', Loader::config('site'));
 		
 		//invoke a method to handler the request
 		if ( $this->uri->page == 'about' ) $this->about();

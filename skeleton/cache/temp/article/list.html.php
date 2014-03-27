@@ -1,8 +1,8 @@
 <html>
 <head>
-    <title><?php echo $this->_symbol["title"]?></title>
-    <meta name="Keywords" content=""/>
-    <meta name="Description" content=""/>
+    <title><?php echo $this->_symbol["site"]["title"]?></title>
+    <meta name="Keywords" content="<?php echo $this->_symbol["site"]["keywords"]?>"/>
+    <meta name="Description" content="<?php echo $this->_symbol["site"]["desc"]?>"/>
     <link rel="stylesheet" type="text/css" href="/static/style/dark/soft/list.css"/>
     <link rel="stylesheet" type="text/css" href="/static/style/dark/top-foot.css"/>
 </head>
