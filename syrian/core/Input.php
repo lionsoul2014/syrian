@@ -63,6 +63,19 @@ class Input
 	}
 	
 	/**
+	 * Fetch an integer form $_GET global array
+	 *
+	 * @param	$_key
+	 * @return	Mixed(Integer or false)
+	*/
+	public function getInt( $_key )
+	{
+		if ( ! isset( $_GET[$_key] ) ) return false;
+		
+		return $_GET[$_key];
+	}
+	
+	/**
 	 * fetch item from $_GET with a specifiel model
 	 *
 	 * @param	$_model
@@ -105,6 +118,19 @@ class Input
 	}
 	
 	/**
+	 * Fetch an integer form $_POST global array
+	 *
+	 * @param	$_POST
+	 * @return	Mixed(Integer or false)
+	*/
+	public function postInt( $_key )
+	{
+		if ( ! isset( $_POST[$_key] ) ) return false;
+		
+		return $_POST[$_key];
+	}
+	
+	/**
 	 * fetch item from $_POST with a specifiel model
 	 *
 	 * @param	$_model
@@ -143,6 +169,19 @@ class Input
 		}
 		
 		//normal string fetch
+		return $_COOKIE[$_key];
+	}
+	
+	/**
+	 * Fetch an integer form $_COOKIE global array
+	 *
+	 * @param	$_key
+	 * @return	Mixed(Integer or false)
+	*/
+	public function cookieInt( $_key )
+	{
+		if ( ! isset( $_COOKIE[$_key] ) ) return false;
+		
 		return $_COOKIE[$_key];
 	}
 	
@@ -212,6 +251,19 @@ class Input
 		}
 		
 		//normal string fetch
+		return $_REQUEST[$_key];
+	}
+	
+	/**
+	 * Fetch an integer form $_REQUEST global array
+	 *
+	 * @param	$_key
+	 * @return	Mixed(Integer or false)
+	*/
+	public function requestInt( $_key )
+	{
+		if ( ! isset( $_REQUEST[$_key] ) ) return false;
+		
 		return $_REQUEST[$_key];
 	}
 	
