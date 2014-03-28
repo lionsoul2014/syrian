@@ -9,9 +9,10 @@
 class Mysql implements Idb
 {
 	
-	private	$_debug	= FALSE;		/*for debug*/
-	private $_link	= NULL;			/*mysql connect resource*/
-	private $_host	= NULL;			/*connection information*/
+	private	$_debug		= FALSE;		/*for debug*/
+	private $_link		= NULL;			/*mysql connect resource*/
+	private $_host		= NULL;			/*connection information*/
+	private $_escape	= true;
 	
 	/*connected to the database server and do some query work to unify the charset*/
 	private function connect()
@@ -30,6 +31,9 @@ class Mysql implements Idb
 	public function __construct( &$_host )
 	{
 		$this->_host = &$_host;
+		
+		//check the default magic quotes for GPC data
+		$this->_escape = get_magic_quotes_gpc();
 	}
 	
 	/**
@@ -57,10 +61,15 @@ class Mysql implements Idb
 	public function insert( $_table, &$_array )
 	{
 		$_fileds = NULL;$_values = NULL;
+		$_tval = NULL;
+		
 		foreach ( $_array as $_key => $_val )
 		{
+			$_tval = &$_val;
+			if ( ! $this->_escape ) $_tval = addslashes($_val);
+			
 			$_fileds .= ( $_fileds==NULL ) ? $_key : ',' . $_key;
-			$_values .= ( $_values==NULL ) ? '\''.$_val.'\'' : ',\''.$_val.'\'';
+			$_values .= ( $_values==NULL ) ? '\''.$_tval.'\'' : ',\''.$_tval.'\'';
 		}
 		
 		if ( $_fileds !== NULL )
@@ -107,37 +116,47 @@ class Mysql implements Idb
 				$_result[] = $_row;
 			return $_result;
 		}
+		
 		return FALSE;
 	}
 	
 	/**
-	 * update the specified records . <br />
+	 * update the specified records
+	 * 		all the value will be quoted with ' punctuation for default, So
+	 * 	you don't have to care about the data type of the fields
+	 * 		in you aim database table, Or make $_quote false...
 	 * 
 	 * @param	$_table
 	 * @param	$_array
 	 * @param	$_where
+	 * @param	$_quote
 	 * @return	mixed
 	 */
-	public function update( $_table, &$_array, $_where )
+	public function update( $_table, &$_array, $_where, $_quote = true )
 	{
 		$_keys = NULL;
+		$qstr = ($_quote) ? '\'' : "";
+		$_tval = NULL;
 		
 		foreach ( $_array as $_key => $_val )
 		{
-			if ( $_keys == NULL ) $_keys .= $_key.'=\''.$_val.'\'';
-			else $_keys .= ','.$_key.'=\''.$_val.'\'';
+			$_tval = &$_val;
+			if ( ! $this->_escape ) $_tval = addslashes($_val);
+			
+			if ( $_keys == NULL ) $_keys = $_key."={$qstr}".$_tval."{$qstr}";
+			else $_keys .= ','.$_key."={$qstr}".$_tval."{$qstr}";
 		}
 		
 		if ( $_keys !== NULL )
 		{
 			$_query = 'UPDATE ' . $_table . ' SET ' . $_keys . ' WHERE '.$_where;
+			echo $_query;
 			if ( $this->query( $_query ) != FALSE )
 				return mysqli_affected_rows($this->_link);
 		}
 		
 		return FALSE;
 	}
-	
 	
 	/**
 	 * get the specified record . <br />

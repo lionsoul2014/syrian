@@ -1,5 +1,5 @@
 <?php
-require 'Mysql.class.php';
+require dirname(dirname(__FILE__)).'/db/DbFactory.class.php';
 
 //Mysql handling class test program
 $_host = array(
@@ -10,7 +10,7 @@ $_host = array(
 	'port'		=> 3306,
 	'db'		=> 'test',
 	'charset'	=> 'utf8');
-$Db = Dbfactory::createDb('mysql', $_host);
+$Db = Dbfactory::create('mysql', $_host);
 //insert
 /*$_array = array(
 	'user'=>'syrian',
