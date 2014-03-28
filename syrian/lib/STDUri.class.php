@@ -24,11 +24,16 @@ class STDUri extends Uri
         
         //make the section, module and the page
         $_len = count($this->_parts);
+        if ( $_len == 0 ) return false;
         
         /*
          * STD Uri ask the module/page must be there
         */
-        if ( $_len < 2 ) return false;
+        if ( $_len == 1 )
+        {
+            $this->module = strtolower($this->_parts[0]);
+            return false;
+        }
         
         //fetch the module and the page
         $this->module = strtolower($this->_parts[$_len - 2]);
