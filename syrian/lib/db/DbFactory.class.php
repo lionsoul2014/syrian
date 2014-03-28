@@ -27,8 +27,6 @@ interface Idb
 
  //-------------------------------------------------------------------
 
-define('DB_LIB_HOME', dirname(__FILE__) . DIRECTORY_SEPARATOR);
-
 class DbFactory
 {
 	private static $_classes = NULL;
