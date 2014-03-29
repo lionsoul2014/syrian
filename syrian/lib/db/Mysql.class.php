@@ -42,13 +42,25 @@ class Mysql implements Idb
 	 * @param	$_query
 	 * @return	mixed
 	 */
-	public function query( &$_query )
+	private function query( &$_query )
 	{
 		//connect to the database server as necessary
 		if ( $this->_link == NULL ) $this->connect();
 		//print the query string for debug	
 		if ( $this->_debug ) echo 'query: ', $_query, '<br />';
 		return mysqli_query( $this->_link, $_query );
+	}
+	
+	/**
+	 * Send the specifield sql string to the server
+	 * 	and return the executed result as it is
+	 *
+	 * @param	$_sql
+	 * @return	Mixed
+	*/
+	public function execute( $_sql )
+	{
+		return $this->query( $_sql );
 	}
 	
 	/**
