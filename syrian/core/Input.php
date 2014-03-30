@@ -72,7 +72,7 @@ class Input
 	{
 		if ( ! isset( $_GET[$_key] ) ) return false;
 		
-		return $_GET[$_key];
+		return intval($_GET[$_key]);
 	}
 	
 	/**
@@ -127,7 +127,7 @@ class Input
 	{
 		if ( ! isset( $_POST[$_key] ) ) return false;
 		
-		return $_POST[$_key];
+		return intval($_POST[$_key]);
 	}
 	
 	/**
@@ -182,7 +182,7 @@ class Input
 	{
 		if ( ! isset( $_COOKIE[$_key] ) ) return false;
 		
-		return $_COOKIE[$_key];
+		return intval($_COOKIE[$_key]);
 	}
 	
 	/**
@@ -264,7 +264,7 @@ class Input
 	{
 		if ( ! isset( $_REQUEST[$_key] ) ) return false;
 		
-		return $_REQUEST[$_key];
+		return intval($_REQUEST[$_key]);
 	}
 	
 	/**
