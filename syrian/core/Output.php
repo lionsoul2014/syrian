@@ -207,7 +207,7 @@ class Output
                 
             if ( $_cond )
             {
-                $_output = gzencode($_output, 9);
+                $_output = gzencode($_output, $this->_gzip_oc);
                 header('Content-Encoding: gzip');  
                 header('Vary: Accept-Encoding');  
                 header('Content-Length: '.strlen($_output));
