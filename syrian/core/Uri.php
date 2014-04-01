@@ -250,6 +250,19 @@ abstract class Uri
     }
     
     /**
+     * get the specifield part of the request url
+     *
+     * @param   $_idx
+     * @return  String
+    */
+    public function getPartById( $idx )
+    {
+        if ( $idx >= 0 && $idx < count($idx->_parts) )
+            return $this->_parts[$idx];
+        return NULL;
+    }
+    
+    /**
      * method to fetch the controll class file
      *  and return a valid instance of the controll class throught
      *  the current request url pattern
