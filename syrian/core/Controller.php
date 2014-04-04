@@ -9,7 +9,7 @@
 
  //-----------------------------------------------------------------
  
-class Controller extends stdClass
+class Controller
 {
 	public   	$uri  	= NULL;			//request uri
     public   	$input  = NULL;			//request input

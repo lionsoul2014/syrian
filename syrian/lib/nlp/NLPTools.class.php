@@ -6,7 +6,7 @@
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
-class NLP
+class NLPTools
 {
 	
 	/**
@@ -20,11 +20,12 @@ class NLP
 	public static function getKeywords( &$_str, $_num )
 	{
 		//1.tokenizer
-		$_splits = rb_split($_str, __RB_COMPLEX_MODE__);
+		$_splits = rb_split($_str, array('mode'=>RB_CMODE));
 		//2.count the term frequency
 		$_ret = array();
-		foreach ( $_splits as $_val )
+		foreach ( $_splits as $item )
 		{
+			$_val = $item['word'];
 			if ( is_numeric($_val) ) continue;
 			if ( ord($_val) > 127 && strlen($_val) == 3 ) continue;
 			if ( isset($_ret[$_val]) ) $_ret[$_val] = $_ret[$_val] + 1;

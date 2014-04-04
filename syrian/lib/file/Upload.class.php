@@ -96,7 +96,7 @@ class Upload
 	private function generate( $_prefix = '' )
 	{
 		$_ret = self::$_letters[$this->_serial++];
-		if ( $this->num > self::$_length - 1 ) $this->num = 0;
+		if ( $this->_serial > self::$_length - 1 ) $this->_serial = 0;
 		if ( $_prefix != '' ) $_ret = $_prefix . $_ret;
 		return md5( uniqid($_ret, true) ) . '.' . $this->_ext;
 	}

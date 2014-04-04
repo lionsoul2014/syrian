@@ -30,6 +30,7 @@ class Loader
         //All the loaded classes.
         static $_loaded = array();
         
+        //$_class = ucfirst($_class);
         $_cls = ($_section == NULL) ? $_class : $_section . '/' . $_class;
         if ( isset($_loaded[$_cls]) ) return;
         
