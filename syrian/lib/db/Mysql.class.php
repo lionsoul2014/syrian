@@ -9,7 +9,7 @@
 class Mysql implements Idb
 {
 	
-	private	$_debug		= FALSE;		/*for debug*/
+	private	$_debug		= false;		/*for debug*/
 	private $_link		= NULL;			/*mysql connect resource*/
 	private $_host		= NULL;			/*connection information*/
 	private $_escape	= true;
