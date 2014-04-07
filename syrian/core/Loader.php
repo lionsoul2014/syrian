@@ -115,13 +115,18 @@ class Loader
             {
                 include $_file;				//include the model class file
                 
-                //mark loaded for the current class
-                $_loaded[$_cls] = true;
-                
+                $o = NULL;
                 $_class = $_model.'Model';
-                if ( class_exists($_class) ) return new $_class();
-                
-                return new $_model();
+                if ( class_exists($_class) ) 
+                {
+                    $o = new $_class();
+                }
+                else $o = new $_model();
+
+                //mark loaded for the current class
+                $_loaded[$_cls] = $o;
+
+                return $o;
             }
         }
         
