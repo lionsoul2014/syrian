@@ -28,6 +28,8 @@ interface Idb
 
  //-------------------------------------------------------------------
 
+defined('SY_DB_DEBUG') or define('SY_DB_DEBUG', false);
+
 class DbFactory
 {
 	private static $_classes = NULL;

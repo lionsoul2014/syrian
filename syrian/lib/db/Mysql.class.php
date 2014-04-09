@@ -9,7 +9,6 @@
 class Mysql implements Idb
 {
 	
-	private	$_debug		= false;		/*for debug*/
 	private $_link		= NULL;			/*mysql connect resource*/
 	private $_host		= NULL;			/*connection information*/
 	private $_escape	= true;
@@ -47,7 +46,7 @@ class Mysql implements Idb
 		//connect to the database server as necessary
 		if ( $this->_link == NULL ) $this->connect();
 		//print the query string for debug	
-		if ( $this->_debug ) echo 'query: ', $_query, '<br />';
+		if ( SY_DB_DEBUG ) echo "query: {$_query} <br/>\n" ;
 		return mysqli_query( $this->_link, $_query );
 	}
 	

@@ -1,24 +1,24 @@
 <?php
 /**
- * data sets paging class . <br />
+ * data sets paging class
  *
  * @author chenxin<chenxin619315@gmail.com>
 */
 
 //-----------------------------------------------------------
 
-define('UI_TOTAL', 1 << 0);
-define('UI_PAGES', 1 << 1);         /*pageno / pages*/
-define('UI_FIRST', 1 << 2);
-define('UI_PREV', 1 << 3);
-define('UI_LEFT', 1 << 4);
-define('UI_QUICK', 1 << 5);
-define('UI_NEXT', 1 << 6);
-define('UI_LAST', 1 << 7);
-define('UI_INPUT', 1 << 8);
-define('UI_INPUT_PAGES', 1 << 9);
-define('UI_SHOP_STYLE', UI_PREV | UI_LEFT | UI_QUICK | UI_NEXT | UI_INPUT | UI_INPUT_PAGES);
-define('UI_DEFAULT_STYLE', UI_TOTAL | UI_PAGES | UI_FIRST | UI_PREV | UI_QUICK | UI_NEXT | UI_LAST);
+defined('UI_TOTAL') or  define('UI_TOTAL',          1 << 0);
+defined('UI_PAGES') or  define('UI_PAGES',          1 << 1);         /*pageno / pages*/
+defined('UI_FIRST') or  define('UI_FIRST',          1 << 2);
+defined('UI_PREV')  or  define('UI_PREV',           1 << 3);
+defined('UI_LEFT')  or  define('UI_LEFT',           1 << 4);
+defined('UI_QUICK') or  define('UI_QUICK',          1 << 5);
+defined('UI_NEXT')  or  define('UI_NEXT',           1 << 6);
+defined('UI_LAST')  or  define('UI_LAST',           1 << 7);
+defined('UI_INPUT') or  define('UI_INPUT',          1 << 8);
+defined('UI_INPUT_PAGES')   or  define('UI_INPUT_PAGES',    1 << 9);
+defined('UI_SHOP_STYLE')    or  define('UI_SHOP_STYLE', UI_PREV | UI_LEFT | UI_QUICK | UI_NEXT | UI_INPUT | UI_INPUT_PAGES);
+defined('UI_DEFAULT_STYLE') or  define('UI_DEFAULT_STYLE', UI_TOTAL | UI_PAGES | UI_FIRST | UI_PREV | UI_QUICK | UI_NEXT | UI_LAST);
 
 class Page
 {
@@ -50,26 +50,16 @@ class Page
     }
     
     /**
-     * create a Page instance .<br />
+     * create a Page instance
      *
      * @param  $_total
      * @param  $_size
      * @param  $_pageno
      * @return Page
     */
-    public function getPage( $_total, $_size, $_pageno )
+    public function create( $_total, $_size, $_pageno )
     {
         return new Page($_total, $_size, $_pageno);
-    }
-    
-    /**
-     * return the start offset . <br />
-     *
-     * @return int
-    */
-    public function invoke()
-    {
-        return ($this->_pageno - 1) * $this->_size;
     }
     
     public function setLang( $_key, $_value )
@@ -80,7 +70,7 @@ class Page
     }
     
     /**
-     * for database query . <br />
+     * for database query
      *
      * @param  $_query
     */
@@ -95,7 +85,7 @@ class Page
     }
     
     /**
-     * show the page handling menu . <br />
+     * show the page handling menu
      * 
      * @param  $_args
      * @param  $_style
