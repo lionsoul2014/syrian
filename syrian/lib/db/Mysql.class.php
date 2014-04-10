@@ -161,8 +161,12 @@ class Mysql implements Idb
 		if ( $_keys !== NULL )
 		{
 			$_query = 'UPDATE ' . $_table . ' SET ' . $_keys . ' WHERE '.$_where;
-			if ( $this->query( $_query ) != FALSE )
-				return mysqli_affected_rows($this->_link);
+			/*
+			 * return the query result directly
+			 * Unlike the delete operation will make the affected rows available
+			 *	TRUE for success and FALSE for failed
+			*/
+			return $this->query( $_query );
 		}
 		
 		return FALSE;
