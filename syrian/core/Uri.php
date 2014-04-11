@@ -66,20 +66,27 @@ abstract class Uri
     {
         //copy
         $this->url      = $_SERVER['REQUEST_URI'];
-        $this->self     = $_SERVER['PHP_SELF'];
-        
+        $this->self     = $_SERVER['REQUEST_URI'];
+        if ( ($args = strpos($this->self, '?') ) !== false )
+        {
+            $this->self = substr($this->self, 0, $args);
+        }
+         
         //normalized the url and make sure it start with /
-        if ( $this->url[0] != '/' )     $this->url = '/' . $this->url;
+        if ( $this->url[0] != '/' )     $this->url  = '/' . $this->url;
         if ( $this->self[0] != '/' )    $this->self = '/' . $this->self;
         
         /*
          * Analysis and initialize the base
         */
-        if ( ($pos = stripos($this->self, '.php')) !== FALSE )
+        $self           = $_SERVER['PHP_SELF'];
+        if ( $self[0] != '/' ) $self = '/' . $self;
+
+        if ( ($pos = stripos($self, '.php')) !== FALSE )
         {
-            while ( $this->self[$pos] != '/' ) $pos--;
+            while ( $self[$pos] != '/' ) $pos--;
              //get the base part, include the '/' mark at $i
-            if ( $pos > 0 ) $this->_base = substr($this->self, 0, $pos + 1);
+            if ( $pos > 0 ) $this->_base = substr($self, 0, $pos + 1);
         }
         
         $this->_rewrite = $_rewrite;

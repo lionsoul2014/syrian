@@ -39,6 +39,13 @@ class Page
         'submit'    => '确定'
     );
 
+    /**
+     * construct method to initialize the class
+     *
+     * @param   $_total
+     * @param   $_size
+     * @param   $_pageno
+    */
     public function __construct( $_total, $_size, $_pageno )
     {
         $this->_total   = $_total;
@@ -70,6 +77,11 @@ class Page
         return $this;
     }
     
+    /**
+     * Get the offset of the data sets
+     *
+     * @return  int
+    */
     public function getOffset()
     {
         return ( $this->_pageno - 1 ) * $this->_size;
@@ -87,7 +99,15 @@ class Page
     public function show($_args = '', $_style = UI_DEFAULT_STYLE,
                         $_name = 'pageno', $_left = 2, $_offset = 2 )
     {
-        $_link  = $_SERVER['PHP_SELF'] . '?';
+        /*
+         yat, get the current request url
+        */
+        $_link  = $_SERVER['REQUEST_URI'];
+        if ( ($args = strpos($_link, '?') ) !== false )
+            $_link  = substr($_link, 0, $args + 1);
+        else $_link .= '?';
+
+        //make the request arguments
         $_forms = NULL;
         if ( $_args != '' )
         {
@@ -104,6 +124,8 @@ class Page
         }
         $_link .= $_name.'=';
         
+        //---------------------------------------------------------------
+
         $_html = '<div class="ui-page-box">';
         if ( ($_style & UI_TOTAL) != 0 )
             $_html .= '<a class="ui-page-total">'.$this->_lang['total'] . $this->_total.'</a>';
@@ -194,6 +216,11 @@ class Page
         return $this->_size;
     }
     
+    /**
+     * return the total pages
+     *
+     * @return  int
+    */
     public function getPages()
     {
         return $this->_pages;
