@@ -27,6 +27,7 @@ class Page
     private $_size;         /*page size*/
     private $_pages;        /*total pages*/
     private $_pageno;
+
     private $_lang = array(
         'total'     => '总记录：',
         'pages'     => '共{pages}页',
@@ -40,11 +41,11 @@ class Page
 
     public function __construct( $_total, $_size, $_pageno )
     {
-        $this->_total = $_total;
-        $this->_size = $_size;
-        $this->_pages = ceil($_total / $_size);
+        $this->_total   = $_total;
+        $this->_size    = $_size;
+        $this->_pages   = ceil($_total / $_size);
         
-        $this->_pageno = intval($_pageno);
+        $this->_pageno  = intval($_pageno);
         if ( $this->_pageno == 0 ) $this->_pageno = 1;
         if ( $this->_pageno > $this->_pages ) $this->_pageno = $this->_pages;
     }
@@ -69,16 +70,6 @@ class Page
         return $this;
     }
     
-    /**
-     * for database query
-     *
-     * @param  $_query
-    */
-    public function limit( &$_query )
-    {
-        $_query .= ' limit '.(($this->_pageno - 1) * $this->_size) . ', ' . $this->_size;
-    }
-    
     public function getOffset()
     {
         return ( $this->_pageno - 1 ) * $this->_size;
@@ -96,7 +87,7 @@ class Page
     public function show($_args = '', $_style = UI_DEFAULT_STYLE,
                         $_name = 'pageno', $_left = 2, $_offset = 2 )
     {
-        $_link = $_SERVER['PHP_SELF'] . '?';
+        $_link  = $_SERVER['PHP_SELF'] . '?';
         $_forms = NULL;
         if ( $_args != '' )
         {
@@ -104,7 +95,8 @@ class Page
             
             $_forms = array();
             $_pair = explode('&', $_args);
-            foreach ( $_pair as $_value ) {
+            foreach ( $_pair as $_value ) 
+            {
                 $_item = explode('=', $_value);
                 if ( count($_item) != 2 ) continue;
                 $_forms[$_item[0]] = $_item[1];

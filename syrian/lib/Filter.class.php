@@ -84,16 +84,29 @@ class Filter
             preg_match('/^[1-6][0-9]{5}[1|2][0-9]{3}(0[1-9]|10|11|12)([0|1|2][0-9]|30|31)[0-9]{3}[0-9A-Z]$/',
                 $_val) == 1);
     }
+
+    private static function sanitizeHtml( &$_val )
+    {
+        //sanitize regex rules
+        $_rules = array(
+            '/<[^>]*?\/>/is',
+            '/<[^>]*?>.*?<\/[^>]*?>/is'
+        );
+        
+        return preg_replace($_rules, '', $_val);
+    }
     
-    private static function santilizeScript( &$_val )
+    private static function sanitizeScript( &$_val )
 	{
 		//clear up the direct script.
 		//clear up the onEvent of html node.
         $_rules = array(
 			'/<script[^>]*?>.*?<\/script\s*>/i',
 			'/<([^>]*?)on[a-zA-Z]+\s*=\s*".*?"([^>]*?)>/i',
-			'/<([^>]*?)on[a-zA-Z]+\s*=\s*\'.*?\'([^>]*?)>/i');
-		$_val = preg_replace($_rules, array('', '<$1$2>'), $_val);
+			'/<([^>]*?)on[a-zA-Z]+\s*=\s*\'.*?\'([^>]*?)>/i'
+        );
+
+		return preg_replace($_rules, array('', '<$1$2>'), $_val);
     }
     
     private static function check( &$_val, &$_model, &$_errno )
@@ -148,9 +161,9 @@ class Filter
         if ( ( $_model[2] & OP_SANITIZE_TRIM ) != 0 )
             $_val = trim($_val);
         if ( ( $_model[2] & OP_SANITIZE_SCRIPT ) != 0 )
-            self::santilizeScript($_val);
+            $_val = self::sanitizeScript($_val);
         if ( ( $_model[2] & OP_SANITIZE_HTML ) != 0 )
-            $_val = htmlspecialchars( $_val );
+            $_val = self::sanitizeHtml($_val);
         if ( ( $_model[2] & OP_SANITIZE_INT ) != 0 )
             $_val = intval( $_val );
         if ( ( $_model[2] & OP_MAGIC_QUOTES ) != 0
