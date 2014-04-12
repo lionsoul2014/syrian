@@ -6,7 +6,7 @@
  * @author chenxin <chenxin619315@gmail.com>
 */
  
- //---------------------------------------------------------
+ //--------------------------------------------------------
  
 class Util
 {
@@ -29,9 +29,15 @@ class Util
 			return TRUE;
 		}
 		
-		return FALSE;	 
+		return FALSE;
 	}
-		
+	
+	/**
+	 * create the given path
+	 *		like the unix command 'mkdir -p'
+	 *
+	 * @param 	$filename
+	*/	
 	public static function makePath( $filename ) 
 	{
 		 $dirArray = array();
@@ -72,6 +78,27 @@ class Util
 		} 
 		
 		return $substr; 
+	}
+
+
+	/**
+	 * common method to get the access internet address
+	 *		of the access client
+	 *
+	 * @param 	int
+	*/
+	public static function getClientIP() 
+	{
+		$ip = ''; 
+		if (getenv('HTTP_CLIENT_IP')) 				$ip = getenv('HTTP_CLIENT_IP'); 
+		//获取客户端用代理服务器访问时的真实ip 地址
+		else if (getenv('HTTP_X_FORWARDED_FOR')) 	$ip = getenv('HTTP_X_FORWARDED_FOR');
+		else if (getenv('HTTP_X_FORWARDED')) 		$ip = getenv('HTTP_X_FORWARDED');
+		else if (getenv('HTTP_FORWARDED_FOR')) 		$ip = getenv('HTTP_FORWARDED_FOR'); 
+		else if (getenv('HTTP_FORWARDED')) 			$ip = getenv('HTTP_FORWARDED');
+		else  										$ip = $_SERVER['REMOTE_ADDR'];
+
+		return $ip;
 	}
 }
 ?>
