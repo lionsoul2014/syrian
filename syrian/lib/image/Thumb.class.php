@@ -40,7 +40,8 @@ class Thumb
 	
 	public function write($_size, $src_path, $dst_path, $_resize = 0)
 	{
-		if ( ! file_exists($src_path) )  return;
+		if ( ! file_exists($src_path) ) return;
+		if ( ! file_exists($dst_path) ) self::createPath($dst_path);
 			
 		//load the args
 		$this->_Load_Args($_size, $_resize);
@@ -182,6 +183,42 @@ class Thumb
 	{
 		if ($this->img_src != NULL) imagedestroy($this->img_src);
 		if ($this->img_dst != NULL) imagedestroy($this->img_dst);
-	}	 
+	}
+
+
+	/**
+	 * check the existence of the upload direcotry, 
+	 * 		if it is not exists create it
+     *
+     * @param 	$path
+	 */
+	public static function createPath( $path )
+	{
+		$dirArray = array();
+		$baseDir = '';
+
+		while ($path != '.' && $path != '..' ) 
+		{
+			if ( file_exists($path) ) 
+			{
+				$baseDir = $path;
+				break;	 
+			}
+
+			$dirArray[]	= basename($path);   //basename part
+			$path 		= dirname($path); 
+		}
+
+		for ( $i = count($dirArray) - 1; $i >= 0; $i-- )
+		{
+			if ( strpos($dirArray[$i], '.') !== FALSE ) 
+			{
+				break;
+			}
+
+			@mkdir( $baseDir . '/' . $dirArray[$i] );
+			$baseDir = $baseDir . '/' .$dirArray[$i];
+		}
+	} 
 }
 ?>
