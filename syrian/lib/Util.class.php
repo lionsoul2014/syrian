@@ -85,9 +85,10 @@ class Util
 	 * common method to get the access internet address
 	 *		of the access client
 	 *
-	 * @param 	int
+	 * @param 	$convert
+	 * @return 	mixed(int or string)
 	*/
-	public static function getClientIP() 
+	public static function getIpAddress( $convert = false ) 
 	{
 		$ip = ''; 
 		if (getenv('HTTP_CLIENT_IP')) 				$ip = getenv('HTTP_CLIENT_IP'); 
@@ -97,6 +98,8 @@ class Util
 		else if (getenv('HTTP_FORWARDED_FOR')) 		$ip = getenv('HTTP_FORWARDED_FOR'); 
 		else if (getenv('HTTP_FORWARDED')) 			$ip = getenv('HTTP_FORWARDED');
 		else  										$ip = $_SERVER['REMOTE_ADDR'];
+
+		if ( $convert ) 	$ip = sprintf("%u", ip2long($ip));
 
 		return $ip;
 	}
