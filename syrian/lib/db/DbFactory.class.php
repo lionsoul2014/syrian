@@ -32,7 +32,11 @@ defined('SY_DB_DEBUG') or define('SY_DB_DEBUG', false);
 
 class DbFactory
 {
-	private static $_classes = NULL;
+	//class load cache pool
+	private static $_classes 	= NULL;
+
+	//instance create cache pool
+	private static $POOL 		= NULL;
 	
 	/**
      * Load and create the instance of a specifield db class
@@ -41,12 +45,27 @@ class DbFactory
      *
      * @param   $_class class key
      * @param   $_args  arguments to initialize the instance
+     * @param 	$cache 	wether to cache the db instance
     */
-	public static function create( $_class, &$_host )
+	public static function create( $_class, &$host, $cache = true )
 	{
-		if ( self::$_classes == NULL ) self::$_classes = array();
-		
-		//Fetch the class
+		if ( self::$_classes == NULL ) 		 self::$_classes = array();
+		if ( $cache && self::$POOL == NULL ) self::$POOL 	 = array();
+
+		/*
+		 * Idb instance cache pool, we will cache the instance, so
+	 	 *	use the cache instance instead when the aim server(port) 
+	 	 *		and database is connect ever this will save a lot resource
+	 	 *	to start a TCP/IP connection...........
+	 	 * 
+	 	 * @added 	2014-04-17
+		*/
+		$key 		= &$host['serial'];
+		if ( $cache && isset(self::$POOL[$key]) ) return self::$POOL[$key];
+
+
+		//-------------------------------------------------------
+		//yat, fetch the class
 		$_class = ucfirst( $_class );
 		if ( ! isset( self::$_classes[$_class] ) )
 		{
@@ -54,7 +73,11 @@ class DbFactory
 			self::$_classes[$_class] = true;
 		}
 		
-		return new $_class($_host);
+		//create a new db instance cache it
+		$instance 	= new $_class($host);
+		if ( $cache ) self::$POOL[$key]	= &$instance;
+
+		return $instance;
 	}
 }
 ?>

@@ -8,16 +8,15 @@
  */
 class Mysql implements Idb
 {
-	
-	private $_link		= NULL;			/*mysql connect resource*/
-	private $_host		= NULL;			/*connection information*/
-	private $_escape	= true;
+	private $_link			= NULL;			//mysql connect resource
+	private $_host			= NULL;			//connection information
+	private $_escape		= true;
 	
 	/*connected to the database server and do some query work to unify the charset*/
 	private function connect()
 	{
-		$this->_link = mysqli_connect($this->_host['host'],
-				$this->_host['user'], $this->_host['pass'], $this->_host['db'], $this->_host['port']);
+		$this->_link = mysqli_connect($this->_host['host'], $this->_host['user'], 
+					$this->_host['pass'], $this->_host['db'], $this->_host['port']);
 		
 		if ( $this->_link == FALSE ) die("Error: cannot connected to the database server.");
 		
@@ -63,7 +62,7 @@ class Mysql implements Idb
 	}
 	
 	/**
-	 * insert the specified array into the database <br />
+	 * insert the specified array into the database
 	 * 
 	 * @param	$_table
 	 * @param	$_array
@@ -93,7 +92,7 @@ class Mysql implements Idb
 	}
 	
 	/**
-	 * delete the specified record . <br />
+	 * delete the specified record
 	 * 
 	 * @param	$_table
 	 * @param	$_where
@@ -110,7 +109,7 @@ class Mysql implements Idb
 	
 	
 	/**
-	 * get a array list from the database . <br />
+	 * get a array list from the database
 	 * 
 	 * @param	$_query
 	 * @param	$_type
@@ -173,7 +172,7 @@ class Mysql implements Idb
 	}
 	
 	/**
-	 * get the specified record . <br />
+	 * get the specified record
 	 *
 	 * @param	$_query
 	 * @return	mixed
@@ -186,7 +185,7 @@ class Mysql implements Idb
 	}
 	
 	/**
-	 * get row number of the specified query . <br />
+	 * get row number of the specified query
 	 * 
 	 * @param	$_query
 	 * @return	int
@@ -200,7 +199,7 @@ class Mysql implements Idb
 	}
 	
 	/**
-	 * count the total records . <br />
+	 * count the total records
 	 *
 	 * @param	$_fields
 	 * @return	int
