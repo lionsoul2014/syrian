@@ -10,28 +10,6 @@
  
 class Util
 {
-	public static function setText( $filename, $text ) 
-	{
-		if ( ($handle = fopen($filename, 'wb') ) != FALSE ) 
-		{
-			if ( flock($handle, LOCK_EX) ) 
-			{
-				if ( ! fwrite($handle, $text) ) 
-				{
-					flock($handle, LOCK_UN);
-					fclose($handle);
-					return FALSE;
-				}
-			}
-			
-			flock($handle, LOCK_UN);
-			fclose($handle);
-			return TRUE;
-		}
-		
-		return FALSE;
-	}
-	
 	/**
 	 * create the given path
 	 *		like the unix command 'mkdir -p'
@@ -102,6 +80,45 @@ class Util
 		if ( $convert ) 	$ip = sprintf("%u", ip2long($ip));
 
 		return $ip;
+	}
+
+	/**
+	 * implode a hash array's specifield key by specifield letter
+	 *
+	 * @param 	$array
+	 * @param 	$key
+	 * @param 	$glue
+	 * @param 	string
+	*/
+	public static function implode(&$array, $key, $glue)
+	{
+		$str = NULL;
+		foreach ( $array as $value ) 
+		{
+			if ( $str == NULL ) $str = $value[$key];
+			else $str .= "{$glue}{$value[$key]}";
+		}
+
+		return $str;
+	}
+
+	/**
+	 * make a hash index for the specifield key of a specifield hash array
+	 *
+	 * @param 	$array
+	 * @param 	$key
+	 * @param 	Array
+	*/
+	public static function makeIndex( &$array, $key )
+	{
+		$index 	= array();
+
+		foreach ( $array as $value ) 
+		{
+			$index["$value[$key]"] 	= true;
+		}
+
+		return $index;
 	}
 }
 ?>
