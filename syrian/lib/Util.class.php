@@ -88,15 +88,35 @@ class Util
 	 * @param 	$array
 	 * @param 	$key
 	 * @param 	$glue
-	 * @param 	string
+	 * @param 	$dup 	remove the dupliate value when it's true
+	 * @return 	string
 	*/
-	public static function implode(&$array, $key, $glue)
+	public static function implode(&$array, $key, $glue, $dup = false)
 	{
-		$str = NULL;
+		$str 	= NULL;
+
+		$idx 	= NULL;
+		if ( $dup ) $idx 	= array();
+
 		foreach ( $array as $value ) 
 		{
-			if ( $str == NULL ) $str = $value[$key];
-			else $str .= "{$glue}{$value[$key]}";
+			if ( $str == NULL ) 
+			{
+				$str = $value[$key];
+				if ( $dup ) $idx["{$value[$key]}"] = true;
+				continue;
+			}
+
+			if ( $dup == false ) 
+				$str .= "{$glue}{$value[$key]}";
+			else 
+			{
+				//remove the duplicate
+				$v 		= $value[$key];
+				if ( isset( $idx["{$v}"] ) ) continue;
+				$str   .= "{$glue}{$v}";
+				$idx["{$v}"] = true;
+			}
 		}
 
 		return $str;
@@ -107,15 +127,22 @@ class Util
 	 *
 	 * @param 	$array
 	 * @param 	$key
+	 * @param 	$quote 		wether to quote its original array value
 	 * @param 	Array
 	*/
-	public static function makeIndex( &$array, $key )
+	public static function makeIndex( &$arr, $key, $quote = false )
 	{
 		$index 	= array();
-
-		foreach ( $array as $value ) 
+		$length = count($arr);
+		for ( $i = 0; $i < $length; $i++ )
 		{
-			$index["$value[$key]"] 	= true;
+			if ( $quote == false )
+			{
+				$index["{$arr[$i][$key]}"] = true;
+				continue;
+			}
+
+			$index["{$arr[$i][$key]}"] = &$arr[$i];
 		}
 
 		return $index;
