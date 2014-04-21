@@ -70,7 +70,7 @@ class Filter
 	
     private static function isCellphone( &$_val )
 	{
-        return (preg_match('/^1[3|5|4|8][0-9]{9}$/', $_str) == 1);
+        return (preg_match('/^1[3|5|4|8][0-9]{9}$/', $_val) == 1);
     }
 	
     private static function isTel( &$_val )
