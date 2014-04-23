@@ -105,7 +105,7 @@ class Thumb
 				{
 					$_dst_size[1] = min($this->_size[1], $h_src);
 					$_dst_size[0] = $_dst_size[1] * $w_src / $h_src;
-					echo $_dst_size[0].', '.$_dst_size[1];	
+					//echo $_dst_size[0].', '.$_dst_size[1];	
 				}
 				$_dst_posi[0] = 0; $_dst_posi[1] = 0;
 				$this->img_dst = imagecreatetruecolor($_dst_size[0], $_dst_size[1]);
