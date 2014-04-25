@@ -10,12 +10,12 @@
 class Thumb
 {
 	
-	private $img_src	= NULL;  	//source image
-	private $img_dst	= NULL;  	//destination image
+	private $img_src			= NULL;  	//source image
+	private $img_dst			= NULL;  	//destination image
 	private $_resize;         		// 1 resize percentage
-	private $_size 		= array();
-	private $_extension = NULL;
-	private static $_instance = NULL;
+	private $_size 				= array();
+	private $_extension 		= NULL;
+	private static $_instance 	= NULL;
 	
 	//true for check the size
 	private $_ = NULL;
@@ -27,6 +27,7 @@ class Thumb
 	{
 		$this->$_ = $_;
 	}
+
 	private function __clone() {}
 	
 	public static function _getInstance($_ = true)
@@ -35,7 +36,8 @@ class Thumb
 		{
 			self::$_instance = new self($_);
 		}
-		return self::$_instance;	
+
+		return self::$_instance;
 	}
 	
 	public function write($_size, $src_path, $dst_path, $_resize = 0)

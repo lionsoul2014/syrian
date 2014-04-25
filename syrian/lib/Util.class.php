@@ -132,6 +132,8 @@ class Util
 	*/
 	public static function makeIndex( &$arr, $key, $quote = false )
 	{
+		if ( $arr == false ) return array();
+		
 		$index 	= array();
 		$length = count($arr);
 		for ( $i = 0; $i < $length; $i++ )
