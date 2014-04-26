@@ -8,7 +8,7 @@
 
  //-------------------------------------------------------
  
-class C_Model extends Model
+class SQLModel extends Model
 {
  
     protected   $_mapping           = false;    //enable the mapping?

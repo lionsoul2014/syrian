@@ -1,16 +1,17 @@
 <?php
-class ArticleModel extends Model
+class ArticleModel extends SQLModel
 {
     public function __construct()
     {
         parent::__construct();
         
         //load and create the database
-        //Loader::import('DbFactory', 'db');
-        
-        //$_host = Loader::config('hosts', 'db');
-        
-        //$this->db = DbFactory::create('Mysql', $_host['main']);
+        $this->db       = $this->getDatabase('Mysql', 'main');
+        $this->tables   = Loader::config('table', 'db');
+
+        //fetch the main table
+        $this->table        = &$this->tables['user'];
+        $this->primary_key  = 'Id';
     }
     
     public function getList($_pageno = 1)
@@ -54,11 +55,6 @@ class ArticleModel extends Model
                 'brief'=>'Celib是使用ANSI C开发的一个扩展类库(c extend library)，包含了一些常用的数据结构和算法的封装，例如：hashmap, 链表，布隆过滤器，bitmap，动态数组，字符串操作API等。可以用于方便你的开发或者拿来学习。'
             )
         );
-    }
-    
-    public function getItem($idx = 0)
-    {
-        return Loader::config('about');
     }
 }
 ?>

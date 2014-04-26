@@ -28,7 +28,10 @@ define('SR_URI_REWRITE',   true);
  * Intiailze the system and fetch the controller of the
  *  current request and then invoke the it#run method to handler the request
 */
-Loader::import('STDUri');
+Loader::import('SQLModel', 'core');
+Loader::import('C_Controller', NULL, false);
+Loader::import('STDUri', 'core');
+
 $URI = new STDUri(SR_URI_REWRITE, SR_LINK_STYLE);
 $URI->parseUrl();
 $_CTRL = $URI->getController('article');

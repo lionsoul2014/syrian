@@ -15,6 +15,6 @@
 <div  id="navi">
     <div id="navi-box">
         <a href="/article/list">开源软件</a>
-        <a href="/article/about">狮子的魂</a>
+        <a href="/article/lionsoul">狮子的魂</a>
     </div>
 </div>

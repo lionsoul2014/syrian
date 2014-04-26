@@ -4,53 +4,55 @@
  * 
  * @author chenxin <chenxin619315@gmail.com>
 */
-class ArticleController extends Controller
+
+ //------------------------------------------------------
+ 
+class ArticleController extends C_Controller
 {	
 	public function __construc( )
 	{
 		parent::__construct();
-		
-		//Better not do any initialize work here
+
+		$this->vc_time 	= -1;
 	}
 	
 	public function run()
 	{
+		parent::run();
+		$this->view->assoc('site', $this->sysconf);
+
 		//Load article model
 		$this->model = Loader::model('Article', 'article');
 		
-		$this->view  = $this->getView();
-		$this->view->assoc('site', Loader::config('site'));
-		
 		//invoke a method to handler the request
-		if ( $this->uri->page == 'about' ) $this->about();
+		if ( strncmp($this->uri->page, 'lionsoul', 8) == 0 ) $this->about();
 		else $this->index();
 	}
 	
 	public function index()
 	{
-		$this->view->assoc('data', $this->model->getList(1));
+		$pageno = $this->input->getInt('paegno');
+		if ( $pageno == false ) $pageno = 1;
+
+		$this->view->assoc('data', $this->model->getList($pageno));
 		
 		//get the executed html content
-		$_content = $this->view->getContent('list.html');
-		
-		$this->output->compress(9);		//set the compress level
-		$this->output->display($_content);
+		$ret 	= $this->view->getContent('list.html');
+		$this->output->compress(9);
+		$this->output->display($ret);
 	}
 	
 	public function about()
 	{
-		$this->view->assoc('about', $this->model->getItem());
-		
 		//get the executed html content
-		$_content = $this->view->getContent('about.html');
+		$ret 	= $this->view->getContent('about.html');
 		
 		$this->output->compress(9);		//set the compress level
-		$this->output->display($_content);
+		$this->output->display($ret);
 	}
 	
 	public function insert()
 	{
-		$this->input->get('id', array(OP_INT, OP_SIZE(2,10), OP_SANTILIZE_SCRIPT));
 		if ( $this->input->post('_act') != FALSE )
 		{
 			$_model = array(
@@ -80,42 +82,6 @@ class ArticleController extends Controller
 			
 			$this->view->assign('errno', $_errno);
 		}
-	}
-	
-	/**
-     * get the View component instance for the current request
-     * 	it is an initialized lib/view/IView instance
-     *
-     * @param	$_timer	template compile cache time
-     * 			(0 for no cace, and -1 for permanent always)
-     * @param	resource	instance of syrian/lib/view/IView
-    */
-	public function getView( $timer = 0 )
-    {
-		Loader::import('ViewFactory', 'view');
-		
-		$_conf = array(
-			'cache_time'	=> $timer,
-			'tpl_dir'		=> SR_VIEWPATH .$this->uri->module.'/',
-			'cache_dir'		=> SR_CACHEPATH.'temp/'.$this->uri->module.'/'
-		);
-		
-		//return the html view
-		return ViewFactory::create('Html', $_conf);
-    }
-	
-	/**
-     * get the Database component instance for the current reques
-     *      it is an initialized syrian/lib/db/Idb instance 
-     *
-     * @param   $idx  - connection index, use for cluster or distributed.
-     * @return  resouce - instance of syrian/lib/db/Idb
-    */
-    public function getDatabase( $idx = 'main' )
-	{
-		Loader::import('Dbfactory', 'db');
-		$_host = Loader::config('hosts', 'db');
-		return Dbfactory::create('mysql', $_host[$idx]);
 	}
 }
 ?>
