@@ -4,10 +4,10 @@
  * 	Offer some useful functions
  * 
  * @author chenxin <chenxin619315@gmail.com>
-*/
- 
- //--------------------------------------------------------
- 
+ */
+
+//--------------------------------------------------------
+
 class Util
 {
 	/**
@@ -15,46 +15,46 @@ class Util
 	 *		like the unix command 'mkdir -p'
 	 *
 	 * @param 	$filename
-	*/	
+	 */	
 	public static function makePath( $filename ) 
 	{
-		 $dirArray = array();
-		 $baseDir = '';
-		 
-		 while ($filename != '.' && $filename != '..') 
-		 {
-			 if ( file_exists($filename) ) 
-			 {
-				 $baseDir = $filename;
-				 break;	 
-			 }
-			 
-			 $dirArray[] 	= basename($filename);   //basename part
-			 $filename 		= dirname($filename); 
-		 }
-		 
-		 for ( $i = count($dirArray) - 1; $i >= 0; $i--) 
-		 {
-			 if ( strpos($dirArray[$i], '.') !== FALSE ) 
-			 {
-				 break;
-			 }
-			 
-			 @mkdir( $baseDir . '/' . $dirArray[$i] );
-			 $baseDir = $baseDir . '/' .$dirArray[$i];
-		 }
-	 }
-		 
+		$dirArray = array();
+		$baseDir = '';
+
+		while ($filename != '.' && $filename != '..') 
+		{
+			if ( file_exists($filename) ) 
+			{
+				$baseDir = $filename;
+				break;	 
+			}
+
+			$dirArray[] 	= basename($filename);   //basename part
+			$filename 		= dirname($filename); 
+		}
+
+		for ( $i = count($dirArray) - 1; $i >= 0; $i--) 
+		{
+			if ( strpos($dirArray[$i], '.') !== FALSE ) 
+			{
+				break;
+			}
+
+			@mkdir( $baseDir . '/' . $dirArray[$i] );
+			$baseDir = $baseDir . '/' .$dirArray[$i];
+		}
+	}
+
 	public static function utf8_substr($str, $limit) 
 	{ 
 		if ( strlen($str) <= $limit ) return $str;
-		
+
 		$substr = ''; 
 		for( $i=0; $i< $limit-3; $i++) 
 		{ 
 			$substr .= ord($str[$i])>127 ? $str[$i].$str[++$i].$str[++$i] : $str[$i]; 
 		} 
-		
+
 		return $substr; 
 	}
 
@@ -65,7 +65,7 @@ class Util
 	 *
 	 * @param 	$convert
 	 * @return 	mixed(int or string)
-	*/
+	 */
 	public static function getIpAddress( $convert = false ) 
 	{
 		$ip = ''; 
@@ -90,13 +90,13 @@ class Util
 	 * @param 	$glue
 	 * @param 	$dup 	remove the dupliate value when it's true
 	 * @return 	string
-	*/
+	 */
 	public static function implode(&$array, $key, $glue, $dup = false)
 	{
 		$str 	= NULL;
 
 		$idx 	= NULL;
-		if ( $dup ) $idx 	= array();
+		if ( $dup )		$idx = array();
 
 		foreach ( $array as $value ) 
 		{
@@ -124,16 +124,17 @@ class Util
 
 	/**
 	 * make a hash index for the specifield key of a specifield hash array
+	 * 	and the late one will rewrite the previous one when face a dupliate key
 	 *
 	 * @param 	$array
 	 * @param 	$key
 	 * @param 	$quote 		wether to quote its original array value
 	 * @param 	Array
-	*/
+	 */
 	public static function makeIndex( &$arr, $key, $quote = false )
 	{
 		if ( $arr == false ) return array();
-		
+
 		$index 	= array();
 		$length = count($arr);
 		for ( $i = 0; $i < $length; $i++ )
@@ -145,6 +146,35 @@ class Util
 			}
 
 			$index["{$arr[$i][$key]}"] = &$arr[$i];
+		}
+
+		return $index;
+	}
+
+	/**
+	 * group the specifield array by specifield field
+	 * 	and take the value of the group key as the key the array of the 
+	 * same items with the some group key value.
+	 *
+	 * @param 	$array
+	 * @param 	$key
+	 * @return 	Array
+	 */
+	public static function groupBy( &$array, $key )
+	{
+		if ( $array == false ) return array();
+
+		$index 		= array();		//returning index array
+		$length 	= count($array);
+		for ( $i = 0; $i < $length; $i++ )
+		{
+			$vkey 	= $array[$i]["{$key}"];
+			if ( ! isset( $index["{$vkey}"] ) )
+			{
+				$index["{$vkey}"] = array();
+			}
+
+			$index["{$vkey}"][]	= &$array[$i];
 		}
 
 		return $index;
