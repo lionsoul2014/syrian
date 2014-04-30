@@ -1,1 +1,3 @@
 /skeleton/cache/
+*.vim
+*.viminfo
