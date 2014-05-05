@@ -94,6 +94,7 @@ class Util
 	public static function implode(&$array, $key, $glue, $dup = false)
 	{
 		$str 	= NULL;
+		if ( $array == false || empty($array) ) return NULL;
 
 		$idx 	= NULL;
 		if ( $dup )		$idx = array();
@@ -178,6 +179,26 @@ class Util
 		}
 
 		return $index;
+	}
+
+	/**
+	 * convert the unix timestamp to seconds ago, hours ago, days ago
+	 * 	month ago or years ago
+	 *
+	 * 	@param 	$timer
+	 */
+	public static function getTimeString( $timer )
+	{
+		$t 		= time() - $timer;
+		if ( $t < 0 ) return date('Y年m月d日', $timer);
+
+		if ( $t < 5 )			return '刚刚';							//just now
+		if ( $t < 60 )			return $t.'秒前';						//under one minuts
+		if ( $t < 3600 )		return floor($t/60).'分钟前';			//under one hour
+		if ( $t < 86400 )		return floor($t/3600).'小时前';			//under one day
+		if ( $t < 2592000 )		return floor($t/86400).'天前';			//under one month
+		if ( $t < 31104000 )	return date('m月d日', $timer);			//under one year
+		return 	date('Y年m月d日', $timer);
 	}
 }
 ?>

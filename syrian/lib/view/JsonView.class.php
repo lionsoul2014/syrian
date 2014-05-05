@@ -72,7 +72,7 @@ class JsonView implements IView
      * @param   $_tpl_file
      * @return  string the executed html text
     */
-	public function getContent( $_output = NULL )
+	public function getContent( $_tpl_file = NULL )
     {
         return json_encode( $this->_data );
     }
