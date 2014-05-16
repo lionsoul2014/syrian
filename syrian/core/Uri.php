@@ -170,7 +170,7 @@ abstract class Uri
      * @return  String
      * @access  private
     */
-    private function makeStyleArgs( &$_args )
+    protected function makeStyleArgs( &$_args )
     {
         //dir style arguments, demo: /nid/tid/pageno
         if ( $this->_style == URI_DIR_STYLE )

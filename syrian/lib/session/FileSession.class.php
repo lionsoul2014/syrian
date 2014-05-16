@@ -1,24 +1,17 @@
 <?php
 /**
- * user level session handler class .
+ * user level session handler class and base on file
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
 class FileSession
 {
 	private $_save_path	= NULL;
-	//private $_sessname = NULL;
 	private $_sessid	= NULL;
     private $_ttl 		= 0;
-	
-	public static function start( $_ttl = 1800 )
-	{
-		new FileSession($_ttl);
-	}
     
-    public function __construct( $_ttl )
+    public function __construct( $conf )
 	{
-        $this->_ttl = $_ttl;
         //set use user level session
         session_module_name('user');
         session_set_save_handler(
