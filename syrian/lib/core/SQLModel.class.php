@@ -154,6 +154,12 @@ class SQLModel extends Model
         return $this->db->insert($this->table, $_data);
     }
 
+	//batch add
+	public function batchAdd( &$_data )
+	{
+		return $this->db->batchInsert($this->table, $_data);
+	}
+
     /**
      * Increase the value of the specifield field of 
      *      the specifiled records in data table $this->table

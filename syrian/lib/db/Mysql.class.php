@@ -90,6 +90,46 @@ class Mysql implements Idb
 		
 		return FALSE;
 	}
+
+	/**
+	 * batch insert a data sets to the specifiel table
+	 *
+	 * @param 	$_table
+	 * @param 	$_array
+	 * @return	mixed
+	 */
+	public function batchInsert($_table, &$_array)
+	{
+		$_fileds = NULL;$vstr = NULL;
+		$_tval = NULL;
+
+		//format the fields
+		foreach ( $_array[0] as $_key => $_val )
+			$_fileds .= ($_fileds==NULL) ? $_key : ',' . $_key;
+		
+		//format the data
+		foreach ( $_array as $record )
+		{
+			$_value	= NULL;
+			foreach ( $record as $_key => $_val )
+			{
+				$_tval = &$_val;
+				if ( ! $this->_escape ) $_tval = addslashes($_val);
+				$_value .= ($_value==NULL) ? '\''.$_tval.'\'' : ',\''.$_tval.'\'';
+			}
+
+			if ( $vstr == NULL) $vstr = "({$_value})";
+			else $vstr .= ",({$_value})";
+		}
+		
+		if ( $_fileds !== NULL )
+		{
+			$_query = 'INSERT INTO ' . $_table . '(' . $_fileds . ') VALUES' . $vstr;
+			if ( $this->query( $_query ) != FALSE ) return mysqli_insert_id( $this->_link );
+		}
+		
+		return FALSE;
+	}
 	
 	/**
 	 * delete the specified record

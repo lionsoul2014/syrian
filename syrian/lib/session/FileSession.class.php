@@ -4,14 +4,29 @@
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
+
+ //----------------------------------------------------------
+
 class FileSession
 {
-	private $_save_path	= NULL;
-	private $_sessid	= NULL;
-    private $_ttl 		= 0;
+	private $_partitions	= 1000;
+	private $_save_path		= NULL;
+    private $_ttl 			= 0;
     
-    public function __construct( $conf )
+	/**
+	 * construct method to initialize the class
+	 *
+	 * @param	$conf
+	 */
+    public function __construct( &$conf )
 	{
+		if ( isset( $conf['save_path'] ) ) 
+			$this->_save_path = $conf['save_path'];
+		if ( isset( $conf['ttl'] ) )
+			$this->_ttl	= $conf['ttl'];
+		if ( isset( $conf['partitions'] ) )
+			$this->_partitions = $conf['partitions'];
+
         //set use user level session
         session_module_name('user');
         session_set_save_handler(
@@ -32,8 +47,8 @@ class FileSession
 	 */
     function open( $_save_path, $_sessname )
 	{
-		$this->_save_path = $_save_path;
-		//$this->_sessname = $_sessname;
+		//use the default _save_path without user define save_path
+		if ( $this->_save_path == NULL ) $this->_save_path = $_save_path;
         return TRUE;
     }
 
@@ -97,5 +112,10 @@ class FileSession
 	{
         return TRUE;
     }
+
+	//------------------------------------------------------------
+	private function bkdr()
+	{
+	}
 }
 ?>

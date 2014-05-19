@@ -16,17 +16,21 @@ define('VERSION', '1.0.0');
 require(BASEPATH . 'core/Loader.php');
 
 //Load the input class manage the input of the controller/
-require(BASEPATH . 'core/Input.php');
+if ( defined('SR_CLI_MODE') )	;
+else require(BASEPATH . 'core/Input.php');
 
 //Load the Uri class offer qucik interface to access the request uri
-require(BASEPATH . 'core/Uri.php');
+if ( defined('SR_CLI_MODE') ) 	;
+else require(BASEPATH . 'core/Uri.php');
 
 //Load the Output class
-require(BASEPATH . 'core/Output.php');
+if ( defined('SR_CLI_MODE') ) 	;
+else require(BASEPATH . 'core/Output.php');
 
 //Load the parent Model class
 require(BASEPATH . 'core/Model.php');
 
 //Load the parent Controller class
-require(BASEPATH . 'core/Controller.php');
+if ( defined('SR_CLI_MODE') )	;
+else require(BASEPATH . 'core/Controller.php');
 ?>
