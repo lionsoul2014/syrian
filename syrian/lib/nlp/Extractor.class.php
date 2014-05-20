@@ -89,6 +89,10 @@ class Extractor
     private     $_steplines     = 6;       //maximum whitespace line for the next text block
     private     $_terminalrules = array('/^\s{0,}正文已结束/', '/^\s(0,)评论/i', '/^\s{0,}tag:/i');
     private     $_continuerules = array('/^\s{0,}相关阅读/', '/^\s{0,}相关专题/', '/^\s{0,}分享到/');
+
+	//mark to quote the analysis block while analysis to find the text
+	//must be an array
+	private		$_blockquote	= NULL;
     
     /**
      * the construct method
@@ -119,6 +123,8 @@ class Extractor
         $this->_html        = NULL;
         $this->_url         = NULL;
         $this->_imgs        = NULL;
+
+		return $this;
     }
     
     /**
@@ -129,6 +135,7 @@ class Extractor
     public function setHtml( $_html )
     {
         $this->_html = $_html;
+		return $this;
     }
     
     /**
@@ -139,6 +146,7 @@ class Extractor
     public function setUrl( $_url )
     {
         $this->_url = $_url;
+		return $this;
     }
     
     //-----------------------------------------------
@@ -231,6 +239,8 @@ class Extractor
         if ( isset($_config['linkrate']) )  $this->_linkRate = $_config['linkrate'];
         //set the maximum space lines
         if ( isset($_config['steplines']) ) $this->_steplines = $_config['steplines'];
+		//set the block quote
+		if ( isset($_config['blockquote'])) $this->_blockquote	= $_config['blockquote'];
     }
     
     /**
@@ -535,7 +545,11 @@ class Extractor
             
             $_rate = self::getLinkRates($_blockstr);
             if ( $_rate > $this->_linkRate ) continue;
-            $_ftext .= $_blockstr . "\n";
+
+			//add the block quotes if was seted
+			if ( $this->_blockquote == NULL ) $_ftext .= $_blockstr . "\n";
+			else $_ftext .= $this->_blockquote[0].$_blockstr.$this->_blockquote[1]."\n";
+
             $_blockstr = NULL;
         }
         
