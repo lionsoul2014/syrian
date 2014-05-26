@@ -6,6 +6,7 @@
 */
 interface ISession
 {
+	public function has( $key );
     public function get( $key );
     public function set( $key, $val );
 }
@@ -13,7 +14,7 @@ interface ISession
  //----------------------------------------------------
 
 /**
- * Session factory - quick way to lanch all kinds of cache with just a key
+ * Session factory - quick way to lanch all kinds of session implements with just a key
  *
  * @author chenxin <chenxin619315@gmail.com>
 */

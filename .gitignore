@@ -1,3 +1,4 @@
 /skeleton/cache/
 *.vim
 *.viminfo
+/session/*
