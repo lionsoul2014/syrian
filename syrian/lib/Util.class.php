@@ -222,5 +222,19 @@ class Util
 		list($msec, $sec) = explode(' ', microtime());	
     	return ((float)$msec + (float)$sec);
 	}
+
+	//get x random letters
+	public static function randomLetters($x)
+	{
+		//random seed
+		static $_letters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		$length = strlen($_letters);
+
+		$STR = '';
+		for ( $i = 0; $i < $x; $i++ )
+			$STR .= $_letters[mt_rand()%$length];
+
+		return $STR;
+	}
 }
 ?>
