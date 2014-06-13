@@ -10,7 +10,7 @@ body {text-align: center;font-size: 12px;}
 .li-title a:hover {text-decoration: underline}
 .li-box {overflow: hidden;zoom:1;padding: 10px 0px;}
 .li-box a {float: left;width: 130px;height: 28px; line-height: 28px;text-align: center;}
-.button-link {text-decoration: none;font-size: 14px;color: #FFF;}
+.button-link {text-decoration: none;font-size: 14px;color: #FFF;border-radius:3px;-moz-border-radius:3px;}
 .lb-index {background-color: #1E4047;margin-right: 25px;}
 .lb-index:hover {background-color: #1A353C;}
 .lb-git {background-color: #2E2E2E;margin-right: 10px;}

@@ -19,14 +19,17 @@ class Net
 	 * @param	$toFile without extension
 	 * @param	$thumb image info
 	 */
-	public function saveRemoteImage($url, $toFile, $thumb=NULL)
+	public function saveRemoteImage($url, $toFile, $thumb=NULL, $conf)
 	{
+		$timeout	= isset($conf['timeout']) ? $conf['timeout'] : 30;
+		$useragent	= isset($conf['useragent']) ? $conf['useragent'] : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.19 (KHTML, like Gecko) Ubuntu/10.10 Chromium/18.0.1025.151 Chrome/18.0.1025.151 Safari/535.19';
+
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_HTTPGET, 1); 
-		curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.19 (KHTML, like Gecko) Ubuntu/10.10 Chromium/18.0.1025.151 Chrome/18.0.1025.151 Safari/535.19");  
+		curl_setopt($ch, CURLOPT_USERAGENT, $useragent);  
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 30 );  
+		curl_setopt($ch, CURLOPT_TIMEOUT, $timeout );
 		curl_setopt($ch, CURLOPT_HEADER, 0);
 
 		//execute the curl to get the response

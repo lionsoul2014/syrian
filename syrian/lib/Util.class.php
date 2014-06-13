@@ -98,6 +98,11 @@ class Util
 		return $ip;
 	}
 
+	//get the real client ip
+	public static function getRealIp($convert = false)
+	{
+	}
+
 	/**
 	 * implode a hash array's specifield key by specifield letter
 	 *
@@ -218,7 +223,8 @@ class Util
 	}
 	
 	//get the current system time (microtime)
-	public static function getMicroTime() {
+	public static function getMicroTime() 
+	{
 		list($msec, $sec) = explode(' ', microtime());	
     	return ((float)$msec + (float)$sec);
 	}
@@ -236,5 +242,6 @@ class Util
 
 		return $STR;
 	}
+
 }
 ?>

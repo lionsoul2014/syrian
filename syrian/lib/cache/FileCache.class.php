@@ -12,7 +12,8 @@ class FileCache implements ICache
     
     public function __construct( $_args )
     {
-        if ( $_args != NULL ) {
+		if ( $_args != NULL ) 
+		{
             if ( isset($_args['cache_dir']) )
                 $this->_cache_dir = $_args['cache_dir'];
             if ( isset($_args['length']) )
