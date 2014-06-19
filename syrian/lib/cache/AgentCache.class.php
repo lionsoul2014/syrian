@@ -11,7 +11,7 @@ class AgentCache
      *
      * @param   $_cache_time (unit second)
     */
-    public static function invoke( $_cache_time = 0 )
+    public static function invoke( $_cache_time = 0, $_strict = false )
     {
         if ( isset( $_SERVER['HTTP_IF_MODIFIED_SINCE'] )
             && strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) + $_cache_time > time() ) {
@@ -20,7 +20,7 @@ class AgentCache
         }
         //send the last modified time
         header('Last-Modified: ' . gmdate('D, d M Y H:i:s', time() + $_cache_time) . ' GMT');
-        header('Cache-Control: max-age=' . $_cache_time);
+		if ( $_strict ) header('Cache-Control: max-age=' . $_cache_time);
         //header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $_cache_time) . ' GMT');
     }
 }
