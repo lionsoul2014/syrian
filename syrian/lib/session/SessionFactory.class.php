@@ -2,13 +2,22 @@
 /**
  * session common interface
  *
+ * R8C - random 8 chars used to strength the session security
+ *
  * @author chenxin<chenxin619315@gmail.com>
 */
 interface ISession
 {
+	public function start();
+	public function setSessionId($_sessid);
+	public function getSessionId();
+
 	public function has( $key );
     public function get( $key );
     public function set( $key, $val );
+
+	public function getR8C();
+	public function setR8C( $r8c );
 }
 
  //----------------------------------------------------

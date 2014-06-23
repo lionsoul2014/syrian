@@ -1,6 +1,9 @@
 <?php
 /**
  * user level session handler class and base on file
+ *	
+ *	R8C security was append after the session_id
+ *		and take the '__' as the dilimiter
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
@@ -12,6 +15,9 @@ class FileSession implements ISession
 	private $_partitions	= 1000;
 	private $_save_path		= NULL;
     private $_ttl 			= 0;
+	private	$_ext			= '.ses';
+	private	$_sessid		= NULL;
+	private $_R8C			= NULL;
 
 	//valud of session_id's hash value
 	private $_hval			= -1;
@@ -29,6 +35,8 @@ class FileSession implements ISession
 			$this->_ttl	= $conf['ttl'];
 		if ( isset( $conf['partitions'] ) )
 			$this->_partitions = $conf['partitions'];
+		if ( isset( $conf['file_ext'] ) )
+			$this->_ext = $conf['file_ext'];
 
         //set use user level session
         session_module_name('user');
@@ -51,10 +59,39 @@ class FileSession implements ISession
 		//and make the cookies last longer than the session, so got a change
 		//to clear the session file itself
 		session_set_cookie_params($this->_ttl + $_more, '/');
-
-		//start the session
-        session_start();
     }
+
+	//start the session
+	public function start()
+	{
+		if ( $this->_sessid != NULL ) 
+		{
+			if ( $this->_R8C == NULL ) $_sessid = $this->_sessid;
+			else $_sessid = $this->_sessid.'---'.$this->_R8C;
+
+			//set the session id
+			session_id($_sessid);
+		}
+
+		session_start();
+	}
+
+	//get the current session id
+	//invoke it after the invoke the start method
+	public function getSessionId()
+	{
+		return $this->_sessid;
+	}
+
+	//set the current session id
+	//only a-z,0-9,A-Z is valid chars for the new session id
+	//invoke it before the invoke of method start
+	public function setSessionId( $_sessid )
+	{
+		//set the session id
+		$this->_sessid = $_sessid;
+		return $this;
+	}
     
 	/**
 	 * It is the first callback function executed when the session
@@ -85,6 +122,16 @@ class FileSession implements ISession
 	*/
     function read( $_sessid )
 	{
+		//check if the R8C is appended
+		if ( ($pos = strpos($_sessid, '---')) !== false )
+		{
+			$this->_R8C = substr($_sessid, $pos+3);
+			$_sessid = substr($_sessid, 0, $pos);
+		}
+		
+		//set the global session id when it is null
+		if ( $this->_sessid == NULL ) $this->_sessid = $_sessid;
+
 		//take the _hval as the partitions number
 		if ( $this->_hval == -1 )
 		{
@@ -92,12 +139,12 @@ class FileSession implements ISession
 		}
 
 		//make the final session file
-		$_file = "{$this->_save_path}/{$this->_hval}/{$_sessid}.ses";
+		$_file = "{$this->_save_path}/{$this->_hval}/{$_sessid}{$this->_ext}";
 
 		//check the existence and the lifetime
 		if ( ! file_exists($_file) ) return '';
 
-		//atime update maybe closed by filesystem
+		//@Note: atime update maybe closed by filesystem
 		$ctime = max(filemtime($_file), fileatime($_file));
 		if ( $ctime + $this->_ttl < time() )
 		{
@@ -119,6 +166,7 @@ class FileSession implements ISession
     function write( $_sessid, $_data )
 	{
 		if ( $_data == NULL || $_data == '' ) return FALSE;
+		$_sessid = $this->_sessid;
 
 		//take the _hval as the partitions number
 		if ( $this->_hval == -1 )
@@ -131,10 +179,11 @@ class FileSession implements ISession
 		if ( ! file_exists($_baseDir) )	@mkdir($_baseDir, 0777);
 
 		//write the data to the final session file
-		if ( @file_put_contents("{$_baseDir}/{$_sessid}.ses", $_data) != FALSE )
+		$_sfile	= "{$_baseDir}/{$_sessid}{$this->_ext}";
+		if ( @file_put_contents($_sfile, $_data) != FALSE )
 		{
 			//chmod the newly created file
-			@chmod("{$_baseDir}/{$_sessid}.ses", 0755);
+			@chmod($_sfile, 0755);
 			return TRUE;
 		}
 
@@ -148,7 +197,7 @@ class FileSession implements ISession
     function destroy( $_sessid )
 	{
 		//delete the session data
-		$_file = "{$this->_save_path}/{$this->_hval}/{$_sessid}.ses";
+		$_file = "{$this->_save_path}/{$this->_hval}/{$this->_sessid}{$this->_ext}";
 		if ( file_exists($_file) ) @unlink($_file);
 
 		//delete the PHPSESSId cookies
@@ -188,6 +237,20 @@ class FileSession implements ISession
 	public function set( $key, $val )
 	{
 		$_SESSION[$key] = &$val;
+		return $this;
+	}
+
+	//get the R8C
+	public function getR8C()
+	{
+		return $this->_R8C;
+	}
+
+	//set the current R8C invoke it before invoke start
+	//@param	$r8c
+	public function setR8C( $r8c )
+	{
+		$this->_R8C	= $r8c;
 		return $this;
 	}
 
