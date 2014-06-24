@@ -6,8 +6,8 @@
 */
 interface ICache
 {
-    public function get( $_baseId, $_factor, $_time );
-    public function set( $_baseId, $_factor, $_content );
+    public function get( $baseId, $_factor, $_time );
+    public function set( $baseId, $_factor, $_content );
 }
 
  //----------------------------------------------------

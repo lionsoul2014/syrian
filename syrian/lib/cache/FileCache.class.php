@@ -7,51 +7,47 @@
 class FileCache implements ICache
 {
 
-    private $_length = 3000;
-    public $_cache_dir = NULL;
+    private $_length 	= 3000;
+    public 	$_cache_dir = NULL;
     
-    public function __construct( $_args )
+    public function __construct( $_args = NULL )
     {
 		if ( $_args != NULL ) 
 		{
-            if ( isset($_args['cache_dir']) )
-                $this->_cache_dir = $_args['cache_dir'];
-            if ( isset($_args['length']) )
-                $this->_length = $_args['length'];
+            if ( isset($_args['cache_dir']) )	$this->_cache_dir = $_args['cache_dir'];
+            if ( isset($_args['length']) )		$this->_length = $_args['length'];
         }
     }
     
     private function getCacheFile($_baseId, $_factor)
     {
         $path = $this->_cache_dir.str_replace('.', '/', $_baseId);
-        if ( $_factor != NULL )
+
+		if ( $_factor == NULL )		$_file = 'default';
+		else
         {
             $path = $path.'/'.floor(($_factor / $this->_length));
-            $_file = ($_factor % $this->_length).'.cache.html';
+            $_file = ($_factor % $this->_length);
         }
-        else
-        {
-            $_file = 'default.cache.html';
-        }
-        return ($path.'/'.$_file);
+
+		//return the cache file path
+        return ($path.'/'.$_file.'.cache.html');
     }
 
     public function get( $_baseId, $_factor, $_time )
     {
         $_cache_file = $this->getCacheFile($_baseId, $_factor);
-        //echo $_cache_file,'<br />';
         
         if ( ! file_exists( $_cache_file ) ) return FALSE;
         if ( $_time < 0 ) return file_get_contents($_cache_file);
         if ( filemtime( $_cache_file ) + $_time < time() ) return FALSE;
         
         return file_get_contents($_cache_file);
-        //return $_cache_file;
     }
     
     public function set( $_baseId, $_factor = NULL, $_content )
     {
-    
+		//get the cache file
         $_cache_file = $this->getCacheFile($_baseId, $_factor);
         
         $path = dirname($_cache_file);
@@ -74,6 +70,7 @@ class FileCache implements ICache
             mkdir($path, 0777);
         }
         
+		//set the cache content
         return file_put_contents($_cache_file, $_content);
     }
 }
