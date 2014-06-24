@@ -105,5 +105,15 @@ class NFileCache
 		//set the cache content
         return file_put_contents($_cache_file, $_content);
     }
+
+	//remove the cache
+	public function remove()
+	{
+		//get the cache file
+        $_cache_file = $this->getCacheFile();
+		if ( ! file_exists($_cache_file) ) return false;
+
+		return @unlink($_cache_file);
+	}
 }
 ?>
