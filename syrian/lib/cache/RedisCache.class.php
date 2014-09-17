@@ -21,5 +21,10 @@ class RedisCache implements ICache
     {
     
     }
+    
+    public function remove( $_baseId, $_factor )
+    {
+    
+    }
 }
 ?>

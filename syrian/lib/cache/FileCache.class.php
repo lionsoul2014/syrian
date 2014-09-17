@@ -73,5 +73,12 @@ class FileCache implements ICache
 		//set the cache content
         return file_put_contents($_cache_file, $_content);
     }
+
+	public function remove($_baseId, $_factor = NULL )
+	{
+        $_cache_file = $this->getCacheFile($_baseId, $_factor);
+		if ( ! file_exists($_cache_file) ) return false;
+		return @unlink($_cache_file);
+	}
 }
 ?>

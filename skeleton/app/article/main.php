@@ -38,7 +38,7 @@ class ArticleController extends C_Controller
 		
 		//get the executed html content
 		$ret 	= $this->view->getContent('list.html');
-		$this->output->compress(9);
+		//$this->output->compress(9);
 		$this->output->display($ret);
 	}
 	
@@ -47,7 +47,7 @@ class ArticleController extends C_Controller
 		//get the executed html content
 		$ret 	= $this->view->getContent('about.html');
 		
-		$this->output->compress(9);		//set the compress level
+		//$this->output->compress(9);		//set the compress level
 		$this->output->display($ret);
 	}
 	

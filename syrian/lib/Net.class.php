@@ -19,7 +19,7 @@ class Net
 	 * @param	$toFile without extension
 	 * @param	$thumb image info
 	 */
-	public function saveRemoteImage($url, $toFile, $thumb=NULL, $conf=array())
+	public static function saveRemoteImage($url, $toFile, $thumb=NULL, $conf=array())
 	{
 		$timeout	= isset($conf['timeout']) ? $conf['timeout'] : 30;
 		$useragent	= isset($conf['useragent']) ? $conf['useragent'] : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.19 (KHTML, like Gecko) Ubuntu/10.10 Chromium/18.0.1025.151 Chrome/18.0.1025.151 Safari/535.19';
