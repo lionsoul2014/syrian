@@ -57,8 +57,8 @@ class NFileCache
 		else
         {
             $path = $path.'/'.floor(($this->_factor / $this->_length));
-            $_file = ($this->_factor % $this->_length);
-			if ( $this->_fname != NULL ) $_file .= ".{$this->_fname}";
+            if ( $this->_fname == null ) $_file = ($this->_factor % $this->_length);
+			else $_file = "{$this->_fname}";
         }
 
 		//return the cache file path
