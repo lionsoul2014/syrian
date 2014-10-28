@@ -10,6 +10,7 @@ class NFileCache
     private $_length 	= 2000;
     public 	$_cache_dir = NULL;
 	public	$_cache_f	= NULL;
+	public	$upt		= false;
 
 	public $_baseKey	= NULL;
 	public $_factor		= NULL;
@@ -27,27 +28,49 @@ class NFileCache
 	//set the baseKey
 	public function baseKey( $_baseKey )
 	{
+		if ( $this->_baseKey == $_baseKey ) 
+		{
+			return $this;
+		}
+
 		$this->_baseKey	= $_baseKey;
+		$this->upt = true;
 		return $this;
 	}
 
 	//set the Factor
 	public function factor( $_factor )
 	{
+		if ( $_factor == $this->_factor )
+		{
+			return $this;
+		}
+
 		$this->_factor	= $_factor;
+		$this->upt = true;
 		return $this;
 	}
 
 	//set the file name
 	public function fname( $_fname )
 	{
+		if ( $_fname == $this->_fname )
+		{
+			return $this;
+		}
+
 		$this->_fname	= $_fname;
+		$this->upt = true;
 		return $this;
 	}
     
     private function getCacheFile()
     {
-		if ( $this->_cache_f != NULL ) return $this->_cache_f;
+		if ( $this->upt == false 
+			&& $this->_cache_f != NULL ) 
+		{
+			return $this->_cache_f;
+		}
 
 		//convert the baseKey to cache path
         $path = $this->_cache_dir.str_replace('.', '/', $this->_baseKey);
