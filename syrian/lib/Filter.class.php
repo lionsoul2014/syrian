@@ -8,27 +8,35 @@
 //-----------------------------------------------------------
 
 //normal data type
-define('OP_NULL', 		1 <<  0);
-define('OP_LATIN', 		1 <<  1);
-define('OP_URL', 		1 <<  2);
-define('OP_EMAIL', 		1 <<  3);
-define('OP_QQ', 		1 <<  4);
-define('OP_DATE', 		1 <<  5);
-define('OP_NUMERIC', 	1 <<  6);
-define('OP_STRING', 	1 <<  7);
-define('OP_ZIP', 		1 <<  8);
-define('OP_CELLPHONE', 	1 <<  9);
-define('OP_TEL', 		1 << 10);
-define('OP_IDENTIRY', 	1 << 11);
+defined('OP_NULL')		or define('OP_NULL', 		1 <<  0);
+defined('OP_LATIN')		or define('OP_LATIN', 		1 <<  1);
+defined('OP_URL')		or define('OP_URL', 		1 <<  2);
+defined('OP_EMAIL')		or define('OP_EMAIL', 		1 <<  3);
+defined('OP_QQ')		or define('OP_QQ',			1 <<  4);
+defined('OP_DATE')		or define('OP_DATE', 		1 <<  5);
+defined('OP_NUMERIC')	or define('OP_NUMERIC', 	1 <<  6);
+defined('OP_STRING')	or define('OP_STRING',		1 <<  7);
+defined('OP_ZIP')		or define('OP_ZIP', 		1 <<  8);
+defined('OP_CELLPHONE') or define('OP_CELLPHONE', 	1 <<  9);
+defined('OP_TEL')		or define('OP_TEL', 		1 << 10);
+defined('OP_IDENTIRY')  or define('OP_IDENTIRY', 	1 << 11);
 
 //santilize type
-define('OP_SANITIZE_TRIM', 		1 << 0);
-define('OP_SANITIZE_SCRIPT', 	1 << 1);
-define('OP_SANITIZE_HTML', 		1 << 2);
-define('OP_MAGIC_QUOTES', 		1 << 3);
-define('OP_SANITIZE_INT', 		1 << 4);
-function OP_LIMIT( $s, $e = -1 ) {return ( $e == -1 ? array(0, $s) : array(0, $s, $e) );}
-function OP_SIZE( $s, $e = -1 ) {return ($e == -1 ? array(1, $s) : array(1, $s, $e));}
+defined('OP_SANITIZE_TRIM')		or define('OP_SANITIZE_TRIM', 		1 << 0);
+defined('OP_SANITIZE_SCRIPT')	or define('OP_SANITIZE_SCRIPT', 	1 << 1);
+defined('OP_SANITIZE_HTML')		or define('OP_SANITIZE_HTML', 		1 << 2);
+defined('OP_MAGIC_QUOTES')		or define('OP_MAGIC_QUOTES', 		1 << 3);
+defined('OP_SANITIZE_INT')		or define('OP_SANITIZE_INT', 		1 << 4);
+
+if ( ! function_exists('OP_LIMIT') )
+{
+	function OP_LIMIT( $s, $e = -1 ) {return ( $e == -1 ? array(0, $s) : array(0, $s, $e) );}
+}
+
+if ( ! function_exists('OP_SIZE') )
+{
+	function OP_SIZE( $s, $e = -1 ) {return ($e == -1 ? array(1, $s) : array(1, $s, $e));}
+}
 
 class Filter
 {
