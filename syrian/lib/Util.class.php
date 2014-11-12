@@ -243,5 +243,80 @@ class Util
 		return $STR;
 	}
 
+	/**
+	 * simple http GET request
+	 *
+	 * @param	string $url
+	 * @return	Mixed(false or the http response body)
+	 */
+	public static function httpGet( $url )
+	{
+		$curl = curl_init();
+		if( stripos($url, 'https://') !==FALSE )
+		{
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+		}
+
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_HEADER, 0);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$ret	= curl_exec($curl);
+		$info	= curl_getinfo($curl);
+		curl_close($curl);
+
+		if( intval( $info["http_code"] ) ==200 )
+		{
+			return $ret;
+		}
+
+		return false;
+	}
+
+	/**
+	 * simple POST post request
+	 * @param	string	$url
+	 * @param	array	$param
+	 * @return	Mixed	false or the http response content
+	 */
+	public static function httpPost( $url, $param )
+	{
+		$curl	= curl_init();
+		if( stripos( $url, 'https://') !== FALSE )
+		{
+			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+		}
+
+		$postfields	= NULL;
+		if ( is_string($param) ) $postfields = $param;
+		else
+		{
+			$args	= array();
+			foreach ( $param as $key => $val)
+			{
+				$args[]	= $key . '=' . urlencode($val);
+			}
+
+			$postfields	= implode('&', $args);
+			unset($args);
+		}
+
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_HEADER, 0);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_POST, true);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, $postfields);
+		$ret	= curl_exec($curl);
+		$info	= curl_getinfo($curl);
+		curl_close($curl);
+
+		if( intval($info['http_code']) == 200 )
+		{
+			return $ret;
+		}
+
+		return false;
+	}
 }
 ?>
