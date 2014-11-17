@@ -60,9 +60,10 @@ class Loader
      * @param	$_config
      * @param	$_section
      * @param   $_inc   True for seach files in syrian/config
+	 * @param	$_key	specifield key
      * @return	mixed(Array, Object, Bool)
      */
-    public static function config( $_config, $_section = NULL, $_inc = false )
+    public static function config( $_config, $_section=NULL, $_inc=false, $key=NULL )
     {
         //make the included file name
         $_dir = (($_inc) ? BASEPATH . '/config/' : SR_CONFPATH);
@@ -76,7 +77,15 @@ class Loader
         {
             if ( file_exists($_file) )
             {
-                return include $_file;
+                //return include $_file;
+                $conf	= include $_file;
+				
+				if ( $key != NULL )
+				{
+					return isset($conf["{$key}"]) ? $conf["{$key}"] : NULL;
+				}
+
+				return $conf;
             }
         }
         
