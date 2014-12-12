@@ -129,7 +129,7 @@ class ElasticSearch
 	{
 		if ( $this->_index == NULL ) return false;
 
-		$json	= do_query("DELETE", NULL, $id);
+		$json	= $this->do_query("DELETE", NULL, $id);
 
 		//{"found":false,"_index":"stream","_type":"main","_id":"1","_version":10}
 
