@@ -133,7 +133,7 @@ class ElasticSearch
 
 		//{"found":false,"_index":"stream","_type":"main","_id":"1","_version":10}
 
-		if ( $josn == false ) return false;
+		if ( $json == false ) return false;
 		return isset($json->found) ? $json->found : false;
 	}
 
