@@ -190,11 +190,11 @@ class Output
         if ( $_output == '' ) $_output = &$this->_final_output;
         
         //Try to send the server heaer
-        if ( count($this->_header) )
+        if ( count($this->_header) > 0 )
         {
             foreach ( $this->_header as $header )
             {
-                @header($header[0].': ', $header[1]);
+                header("$header[0]: $header[1]");
             }
         }
         
