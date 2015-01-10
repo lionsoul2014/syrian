@@ -39,8 +39,18 @@ class Thumb
 
 		return self::$_instance;
 	}
+
+    /**
+     * write image to dest path
+     * 
+     * @param $_size        dimension
+     * @param $_src_path    source path of image file
+     * @param $dst_path     path to write
+     * @param $_resize      resize type
+     * @param $_trans       transparent background
+     * */
 	
-	public function write($_size, $src_path, $dst_path, $_resize = 0)
+	public function write($_size, $src_path, $dst_path, $_resize = 0, $_trans = false)
 	{
 		if ( ! file_exists($src_path) ) return;
 		if ( ! file_exists($dst_path) ) self::createPath($dst_path);
@@ -116,9 +126,14 @@ class Thumb
 		
 		if ( $this->img_dst == NULL ) return;
 		//build a white background for the resource  
-		$bg = imagecolorallocate($this->img_dst, 255, 255, 255);
-		imagefill($this->img_dst, 0, 0, $bg);
-		
+
+        if ($_trans){
+            $bg = imagecolorallocatealpha($this->img_dst, 255, 255, 255, 127);
+            imagefill($this->img_dst, 0, 0, $bg);
+        } else {
+            $bg = imagecolorallocate($this->img_dst, 255, 255, 255);
+            imagefill($this->img_dst, 0, 0, $bg);
+        }
 		/*
 		bool imagecopyresampled ( resource dst_image, resource src_image, 
 		int dst_x, int dst_y, int src_x, int src_y, int dst_w, int dst_h, int src_w, int src_h )
@@ -137,6 +152,12 @@ class Thumb
 				$_out = imagejpeg($this->img_dst, $dst_path, 100);
 				break;
 			case 'PNG':
+                // support transparent background
+                // add by dongyado<dongaydo@gmail.com>
+                if ($_trans){
+                    imagealphablending( $this->img_dst, false  );
+                    imagesavealpha( $this->img_dst, true  );    
+                }
 				$_out = imagepng($this->img_dst, $dst_path);
 				break;
 			case 'WBMP':
