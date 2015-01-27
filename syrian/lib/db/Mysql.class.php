@@ -260,6 +260,7 @@ class Mysql implements Idb
 	public function __destruct()
 	{
 		if ( $this->_link != NULL ) mysqli_close( $this->_link );
+		$this->_link = NULL;
 	}
 }
 ?>
