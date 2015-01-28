@@ -19,7 +19,7 @@ class Net
 	 * @param	$toFile without extension
 	 * @param	$thumb image info
 	 */
-	public static function saveRemoteImage($url, $toFile, $thumb=NULL, $conf=array())
+	public static function saveRemoteImage($url, $toFile, $thumb=NULL, $conf=array(), $noThumbExt=NULL)
 	{
 		$timeout	= isset($conf['timeout']) ? $conf['timeout'] : 30;
 		$useragent	= isset($conf['useragent']) ? $conf['useragent'] : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.19 (KHTML, like Gecko) Ubuntu/10.10 Chromium/18.0.1025.151 Chrome/18.0.1025.151 Safari/535.19';
@@ -55,10 +55,19 @@ class Net
 			//check the extension and save the image
 			$toFile	= "{$toFile}.{$ext}";
 			if ( $ext != NULL && file_put_contents($toFile, $R) != false )
+			{
 				$ret 	= basename($toFile);
+			}
+
+			//define the to thumb
+			$toThumb = true;
+			if ( $noThumbExt != NULL && isset($noThumbExt[$ext]) )
+			{
+				$toThumb = false;
+			}
 
 			//make a thumb image for the downloaded images
-			if ( $ret != false && $thumb != NULL )
+			if ( $toThumb && $ret != false && $thumb != NULL )
 			{
 				Loader::import('Thumb', 'image');
 				Thumb::_getInstance()->write(array($thumb['width'], 
