@@ -72,12 +72,13 @@ class Input
     *
     * @param	$_key
     * @param	$_model
+	* @param	$_default
     * @param	$_errno
     * @return	Mixed(Array, String, Bool)
    */
-	public function get( $_key, $_model = NULL, &$_errno = NULL )
+	public function get( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
 	{
-		if ( ! isset( $_GET[$_key] ) ) return false;
+		if ( ! isset( $_GET[$_key] ) ) return $_default;
 		
 		//apply the model if it is not null
 		if ( $_model != NULL )
@@ -96,11 +97,12 @@ class Input
 	 * Fetch an integer form $_GET global array
 	 *
 	 * @param	$_key
+	 * @param	$_default
 	 * @return	Mixed(Integer or false)
 	*/
-	public function getInt( $_key )
+	public function getInt( $_key, $_default=false )
 	{
-		if ( ! isset( $_GET[$_key] ) ) return false;
+		if ( ! isset( $_GET[$_key] ) ) return $_default;
 		
 		return intval($_GET[$_key]);
 	}
@@ -127,12 +129,13 @@ class Input
 	 *
 	 * @param	$_key
 	 * @param	$_model
+	 * @param	$_default
 	 * @param	$_errno
 	 * @return	Mixed
 	*/
-	public function post( $_key, $_model = NULL, &$_errno = NULL )
+	public function post( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
 	{
-		if ( ! isset($_POST[$_key]) ) return false;
+		if ( ! isset($_POST[$_key]) ) return $_default;
 		
 		//apply the model if it is not null
 		if ( $_model != NULL )
@@ -151,11 +154,12 @@ class Input
 	 * Fetch an integer form $_POST global array
 	 *
 	 * @param	$_POST
+	 * @param	$_default
 	 * @return	Mixed(Integer or false)
 	*/
-	public function postInt( $_key )
+	public function postInt( $_key, $_default=false )
 	{
-		if ( ! isset( $_POST[$_key] ) ) return false;
+		if ( ! isset( $_POST[$_key] ) ) return $_default;
 		
 		return intval($_POST[$_key]);
 	}
@@ -182,12 +186,13 @@ class Input
 	 *
 	 * @param	$_key
 	 * @param	$_model
+	 * @param	$_default
 	 * @param	$_errno
 	 * @return	Mixed
 	*/
-	public function cookie( $_key, $_model = NULL, &$_errno = NULL )
+	public function cookie( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
 	{
-		if ( ! isset($_COOKIE[$_key]) ) return false;
+		if ( ! isset($_COOKIE[$_key]) ) return $_default;
 		
 		//apply the model if it is not null
 		if ( $_model != NULL )
@@ -206,11 +211,12 @@ class Input
 	 * Fetch an integer form $_COOKIE global array
 	 *
 	 * @param	$_key
+	 * @param	$_default
 	 * @return	Mixed(Integer or false)
 	*/
-	public function cookieInt( $_key )
+	public function cookieInt( $_key, $_default=false )
 	{
-		if ( ! isset( $_COOKIE[$_key] ) ) return false;
+		if ( ! isset( $_COOKIE[$_key] ) ) return $_default;
 		
 		return intval($_COOKIE[$_key]);
 	}
@@ -237,12 +243,13 @@ class Input
 	 *
 	 * @param	$_key
 	 * @param	$_model
+	 * @param	$_default
 	 * @param	$_errno
 	 * @return	Mixed
 	*/
-	public function session( $_key, $_model = NULL, &$_errno = NULL )
+	public function session( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
 	{
-		if ( ! isset($_SESSION[$_key]) ) return false;
+		if ( ! isset($_SESSION[$_key]) ) return $_default;
 		
 		//apply the model if it is not null
 		if ( $_model != NULL )
@@ -264,12 +271,13 @@ class Input
 	 *
 	 * @param	$_key
 	 * @param	$_model
+	 * @param	$_default
 	 * @param	$_errno
 	 * @return	Mixed
 	*/
-	public function request( $_key, $_model = NULL, &$_errno = NULL )
+	public function request( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
 	{
-		if ( ! isset($_REQUEST[$_key]) ) return false;
+		if ( ! isset($_REQUEST[$_key]) ) return $_default;
 		
 		//apply the model if it is not null
 		if ( $_model != NULL )
@@ -288,11 +296,12 @@ class Input
 	 * Fetch an integer form $_REQUEST global array
 	 *
 	 * @param	$_key
+	 * @param	$_default
 	 * @return	Mixed(Integer or false)
 	*/
-	public function requestInt( $_key )
+	public function requestInt( $_key, $_default=false )
 	{
-		if ( ! isset( $_REQUEST[$_key] ) ) return false;
+		if ( ! isset( $_REQUEST[$_key] ) ) return $_default;
 		
 		return intval($_REQUEST[$_key]);
 	}
@@ -319,12 +328,13 @@ class Input
 	 *
 	 * @param	$_key
 	 * @param	$_model
+	 * @param	$_default
 	 * @param	$_errno
 	 * @return	Mixed
 	*/
-	public function server( $_key, $_model = NULL, &$_errno = NULL )
+	public function server( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
 	{
-		if ( ! isset($_SERVER[$_key]) ) return false;
+		if ( ! isset($_SERVER[$_key]) ) return $_default;
 		
 		//apply the model if it is not null
 		if ( $_model != NULL )
@@ -346,12 +356,13 @@ class Input
 	 *
 	 * @param	$_key
 	 * @param	$_model
+	 * @param	$_default
 	 * @param	$_errno
 	 * @return	Mixed
 	*/
-	public function env( $_key, $_model = NULL, &$_errno = NULL )
+	public function env( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
 	{
-		if ( ! isset($_ENV[$_key]) ) return false;
+		if ( ! isset($_ENV[$_key]) ) return $_default;
 		
 		//apply the model if it is not null
 		if ( $_model != NULL )
