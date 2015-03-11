@@ -6,7 +6,7 @@
  */
 interface Idb
 {
-	public function execute( $_sql );
+	public function execute( $_sql, $_rows = false );
 	public function insert( $_table, &$_array );
 	public function batchInsert( $_table, &$_array );
 	public function delete( $_table, $_where );

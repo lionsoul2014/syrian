@@ -54,11 +54,13 @@ class Mysql implements Idb
 	 * 	and return the executed result as it is
 	 *
 	 * @param	$_sql
+	 * @param	$_row return the affected rows ? 
 	 * @return	Mixed
 	*/
-	public function execute( $_sql )
+	public function execute( $_sql, $_row = false )
 	{
-		return $this->query( $_sql );
+		$ret	= $this->query( $_sql );
+		return ($_row) ? mysqli_affected_rows($this->_link) : $ret;
 	}
 	
 	/**
@@ -205,7 +207,13 @@ class Mysql implements Idb
 			 * Unlike the delete operation will make the affected rows available
 			 *	TRUE for success and FALSE for failed
 			*/
-			return $this->query( $_query );
+			if ( $this->query( $_query ) == FALSE )
+			{
+				return FALSE;
+			}
+
+			//@Note: change to return the affect rows for the operation at 2015-03-11
+			return mysqli_affected_rows($this->_link);
 		}
 		
 		return FALSE;
