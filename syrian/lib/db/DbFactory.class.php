@@ -15,6 +15,7 @@ interface Idb
 	public function update( $_table, &$_array, $_where, $_quote = true );
 	public function getRowNum( $_query, $_res = false );
 	public function count( $_table, $_field = 0, $_where = NULL, $_group = NULL );
+	public function setDebug( $_debug );
 }
 
  //------------------------------------------------------------------

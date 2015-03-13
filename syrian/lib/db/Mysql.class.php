@@ -10,6 +10,7 @@ class Mysql implements Idb
 {
 	private $_link			= NULL;			//mysql connect resource
 	private $_host			= NULL;			//connection information
+	private $_debug			= false;		//open the debug mode ?
 	private $_escape		= true;
 	
 	/*connected to the database server and do some query work to unify the charset*/
@@ -45,7 +46,7 @@ class Mysql implements Idb
 		//connect to the database server as necessary
 		if ( $this->_link == NULL ) $this->connect();
 		//print the query string for debug	
-		if ( SY_DB_DEBUG ) echo "query: {$_query} <br/>\n" ;
+		if ( $this->_debug ) echo "query: {$_query} <br/>\n" ;
 		return mysqli_query( $this->_link, $_query );
 	}
 	
@@ -263,6 +264,18 @@ class Mysql implements Idb
 		if ( ($_ret = $this->getOneRow($_query, MYSQLI_NUM)) != FALSE )
 			return $_ret[0];
 		return 0;
+	}
+
+	/**
+	 * set the debug status
+	 *
+	 * @param	$_debug
+	 * @return	$this
+	 */
+	public function setDebug($_debug)
+	{
+		$this->_debug = $_debug;
+		return $this;
 	}
 	
 	public function __destruct()

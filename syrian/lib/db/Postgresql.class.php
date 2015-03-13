@@ -9,5 +9,6 @@ class Postgresql implements Idb
 	public function update( $_table, &$_array, $_where ) {}
 	public function getRowNum( $_query, $_res = false ) {}
 	public function count( $_table, $_field, $_where = NULL ) {}
+	public function setDebug( $_debug ) {}
 }
 ?>
