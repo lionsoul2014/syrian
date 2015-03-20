@@ -9,6 +9,7 @@
 */
 
  //----------------------------------------------------------
+//require('SessionFactory.class.php');
 
 class MemcachedSession implements ISession
 {
@@ -28,7 +29,9 @@ class MemcachedSession implements ISession
      *           array('localhost', 11212, 40),
      *       ),
      *       'ttl'           => 60, // time to live
-     *       'hash_strategy' => 'consistant',
+     *       // default: standard,  consistent was recommended,
+     *       // for more infomation,  search 'consistent hash'
+     *       'hash_strategy' => 'consistent',
      *       'prefix'        => 'ses_'
      *   );
      *  
@@ -45,7 +48,7 @@ class MemcachedSession implements ISession
         // hash distribute strategy, 
         // default: Memcached::DISTRIBUTION_MODULA
         if (isset($conf['hash_strategy']) 
-            && $conf['hash_strategy'] == 'consistant') 
+            && $conf['hash_strategy'] == 'consistent') 
         {
             $this->_mem->setOption(Memcached::OPT_DISTRIBUTION,
                      Memcached::DISTRIBUTION_CONSISTENT); 
@@ -238,14 +241,16 @@ $_conf = array(
         array('localhost', 11211, 60),
         array('localhost', 11212, 40),
     ),
-    'ttl'           => 60, // time to live
-    'hash_strategy' => 'consistant',
+    'ttl'           => 240, // time to live
+    'hash_strategy' => 'consistent',
     'prefix'        => 'ses_'
 );
 
 $memS = new MemcachedSession($_conf);
-$memS->write('test',  'testidata2');
-$memS->write('test1', 'this is the test data');
-
+$memS->write('test',  'testdata');
+$memS->write('test1', 'testdata1');
+$memS->write('test2',  'testdata2');
+$memS->write('test3',  'testdata3');
+$memS->write('test1000',  'testdata1000');
 */
 ?>
