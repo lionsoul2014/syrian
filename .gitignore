@@ -2,3 +2,5 @@
 *.vim
 *.viminfo
 /session/*
+*~
+*.swp
