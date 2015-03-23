@@ -14,7 +14,7 @@
 class MemcachedSession implements ISession
 {
     private $_ttl 			= 0;
-	private	$_prefix		= 'ses_';
+	private	$_prefix		= '';
 	private	$_sessid		= NULL;
 	private $_R8C			= NULL;
     private $_mem            = NULL;
@@ -54,7 +54,7 @@ class MemcachedSession implements ISession
                      Memcached::DISTRIBUTION_CONSISTENT); 
         }
 
-        if (isset($conf['prefix']) && $conf['prefix'] != '')
+        if (isset($conf['prefix']))
         {
             $this->_prefix = $conf['prefix'];
         }
@@ -154,6 +154,17 @@ class MemcachedSession implements ISession
 	*/
     function read( $_sessid )
 	{
+
+		//check if the R8C is appended
+		if ( ($pos = strpos($_sessid, '---')) !== false )
+		{
+			$this->_R8C = substr($_sessid, $pos+3);
+			$_sessid = substr($_sessid, 0, $pos);
+		}
+		
+		//set the global session id when it is null
+		if ( $this->_sessid == NULL ) $this->_sessid = $_sessid;
+
         return $this->_mem->get($_sessid);
     }
     
@@ -166,8 +177,10 @@ class MemcachedSession implements ISession
     function write( $_sessid, $_data )
 	{
 		if ( $_data == NULL || $_data == '' ) return FALSE;
+		$_sessid = $this->_sessid;
 
-        return $this->_mem->set($_sessid, $_data, $this->_ttl);
+        $ret = $this->_mem->set($_sessid, $_data, $this->_ttl);
+        return $ret;
     }
     
 	/**
@@ -234,8 +247,8 @@ class MemcachedSession implements ISession
 }
 
 
-// test code
 /*
+// test code
 $_conf = array(
     'servers'       => array(
         array('localhost', 11211, 60),
@@ -252,5 +265,5 @@ $memS->write('test1', 'testdata1');
 $memS->write('test2',  'testdata2');
 $memS->write('test3',  'testdata3');
 $memS->write('test1000',  'testdata1000');
-*/
+ */
 ?>
