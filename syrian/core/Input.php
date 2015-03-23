@@ -98,13 +98,20 @@ class Input
 	 *
 	 * @param	$_key
 	 * @param	$_default
+	 * @param	$allow_nagative
 	 * @return	Mixed(Integer or false)
 	*/
-	public function getInt( $_key, $_default=false )
+	public function getInt( $_key, $_default=false, $allow_nagative=false )
 	{
 		if ( ! isset( $_GET[$_key] ) ) return $_default;
 		
-		return intval($_GET[$_key]);
+		$v	= intval($_GET[$_key]);
+		if ( $v < 0 && $allow_nagative == false )
+		{
+			return false;
+		}
+
+		return $v;
 	}
 	
 	/**
@@ -155,13 +162,20 @@ class Input
 	 *
 	 * @param	$_POST
 	 * @param	$_default
+	 * @param	$allow_nagative
 	 * @return	Mixed(Integer or false)
 	*/
-	public function postInt( $_key, $_default=false )
+	public function postInt( $_key, $_default=false, $allow_nagative=false )
 	{
 		if ( ! isset( $_POST[$_key] ) ) return $_default;
 		
-		return intval($_POST[$_key]);
+		$v	= intval($_POST[$_key]);
+		if ( $v < 0 && $allow_nagative == false )
+		{
+			return false;
+		}
+
+		return $v;
 	}
 	
 	/**
@@ -212,13 +226,20 @@ class Input
 	 *
 	 * @param	$_key
 	 * @param	$_default
+	 * @param	$allow_nagative
 	 * @return	Mixed(Integer or false)
 	*/
-	public function cookieInt( $_key, $_default=false )
+	public function cookieInt( $_key, $_default=false, $allow_nagative=false )
 	{
 		if ( ! isset( $_COOKIE[$_key] ) ) return $_default;
 		
-		return intval($_COOKIE[$_key]);
+		$v	= intval($_COOKIE[$_key]);
+		if ( $v < 0 && $allow_nagative == false )
+		{
+			return false;
+		}
+
+		return $v;
 	}
 	
 	/**
@@ -297,13 +318,20 @@ class Input
 	 *
 	 * @param	$_key
 	 * @param	$_default
+	 * @param	$allow_nagative
 	 * @return	Mixed(Integer or false)
 	*/
-	public function requestInt( $_key, $_default=false )
+	public function requestInt( $_key, $_default=false, $allow_nagative=false )
 	{
 		if ( ! isset( $_REQUEST[$_key] ) ) return $_default;
 		
-		return intval($_REQUEST[$_key]);
+		$v	= intval($_REQUEST[$_key]);
+		if ( $v < 0 && $allow_nagative == false )
+		{
+			return false;
+		}
+
+		return $v;
 	}
 	
 	/**

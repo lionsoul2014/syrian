@@ -251,9 +251,10 @@ class Util
 	 * simple http GET request
 	 *
 	 * @param	string $url
+	 * @param	Array header
 	 * @return	Mixed(false or the http response body)
 	 */
-	public static function httpGet( $url )
+	public static function httpGet( $url, $_header = NULL )
 	{
 		$curl = curl_init();
 		if( stripos($url, 'https://') !==FALSE )
@@ -265,11 +266,15 @@ class Util
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_HEADER, 0);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		if ( $_header != NULL )
+		{
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $_header);
+		}
 		$ret	= curl_exec($curl);
 		$info	= curl_getinfo($curl);
 		curl_close($curl);
 
-		if( intval( $info["http_code"] ) ==200 )
+		if( intval( $info["http_code"] ) == 200 )
 		{
 			return $ret;
 		}
@@ -283,7 +288,7 @@ class Util
 	 * @param	array	$param
 	 * @return	Mixed	false or the http response content
 	 */
-	public static function httpPost( $url, $param )
+	public static function httpPost( $url, $param, $_header = NULL )
 	{
 		$curl	= curl_init();
 		if( stripos( $url, 'https://') !== FALSE )
@@ -311,6 +316,10 @@ class Util
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($curl, CURLOPT_POST, true);
 		curl_setopt($curl, CURLOPT_POSTFIELDS, $postfields);
+		if ( $_header != NULL )
+		{
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $_header);
+		}
 		$ret	= curl_exec($curl);
 		$info	= curl_getinfo($curl);
 		curl_close($curl);
