@@ -166,7 +166,8 @@ class MemcachedSession implements ISession
 		//set the global session id when it is null
 		if ( $this->_sessid == NULL ) $this->_sessid = $_sessid;
 
-        return $this->_mem->get($_sessid);
+        $ret = $this->_mem->get($_sessid);
+        return $ret == FALSE ? '' : $ret;
     }
     
 	/**
