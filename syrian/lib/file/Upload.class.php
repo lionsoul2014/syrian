@@ -63,7 +63,7 @@ class Upload
 	 * @param 	$input		name for file input
 	 * @param 	$overwrite
 	 */
-	public function upload( $input, $serial = 0 )
+	public function upload( $input, $serial = 0, $use_old_name = false )
 	{
 		$_error = $_FILES[''.$input.'']['error'];
 		$_local = $_FILES[''.$input.'']['name'];
@@ -77,7 +77,33 @@ class Upload
 		//---------------------------------------------
 		//check the file size and make the upload path
 		if ( $_size > 0 )	self::createPath($this->_upl_dir);
+
+        foreach($_local as $key => $val){
+            //get the error code number
+			$this->_errno = $_error[$key];	
+			if ( $this->_errno != 0 ) continue;
+
+			//check wether the file is valid
+			$this->isLegal( $_local[$key] );
+			if ( $this->_errno != 0 ) continue;
+
+			if(  ! is_uploaded_file($_temp[$key]) ) continue;
+
+            if ($use_old_name) {
+                $_file = $_local[$key];
+            } else {
+                $_file 	= $this->createName($serial);
+            }
+
+			$opt 	= move_uploaded_file($_temp[$key], $this->_upl_dir.$_file);
+
+			if( $opt == true ) 
+			{
+				$files[$key] = $_file;
+			}
+        }
 		
+        /*
 		for( $i = 0; $i < $_size; $i++ )
 		{
 			//get the error code number
@@ -90,14 +116,19 @@ class Upload
 
 			if(  ! is_uploaded_file($_temp[$i]) ) continue;
 
-			$_file 	= $this->createName($serial);
+            if ($use_old_name) {
+                $_file = $_local[$i];
+            } else {
+                $_file 	= $this->createName($serial);
+            }
 			$opt 	= move_uploaded_file($_temp[$i], $this->_upl_dir.$_file);
 			if( $opt == true ) 
 			{
 				$files[] = $_file;
 			}
 		}
-		
+       
+         */
 		return ( empty($files) ? false : $files );
 	}
 	
