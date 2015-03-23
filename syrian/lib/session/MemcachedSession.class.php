@@ -52,6 +52,7 @@ class MemcachedSession implements ISession
         {
             $this->_mem->setOption(Memcached::OPT_DISTRIBUTION,
                      Memcached::DISTRIBUTION_CONSISTENT); 
+            $this->_mem->setOPtion(Memcached::OPT_LIBKETAMA_COMPATIBLE, TRUE);
         }
 
         if (isset($conf['prefix']))
