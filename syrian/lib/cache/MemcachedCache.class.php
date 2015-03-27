@@ -1,16 +1,19 @@
 <?php
 /**
- * Memcache class implements ICache.
+ * Memcached class 
  *
  *
  * @author MonsterSlayer<slaying.monsters@gmail.com>
  * */
 
-class Memcache implements ICache 
+class MemcachedCache 
 {
     private $_ttl 			= 0;
-	private	$_prefix		= 'cache_';
+	private	$_baseKey		= '';
+	private	$_fname  		= '';
     private $_mem           = NULL;
+    private $_key           = '';
+    private $_prefix        = ''; //prefix used inter the memcached
 
 	/**
 	 * construct method to initialize the class
@@ -66,21 +69,54 @@ class Memcache implements ICache
 
     }
 
+    public function baseKey($bk= NULL){
+        if ($bk != NULL) $this->_baseKey = $bk;
+        $this->_key = $this->_baseKey . $this->_fname;
+        return $this;
+    }
 
-    public function get($_key) 
+
+    public function fname($fname= NULL){
+        if ($fname != NULL) $this->_fname = $fname;
+
+        $this->_key = $this->_baseKey . $this->_fname;
+        return $this;
+    }
+
+
+    public function get() {
+        if ($this->_key == '' ) return false;
+
+        return $this->getByKey($this->_key);
+    }
+
+
+    public function getByKey($_key) 
     {
         return $this->_mem->get($_key);
     }
 
 
-    public function set($_key, $_data, $_ttl = NULL)
+    public function set($_data, $_ttl = NULL) {
+        if ($this->_key == '' 
+            && empty($_data)) return false;
+
+        return $this->setByKey($this->_key, $_data, $_ttl);
+    }
+
+    public function setByKey($_key, $_data, $_ttl = NULL)
     {
         if ($_ttl == NULL) $_ttl = $this->_ttl;
-        return $this->_mem->set($_sessid, $_data, $_ttl);
+        return $this->_mem->set($_key, $_data, $_ttl);
     }
 
 
-    public function remove($key) 
+    public function remove(){
+       return $this->removeByKey($this->_key); 
+    }
+
+
+    public function removeByKey($key) 
     {
         $this->_mem->delete($_key); 
     }
