@@ -8,24 +8,14 @@
  */
 class Mysql implements Idb
 {
-	private $_link			= NULL;			//mysql connect resource
+	private $_link			= NULL;			//mysql connection resource
+	private $rlink			= NULL;			//mysql read connection resource
+	private	$clink			= NULL;			//last used connection resource
+
 	private $_host			= NULL;			//connection information
 	private $_debug			= false;		//open the debug mode ?
+	private	$_srw			= false;		//separate the read/write operation ?
 	private $_escape		= true;
-	
-	/*connected to the database server and do some query work to unify the charset*/
-	private function connect()
-	{
-		$this->_link = mysqli_connect($this->_host['host'], $this->_host['user'], 
-					$this->_host['pass'], $this->_host['db'], $this->_host['port']);
-		
-		if ( $this->_link == FALSE ) die("Error: cannot connected to the database server.");
-		
-		$_charset = $this->_host['charset'];
-		mysqli_query( $this->_link, 'SET NAMES \''.$_charset.'\'');
-		mysqli_query( $this->_link, 'SET CHARACTER_SET_CLIENT = \''.$_charset.'\'');
-		mysqli_query( $this->_link, 'SET CHARACTER_SET_RESULTS = \''.$_charset.'\'');
-	}
 	
 	public function __construct( &$_host )
 	{
@@ -34,20 +24,70 @@ class Mysql implements Idb
 		//check the default magic quotes for GPC data
 		$this->_escape = get_magic_quotes_gpc();
 	}
+
+	/*
+	 * connected to the database server and do some query work to unify the charset
+	 *
+	 * @param	$conf standart syrian database connection conf
+	 * @return	resource database connection resource
+	 */
+	private function connect( &$conf )
+	{
+		$_link = mysqli_connect($conf['host'], $conf['user'], $conf['pass'], $conf['db'], $conf['port']);
+		
+		if ( $_link == FALSE ) die("Error: cannot connected to the database server.");
+		
+		$_charset = $conf['charset'];
+		mysqli_query( $_link, 'SET NAMES \''.$_charset.'\'');
+		mysqli_query( $_link, 'SET CHARACTER_SET_CLIENT = \''.$_charset.'\'');
+		mysqli_query( $_link, 'SET CHARACTER_SET_RESULTS = \''.$_charset.'\'');
+
+		return $_link;
+	}
 	
 	/**
 	 * send an query string to the mysql server	<br />
+	 * @Note: use $_srw argument instead of $this->_srw to make the single
+	 * 	specifield method read/write separate define available ...
 	 * 
-	 * @param	$_query
+	 * @param	$_query	query string
+	 * @param	$opt	could be read or write operation
+	 * @param	$_srw	start the read write separate ?
 	 * @return	mixed
 	 */
-	private function query( &$_query )
+	private function query( &$_query, $opt, $_srw )
 	{
 		//connect to the database server as necessary
-		if ( $this->_link == NULL ) $this->connect();
+		$S	= 0;
+		if ( $_srw == false || $opt == Idb::WRITE_OPT )
+		{
+			if ( $this->_link == NULL )
+			{
+				$conf	= isset($this->_host['__w']) ? $this->_host['__w'] : $this->_host;
+				$this->_link = $this->connect($conf);
+			}
+
+			$this->clink = $this->_link;
+		}
+		else
+		{
+			if ( $this->rlink == NULL )
+			{
+				$conf	= isset($this->_host['__r']) ? $this->slaveStrategy() : $this->_host;
+				$this->rlink = $this->connect($conf);
+			}
+
+			$S	= 1;
+			$this->clink = $this->rlink;
+		}
+
 		//print the query string for debug	
-		if ( $this->_debug ) echo "query: {$_query} <br/>\n" ;
-		return mysqli_query( $this->_link, $_query );
+		if ( $this->_debug ) 
+		{
+			echo ($S===0 ? 'Master' : 'Slave') . "#query: {$_query} <br/>\n" ;
+		}
+
+		return mysqli_query( $this->clink, $_query );
 	}
 	
 	/**
@@ -55,13 +95,14 @@ class Mysql implements Idb
 	 * 	and return the executed result as it is
 	 *
 	 * @param	$_sql
+	 * @param	$opt	operation const
 	 * @param	$_row return the affected rows ? 
 	 * @return	Mixed
 	*/
-	public function execute( $_sql, $_row = false )
+	public function execute( $_sql, $opt, $_row = false )
 	{
-		$ret	= $this->query( $_sql );
-		return ($_row) ? mysqli_affected_rows($this->_link) : $ret;
+		$ret	= $this->query( $_sql, $opt, $this->_srw );
+		return ($_row) ? mysqli_affected_rows($this->clink) : $ret;
 	}
 	
 	/**
@@ -88,7 +129,10 @@ class Mysql implements Idb
 		if ( $_fileds !== NULL )
 		{
 			$_query = 'INSERT INTO ' . $_table . '(' . $_fileds . ') VALUES(' . $_values . ')';
-			if ( $this->query( $_query ) != FALSE ) return mysqli_insert_id( $this->_link );
+			if ( $this->query( $_query, Idb::WRITE_OPT, $this->_srw ) != FALSE )
+			{
+				return mysqli_insert_id( $this->clink );
+			}
 		}
 		
 		return FALSE;
@@ -108,7 +152,9 @@ class Mysql implements Idb
 
 		//format the fields
 		foreach ( $_array[0] as $_key => $_val )
+		{
 			$_fileds .= ($_fileds==NULL) ? $_key : ',' . $_key;
+		}
 		
 		//format the data
 		foreach ( $_array as $record )
@@ -128,7 +174,10 @@ class Mysql implements Idb
 		if ( $_fileds !== NULL )
 		{
 			$_query = 'INSERT INTO ' . $_table . '(' . $_fileds . ') VALUES' . $vstr;
-			if ( $this->query( $_query ) != FALSE ) return mysqli_insert_id( $this->_link );
+			if ( $this->query( $_query, Idb::WRITE_OPT, $this->_srw ) != FALSE )
+			{
+				return mysqli_insert_id( $this->clink );
+			}
 		}
 		
 		return FALSE;
@@ -145,8 +194,10 @@ class Mysql implements Idb
 	{
 		//for safe, where condition must needed
 		$_query = 'DELETE FROM ' . $_table . ' WHERE '.$_where;
-		if ( $this->query( $_query ) != FALSE )
-			return mysqli_affected_rows($this->_link);
+		if ( $this->query( $_query, Idb::WRITE_OPT, $this->_srw ) != FALSE )
+		{
+			return mysqli_affected_rows($this->clink);
+		}
 		return FALSE;
 	}
 	
@@ -160,14 +211,14 @@ class Mysql implements Idb
 	 */
 	public function getList( $_query, $_type = MYSQLI_ASSOC )
 	{
-		$_ret = $this->query( $_query );
+		$_ret = $this->query( $_query, Idb::READ_OPT, $this->_srw );
 		
 		if ( $_ret !== FALSE )
 		{
-			$_result = array();
+			$_rows = array();
 			while ( ( $_row = mysqli_fetch_array( $_ret, $_type ) ) != FALSE )
-				$_result[] = $_row;
-			return $_result;
+				$_rows[] = $_row;
+			return $_rows;
 		}
 		
 		return FALSE;
@@ -208,13 +259,13 @@ class Mysql implements Idb
 			 * Unlike the delete operation will make the affected rows available
 			 *	TRUE for success and FALSE for failed
 			*/
-			if ( $this->query( $_query ) == FALSE )
+			if ( $this->query( $_query, Idb::WRITE_OPT, $this->_srw ) == FALSE )
 			{
 				return FALSE;
 			}
 
 			//@Note: change to return the affect rows for the operation at 2015-03-11
-			return mysqli_affected_rows($this->_link);
+			return mysqli_affected_rows($this->clink);
 		}
 		
 		return FALSE;
@@ -228,7 +279,7 @@ class Mysql implements Idb
 	 */	
 	public function getOneRow( $_query, $_type = MYSQLI_ASSOC )
 	{
-		$_ret = $this->query ( $_query );
+		$_ret = $this->query( $_query, Idb::READ_OPT, $this->_srw );
 		if ( $_ret != FALSE ) return mysqli_fetch_array( $_ret, $_type );
 		return FALSE;
 	}
@@ -242,7 +293,7 @@ class Mysql implements Idb
 	public function getRowNum( $_query, $_res = false )
 	{
 		if ( $_res ) $_ret = $_res;
-		else $_ret = $this->query( $_query );
+		else $_ret = $this->query( $_query, Idb::READ_OPT, $this->_srw );
 		if ($_ret != FALSE) return mysqli_num_rows($_ret);
 		return 0;
 	}
@@ -277,11 +328,37 @@ class Mysql implements Idb
 		$this->_debug = $_debug;
 		return $this;
 	}
+
+	/**
+	 * set the read/write operation separate status
+	 *
+	 * @param	$_srw
+	 * @return	$this
+	 */
+	public function setSepRW( $srw )
+	{
+		$this->_srw = $srw;
+		return $this;
+	}
+
+	/**
+	 * slave server select stratety
+	 * 	rewrite this method to offer a better strategy
+	 *
+	 * @return	Array the server connection info
+	 */
+	public function slaveStrategy()
+	{
+		return $this->_host['__r'][0];
+	}
 	
 	public function __destruct()
 	{
 		if ( $this->_link != NULL ) mysqli_close( $this->_link );
+		if ( $this->rlink != NULL ) mysqli_close( $this->rlink );
+
 		$this->_link = NULL;
+		$this->rlink = NULL;
 	}
 }
 ?>

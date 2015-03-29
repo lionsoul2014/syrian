@@ -6,7 +6,10 @@
  */
 interface Idb
 {
-	public function execute( $_sql, $_rows = false );
+	const WRITE_OPT	= 0;
+	const READ_OPT	= 1;
+
+	public function execute( $_sql, $opt, $_rows = false );
 	public function insert( $_table, &$_array );
 	public function batchInsert( $_table, &$_array );
 	public function delete( $_table, $_where );
@@ -16,6 +19,8 @@ interface Idb
 	public function getRowNum( $_query, $_res = false );
 	public function count( $_table, $_field = 0, $_where = NULL, $_group = NULL );
 	public function setDebug( $_debug );
+	public function setSepRW( $srw );
+	public function slaveStrategy();
 }
 
  //------------------------------------------------------------------
@@ -29,8 +34,6 @@ interface Idb
 */
 
  //-------------------------------------------------------------------
-
-defined('SY_DB_DEBUG') or define('SY_DB_DEBUG', false);
 
 class DbFactory
 {
@@ -58,11 +61,11 @@ class DbFactory
 		 * Idb instance cache pool, we will cache the instance, so
 	 	 *	use the cache instance instead when the aim server(port) 
 	 	 *		and database is connect ever this will save a lot resource
-	 	 *	to start a TCP/IP connection...........
+	 	 *	to start a create duplicated server instance
 	 	 * 
 	 	 * @added 	2014-04-17
 		*/
-		$key 		= &$host['serial'];
+		$key 		= $host['serial'];
 		if ( $cache && isset(self::$POOL[$key]) ) return self::$POOL[$key];
 
 
