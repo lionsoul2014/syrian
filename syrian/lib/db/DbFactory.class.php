@@ -9,15 +9,15 @@ interface Idb
 	const WRITE_OPT	= 0;
 	const READ_OPT	= 1;
 
-	public function execute( $_sql, $opt, $_rows = false );
+	public function execute( $_sql, $opt, $_rows = false, $src = NULL );
 	public function insert( $_table, &$_array );
 	public function batchInsert( $_table, &$_array );
 	public function delete( $_table, $_where );
-	public function getList( $_query, $_type = NULL );
-	public function getOneRow( $_query, $_type = NULL );
+	public function getList( $_query, $_type = NULL, $srw = NULL );
+	public function getOneRow( $_query, $_type = NULL, $srw = NULL );
 	public function update( $_table, &$_array, $_where, $_quote = true );
-	public function getRowNum( $_query, $_res = false );
-	public function count( $_table, $_field = 0, $_where = NULL, $_group = NULL );
+	public function getRowNum( $_query, $_res = false, $srw = NULL );
+	public function count( $_table, $_field = 0, $_where = NULL, $_group = NULL, $srw = NULL );
 	public function setDebug( $_debug );
 	public function setSepRW( $srw );
 	public function slaveStrategy();

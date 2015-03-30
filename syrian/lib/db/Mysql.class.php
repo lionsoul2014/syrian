@@ -4,8 +4,11 @@
  * 		the database operation. <br />
  *
  * @author	chenxin <chenxin619315@gmail.com>
- * @version	1.2
+ * @version	15.03.30
  */
+
+ //----------------------------------------------------------
+
 class Mysql implements Idb
 {
 	private $_link			= NULL;			//mysql connection resource
@@ -97,11 +100,12 @@ class Mysql implements Idb
 	 * @param	$_sql
 	 * @param	$opt	operation const
 	 * @param	$_row return the affected rows ? 
+	 * @param	$srw	separate read/write
 	 * @return	Mixed
 	*/
-	public function execute( $_sql, $opt, $_row = false )
+	public function execute( $_sql, $opt, $_row = false, $srw = NULL )
 	{
-		$ret	= $this->query( $_sql, $opt, $this->_srw );
+		$ret	= $this->query( $_sql, $opt, $srw===NULL ? $this->_srw : $srw );
 		return ($_row) ? mysqli_affected_rows($this->clink) : $ret;
 	}
 	
@@ -207,11 +211,12 @@ class Mysql implements Idb
 	 * 
 	 * @param	$_query
 	 * @param	$_type
+	 * @param	$srw	? separate read/write
 	 * @return	mixed
 	 */
-	public function getList( $_query, $_type = MYSQLI_ASSOC )
+	public function getList( $_query, $_type = MYSQLI_ASSOC, $srw = NULL )
 	{
-		$_ret = $this->query( $_query, Idb::READ_OPT, $this->_srw );
+		$_ret = $this->query( $_query, Idb::READ_OPT, $srw===NULL ? $this->_srw : $srw );
 		
 		if ( $_ret !== FALSE )
 		{
@@ -275,11 +280,13 @@ class Mysql implements Idb
 	 * get the specified record
 	 *
 	 * @param	$_query
+	 * @param	$_type
+	 * @param	$srw	separate read/write
 	 * @return	mixed
 	 */	
-	public function getOneRow( $_query, $_type = MYSQLI_ASSOC )
+	public function getOneRow( $_query, $_type = MYSQLI_ASSOC, $srw = NULL )
 	{
-		$_ret = $this->query( $_query, Idb::READ_OPT, $this->_srw );
+		$_ret = $this->query( $_query, Idb::READ_OPT, $srw===NULL ? $this->_srw : $srw );
 		if ( $_ret != FALSE ) return mysqli_fetch_array( $_ret, $_type );
 		return FALSE;
 	}
@@ -288,12 +295,14 @@ class Mysql implements Idb
 	 * get row number of the specified query
 	 * 
 	 * @param	$_query
+	 * @param	$_res
+	 * @param	$srw	separate read/write
 	 * @return	int
 	 */
-	public function getRowNum( $_query, $_res = false )
+	public function getRowNum( $_query, $_res = false, $srw = NULL )
 	{
 		if ( $_res ) $_ret = $_res;
-		else $_ret = $this->query( $_query, Idb::READ_OPT, $this->_srw );
+		else $_ret = $this->query( $_query, Idb::READ_OPT, $srw===NULL ? $this->_srw : $srw );
 		if ($_ret != FALSE) return mysqli_num_rows($_ret);
 		return 0;
 	}
@@ -305,14 +314,15 @@ class Mysql implements Idb
 	 * @param	$_fields
 	 * @param	$_where
 	 * @param	$_group
+	 * @param	$srw	separate read/write
 	 * @return	int
 	*/
-	public function count( $_table, $_field = 0, $_where = NULL, $_group = NULL )
+	public function count( $_table, $_field = 0, $_where = NULL, $_group = NULL, $srw = NULL )
 	{
 		$_query = 'SELECT count(' . $_field . ') FROM ' . $_table;
 		if ( $_where != NULL ) $_query .= ' WHERE ' . $_where;
 		if ( $_group != NULL ) $_query .= ' GROUP BY '. $_group;
-		if ( ($_ret = $this->getOneRow($_query, MYSQLI_NUM)) != FALSE )
+		if ( ($_ret = $this->getOneRow($_query, MYSQLI_NUM, $srw)) != FALSE )
 			return $_ret[0];
 		return 0;
 	}
