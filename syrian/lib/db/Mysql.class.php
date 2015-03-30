@@ -133,7 +133,7 @@ class Mysql implements Idb
 		if ( $_fileds !== NULL )
 		{
 			$_query = 'INSERT INTO ' . $_table . '(' . $_fileds . ') VALUES(' . $_values . ')';
-			if ( $this->query( $_query, Idb::WRITE_OPT, $this->_srw ) != FALSE )
+			if ( $this->query( $_query, Idb::WRITE_OPT, false ) != FALSE )
 			{
 				return mysqli_insert_id( $this->clink );
 			}
@@ -178,7 +178,7 @@ class Mysql implements Idb
 		if ( $_fileds !== NULL )
 		{
 			$_query = 'INSERT INTO ' . $_table . '(' . $_fileds . ') VALUES' . $vstr;
-			if ( $this->query( $_query, Idb::WRITE_OPT, $this->_srw ) != FALSE )
+			if ( $this->query( $_query, Idb::WRITE_OPT, false ) != FALSE )
 			{
 				return mysqli_insert_id( $this->clink );
 			}
@@ -198,7 +198,7 @@ class Mysql implements Idb
 	{
 		//for safe, where condition must needed
 		$_query = 'DELETE FROM ' . $_table . ' WHERE '.$_where;
-		if ( $this->query( $_query, Idb::WRITE_OPT, $this->_srw ) != FALSE )
+		if ( $this->query( $_query, Idb::WRITE_OPT, false ) != FALSE )
 		{
 			return mysqli_affected_rows($this->clink);
 		}
@@ -264,7 +264,7 @@ class Mysql implements Idb
 			 * Unlike the delete operation will make the affected rows available
 			 *	TRUE for success and FALSE for failed
 			*/
-			if ( $this->query( $_query, Idb::WRITE_OPT, $this->_srw ) == FALSE )
+			if ( $this->query( $_query, Idb::WRITE_OPT, false ) == FALSE )
 			{
 				return FALSE;
 			}
