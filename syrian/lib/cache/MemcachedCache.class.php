@@ -14,6 +14,18 @@ class MemcachedCache implements ICache
     private $_mem           = NULL;
     private $_key           = '';
     private $_prefix        = ''; //prefix used inter the memcached
+    private $_hash          = Memcached::HASH_DEFAULT;
+    public static $_hash_opts     = array(
+        'default'   => Memcached::HASH_DEFAULT,
+        'md5'       => Memcached::HASH_MD5,
+        'crc'       => Memcached::HASH_CRC,
+        'fnv1_64'   => Memcached::HASH_FNV1_64,
+        'fnv1a_64'  => Memcached::HASH_FNV1A_64,
+        'fnv1_32'   => Memcached::HASH_FNV1_32,
+        'fnv1a_32'  => Memcached::HASH_FNV1A_32,
+        'hsieh'     => Memcached::HASH_HSIEH,
+        'murmur'    => Memcached::HASH_MURMUR
+    );
 
 	/**
 	 * construct method to initialize the class
@@ -28,6 +40,7 @@ class MemcachedCache implements ICache
      *       // default: standard,  consistent was recommended,
      *       // for more infomation,  search 'consistent hash'
      *       'hash_strategy' => 'consistent',
+     *       'hash'          => 'default', // hash function,  empty for default
      *       'prefix'        => 'ses_'
      *   );
      *  
@@ -48,7 +61,17 @@ class MemcachedCache implements ICache
         {
             $this->_mem->setOption(Memcached::OPT_DISTRIBUTION,
                      Memcached::DISTRIBUTION_CONSISTENT); 
+            $this->_mem->setOPtion(Memcached::OPT_LIBKETAMA_COMPATIBLE, TRUE);
         }
+
+        if (isset($conf['hash']) 
+            && $conf['hash'] != 'default' 
+            && array_keys(self::$_hash_opts, $conf['hash']))
+        {
+            $this->_hash = self::$_hash_opts[$conf['hash']];
+            $this->_mem->setOption(Memcached::OPT_HASH, $this->_hash); 
+        }
+
 
         if (isset($conf['prefix']) && $conf['prefix'] != '')
         {
