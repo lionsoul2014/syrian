@@ -6,7 +6,7 @@
  * @author MonsterSlayer<slaying.monsters@gmail.com>
  * */
 
-class MemcachedCache 
+class MemcachedCache implements ICache
 {
     private $_ttl 			= 0;
 	private	$_baseKey		= '';
@@ -53,9 +53,8 @@ class MemcachedCache
         if (isset($conf['prefix']) && $conf['prefix'] != '')
         {
             $this->_prefix = $conf['prefix'];
+            $this->_mem->setOption(Memcached::OPT_PREFIX_KEY, $this->_prefix);
         }
-
-        $this->_mem->setOption(Memcached::OPT_PREFIX_KEY, $this->_prefix);
 
 
         if (empty($this->_mem->getServerList())){
@@ -84,7 +83,8 @@ class MemcachedCache
     }
 
 
-    public function get() {
+    // we don't need the $_time param, just for implements ICache
+    public function get($_time) {
         if ($this->_key == '' ) return false;
 
         return $this->getByKey($this->_key);
@@ -119,6 +119,16 @@ class MemcachedCache
     public function removeByKey($key) 
     {
         $this->_mem->delete($_key); 
+    }
+
+
+    /**
+     * implements functions
+     *
+     * */
+    public function factor($_factor) 
+    {
+        return true;
     }
 }
 ?>

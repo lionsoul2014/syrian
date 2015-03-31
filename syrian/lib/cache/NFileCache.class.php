@@ -4,7 +4,7 @@
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
-class NFileCache
+class NFileCache implements ICache
 {
 
     private $_length 	= 2000;

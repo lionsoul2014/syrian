@@ -3,12 +3,20 @@
  * Dynamic content cache common interface
  *
  * @author chenxin<chenxin619315@gmail.com>
+ * @author dongyado<dongyado@gmail.com>
 */
 interface ICache
 {
-    public function get( $baseId, $_factor, $_time );
-    public function set( $baseId, $_factor, $_content );
-    public function remove( $baseId, $_factor );
+   // public function get( $baseId, $_factor, $_time );
+   // public function set( $baseId, $_factor, $_content );
+   // public function remove( $baseId, $_factor );
+    
+   public function baseKey ( $_baseKey );
+   public function factor  ( $_factor );
+   public function fname   ( $_fname ); 
+   public function get     ( $_time );
+   public function set     ( $_content);
+   public function remove  ();
 }
 
  //----------------------------------------------------
