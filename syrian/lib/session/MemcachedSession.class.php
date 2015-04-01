@@ -17,6 +17,7 @@ class MemcachedSession implements ISession
 	private	$_prefix		= '';
 	private	$_sessid		= NULL;
 	private $_R8C			= NULL;
+    private $_session_name  = NULL;
     private $_mem            = NULL;
     private $_hash          = Memcached::HASH_DEFAULT;
     public static $_hash_opts     = array(
@@ -113,6 +114,10 @@ class MemcachedSession implements ISession
 			$_more = $conf['more_for_cookie'];
 		}
 
+        if (isset($conf['session_name']) && $conf['session_name']){
+            $this->_session_name = $conf['session_name']; 
+            session_name($this->_session_name);
+        }
 		//set the session id cookies lifetime
 		//and make the cookies last longer than the session, so got a change
 		//to clear the session file itself

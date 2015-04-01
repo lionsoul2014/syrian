@@ -18,6 +18,7 @@ class FileSession implements ISession
 	private	$_ext			= '.ses';
 	private	$_sessid		= NULL;
 	private $_R8C			= NULL;
+    private $_session_name  = NULL;
 
 	//valud of session_id's hash value
 	private $_hval			= -1;
@@ -54,7 +55,12 @@ class FileSession implements ISession
 		{
 			$_more = $conf['more_for_cookie'];
 		}
+        
 
+        if (isset($conf['session_name']) && $conf['session_name']){
+            $this->_session_name = $conf['session_name']; 
+            session_name($this->_session_name);
+        }
 		//set the session id cookies lifetime
 		//and make the cookies last longer than the session, so got a change
 		//to clear the session file itself
@@ -62,6 +68,8 @@ class FileSession implements ISession
             session_set_cookie_params($this->_ttl + $_more, '/', $conf['cookie_domain']);
         else 
             session_set_cookie_params($this->_ttl + $_more, '/');
+
+        
     }
 
 	//start the session
