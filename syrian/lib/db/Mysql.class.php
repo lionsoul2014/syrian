@@ -34,7 +34,7 @@ class Mysql implements Idb
 	 * @param	$conf standart syrian database connection conf
 	 * @return	resource database connection resource
 	 */
-	private function connect( &$conf )
+	private static function connect( &$conf )
 	{
 		$_link = mysqli_connect($conf['host'], $conf['user'], $conf['pass'], $conf['db'], $conf['port']);
 		
@@ -64,24 +64,30 @@ class Mysql implements Idb
 		$S	= 0;
 		if ( $_srw == false || $opt == Idb::WRITE_OPT )
 		{
-			if ( $this->_link == NULL )
-			{
+			if ( $this->_link == NULL ) {
 				$conf	= isset($this->_host['__w']) ? $this->_host['__w'] : $this->_host;
-				$this->_link = $this->connect($conf);
+				$this->_link = self::connect($conf);
 			}
-
 			$this->clink = $this->_link;
 		}
 		else
 		{
-			if ( $this->rlink == NULL )
-			{
-				$conf	= isset($this->_host['__r']) ? $this->slaveStrategy() : $this->_host;
-				$this->rlink = $this->connect($conf);
+			//@Note: added at 2015-04-01
+			//	for model separateed read and write but without
+			//	a standart read and write db connection configuration ...
+			if ( ! isset($this->_host['__r']) ) {
+				if ( $this->_link == NULL ) {
+					$this->_link = self::connect($this->_host);
+				}
+				$this->clink = $this->_link;
+			} else {
+				if ( $this->rlink == NULL ) {
+					$this->rlink = self::connect($this->_host['__r']);
+				}
+				$this->clink = $this->rlink;
 			}
 
 			$S	= 1;
-			$this->clink = $this->rlink;
 		}
 
 		//print the query string for debug	
