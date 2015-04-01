@@ -82,7 +82,7 @@ class Mysql implements Idb
 				$this->clink = $this->_link;
 			} else {
 				if ( $this->rlink == NULL ) {
-					$this->rlink = self::connect($this->_host['__r']);
+					$this->rlink = self::connect($this->slaveStrategy());
 				}
 				$this->clink = $this->rlink;
 			}
