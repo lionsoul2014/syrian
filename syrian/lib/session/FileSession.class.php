@@ -58,7 +58,10 @@ class FileSession implements ISession
 		//set the session id cookies lifetime
 		//and make the cookies last longer than the session, so got a change
 		//to clear the session file itself
-		session_set_cookie_params($this->_ttl + $_more, '/');
+        if (isset($conf['cookie_domain']) && $conf['cookie_domain'])
+            session_set_cookie_params($this->_ttl + $_more, '/', $conf['cookie_domain']);
+        else 
+            session_set_cookie_params($this->_ttl + $_more, '/');
     }
 
 	//start the session
