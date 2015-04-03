@@ -279,25 +279,4 @@ class MemcachedSession implements ISession
 		return $this;
 	}
 }
-
-
-/*
-// test code
-$_conf = array(
-    'servers'       => array(
-        array('localhost', 11211, 60),
-        array('localhost', 11212, 40),
-    ),
-    'ttl'           => 240, // time to live
-    'hash_strategy' => 'consistent',
-    'prefix'        => 'ses_'
-);
-
-$memS = new MemcachedSession($_conf);
-$memS->write('test',  'testdata');
-$memS->write('test1', 'testdata1');
-$memS->write('test2',  'testdata2');
-$memS->write('test3',  'testdata3');
-$memS->write('test1000',  'testdata1000');
- */
 ?>
