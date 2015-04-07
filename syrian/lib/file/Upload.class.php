@@ -12,14 +12,19 @@
  
 class Upload
 {
-	
+	const MICROTIME_ALG		= 0;
+	const UNIQID_ALG		= 1;
+	const UNIQID_MD5_ALG	= 2;
+	const DEFAULT_ALG		= 3;
+
+	private			$algorithm	= Upload::DEFAULT_ALG;
 	private			$_upl_dir;
 	private 		$_refu_ext;
 	private 		$_acce_ext;
 	
 	private 		$_errno 	= 0;
-	public static 	$_letters 	= '0123456789';
-	private static 	$_length 	= 10;
+	public static 	$_letters 	= '0ab1c2de3f4ghi5jk6lmn7opq8rstuv9wxyz';
+	private static 	$_length 	= 36;
 	private 		$_ext;
 	
 	/**
@@ -56,18 +61,34 @@ class Upload
 	{
 		$this->_acce_ext = &$_acce_ext;
 	}
+
+	/**
+	 * set file name generator algorithm
+	 *
+	 * @param alg
+	 */
+	public function setAlgorithm($alg)
+	{
+		$this->algorithm = $alg;
+		return $this;
+	}
 	
 	/**
 	 * handling the files from the speicified file input
 	 * 
 	 * @param 	$input		name for file input
-	 * @param 	$overwrite
+	 * @param	$prefix		name prefix
 	 */
-	public function upload( $input, $serial = 0, $use_old_name = false )
+	public function upload( $input, $prefix="")
 	{
-		$_error = $_FILES[''.$input.'']['error'];
-		$_local = $_FILES[''.$input.'']['name'];
-		$_temp  = $_FILES[''.$input.'']['tmp_name'];
+		if ( ! isset($_FILES[$input]) ) 
+		{
+			return false;
+		}
+
+		$_error = $_FILES[$input]['error'];
+		$_local = $_FILES[$input]['name'];
+		$_temp  = $_FILES[$input]['tmp_name'];
 		//$size = $_FILES[''.$input.'']['size'];
 		//$type = $_FILES[''.$input.'']['type'];
 
@@ -78,7 +99,8 @@ class Upload
 		//check the file size and make the upload path
 		if ( $_size > 0 )	self::createPath($this->_upl_dir);
 
-        foreach($_local as $key => $val){
+        foreach( $_local as $key => $val )
+		{
             //get the error code number
 			$this->_errno = $_error[$key];	
 			if ( $this->_errno != 0 ) continue;
@@ -87,76 +109,47 @@ class Upload
 			$this->isLegal( $_local[$key] );
 			if ( $this->_errno != 0 ) continue;
 
-			if(  ! is_uploaded_file($_temp[$key]) ) continue;
-
-            if ($use_old_name) {
-                $_file = $_local[$key];
-            } else {
-                $_file 	= $this->createName($serial);
-            }
-
+			if (  ! is_uploaded_file($_temp[$key]) ) continue;
+            $_file 	= $this->createName($_local[$key], $prefix);
 			$opt 	= move_uploaded_file($_temp[$key], $this->_upl_dir.$_file);
-
 			if( $opt == true ) 
 			{
 				$files[$key] = $_file;
 			}
         }
 		
-        /*
-		for( $i = 0; $i < $_size; $i++ )
-		{
-			//get the error code number
-			$this->_errno = $_error[$i];	
-			if ( $this->_errno != 0 ) return false;
-
-			//check wether the file is valid
-			$this->isLegal( $_local[$i] );
-			if ( $this->_errno != 0 ) return false;
-
-			if(  ! is_uploaded_file($_temp[$i]) ) continue;
-
-            if ($use_old_name) {
-                $_file = $_local[$i];
-            } else {
-                $_file 	= $this->createName($serial);
-            }
-			$opt 	= move_uploaded_file($_temp[$i], $this->_upl_dir.$_file);
-			if( $opt == true ) 
-			{
-				$files[] = $_file;
-			}
-		}
-       
-         */
 		return ( empty($files) ? false : $files );
 	}
 	
 	/**
 	 * create 16bytes unique name for the  the new upload file
 	 *
-	 * @param 	$serial
+	 * @param	$oname
+	 * @param 	$prefix
 	 * @return 	string
 	 */
-	private function createName( $serial = 0 )
+	private function createName( $oname, $prefix )
 	{
-		$seed 	= self::$_letters[mt_rand()%self::$_length];
-		if ( $serial == 0 )
+		$fname	= $oname;
+		switch ( $this->algorithm )
 		{
+		case Upload::MICROTIME_ALG:
 			$parts 	= explode(' ', microtime());
-			$seed 	.= $parts[1].substr($parts[0], 2, 2);
+			$fname	= $parts[1].substr($parts[0], 2, 2);
+			break;
+		case Upload::UNIQID_ALG:
+			$fname	= uniqid($prefix, true);
+			break;
+		case Upload::UNIQID_MD5_ALG:
+			$fname	= md5(uniqid($prefix, true));
+			break;
+		case Upload::DEFAULT_ALG:
+			$prefix = $prefix.self::$_letters[mt_rand()%self::$_length];
+			$fname	= md5(uniqid($prefix, true));
+			break;
 		}
-		else
-		{
-			$seedstr = time().'000';
-			$serial  = "$serial";
-			$seed 	.= $serial;
 
-			$space 	 = 12 - strlen($serial);
-			$seed   .= substr($seedstr, 0, $space);
-		}
-
-		return $seed.".{$this->_ext}";
+		return "{$fname}.{$this->_ext}";
 	}
 	
 	/**
