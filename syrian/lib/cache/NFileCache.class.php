@@ -100,7 +100,7 @@ class NFileCache implements ICache
         return file_get_contents($_cache_file);
     }
     
-    public function set( $_content )
+    public function set( $_content, $_ttl = NULL )
     {
 		//get the cache file
         $_cache_file = $this->getCacheFile();

@@ -16,7 +16,7 @@ class RedisCache implements ICache
    public function factor  ( $_factor ){}
    public function fname   ( $_fname ){}
    public function get     ( $_time ){}
-   public function set     ( $_content){}
+   public function set     ( $_content, $_ttl = NULL){}
    public function remove  (){}
     
 }
