@@ -151,7 +151,7 @@ class MemcachedCache implements ICache
      * */
     public function factor($_factor) 
     {
-        return true;
+        return $this;
     }
 }
 ?>
