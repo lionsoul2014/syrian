@@ -85,10 +85,6 @@ class MemcachedCache implements ICache
         } else {
            //throw new  Exception('Use Old Memcached server'); 
         }
-
-		if ( isset( $conf['ttl'] ) )
-			$this->_ttl	= $conf['ttl'];
-
     }
 
     public function baseKey($bk= NULL){
