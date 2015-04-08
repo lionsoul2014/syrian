@@ -105,9 +105,15 @@ class MemcachedCache implements ICache
         return $this;
     }
 
+	//set the global time to live seconds
+	public function setTtl($_ttl)
+	{
+		$this->_ttl = $_ttl;
+		return $this;
+	}
 
     // we don't need the $_time param, just for implements ICache
-    public function get($_time) {
+    public function get($_time = NULL) {
         if ($this->_key == '' ) return false;
 
         return $this->getByKey($this->_key);
@@ -129,7 +135,7 @@ class MemcachedCache implements ICache
 
     public function setByKey($_key, $_data, $_ttl = NULL)
     {
-        if ($_ttl == NULL) $_ttl = $this->_ttl;
+        if ( $_ttl === NULL ) $_ttl = $this->_ttl;
         return $this->_mem->set($_key, $_data, $_ttl);
     }
 

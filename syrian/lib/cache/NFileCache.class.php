@@ -15,6 +15,7 @@ class NFileCache implements ICache
 	public $_baseKey	= NULL;
 	public $_factor		= NULL;
 	public $_fname		= NULL;
+	public $_ttl		= 0;
     
     public function __construct( $_args = NULL )
     {
@@ -63,6 +64,13 @@ class NFileCache implements ICache
 		$this->upt = true;
 		return $this;
 	}
+
+	//set the global time to live seconds
+	public function setTtl($_ttl)
+	{
+		$this->_ttl = $_ttl;
+		return $this;
+	}
     
     private function getCacheFile()
     {
@@ -89,9 +97,10 @@ class NFileCache implements ICache
 		return $this->_cache_f;
     }
 
-    public function get( $_time )
+    public function get( $_time=NULL )
     {
         $_cache_file = $this->getCacheFile();
+		if ( $_time === NULL ) $_time = $this->_ttl;
         
         if ( ! file_exists( $_cache_file ) ) return FALSE;
         if ( $_time < 0 ) return file_get_contents($_cache_file);
