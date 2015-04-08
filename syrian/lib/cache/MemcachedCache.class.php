@@ -145,7 +145,7 @@ class MemcachedCache implements ICache
     }
 
 
-    public function removeByKey($key) 
+    public function removeByKey($_key) 
     {
         $this->_mem->delete($_key); 
     }
