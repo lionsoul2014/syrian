@@ -20,7 +20,7 @@ interface Idb
 	public function count( $_table, $_field = 0, $_where = NULL, $_group = NULL, $srw = NULL );
 	public function setDebug( $_debug );
 	public function setSepRW( $srw );
-	public function slaveStrategy();
+	public function slaveStrategy( $factor );
 }
 
  //------------------------------------------------------------------

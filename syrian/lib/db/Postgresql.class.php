@@ -11,6 +11,6 @@ class Postgresql implements Idb
 	public function count( $_table, $_field, $_where = NULL, $_group = NULL, $srw = NULL ) {}
 	public function setDebug( $_debug ) {}
 	public function setSepRW( $srw ) {}
-	public function slaveStrategy() {}
+	public function slaveStrategy( $factor ) {}
 }
 ?>

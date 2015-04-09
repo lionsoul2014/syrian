@@ -18,6 +18,7 @@ class Mysql implements Idb
 	private $_host			= NULL;			//connection information
 	private $_debug			= false;		//open the debug mode ?
 	private	$_srw			= false;		//separate the read/write operation ?
+	private $_rsidx			= 0;			//read server index
 	private $_escape		= true;
 	
 	public function __construct( &$_host )
@@ -75,16 +76,16 @@ class Mysql implements Idb
 			//@Note: added at 2015-04-01
 			//	for model separateed read and write but without
 			//	a standart read and write db connection configuration ...
-			if ( ! isset($this->_host['__r']) ) {
+			if ( isset($this->_host['__r']) ) {
+				if ( $this->rlink == NULL ) {
+					$this->rlink = self::connect($this->_host['__r'][$this->_rsidx]);
+				}
+				$this->clink = $this->rlink;
+			} else {
 				if ( $this->_link == NULL ) {
 					$this->_link = self::connect($this->_host);
 				}
 				$this->clink = $this->_link;
-			} else {
-				if ( $this->rlink == NULL ) {
-					$this->rlink = self::connect($this->slaveStrategy());
-				}
-				$this->clink = $this->rlink;
 			}
 
 			$S	= 1;
@@ -359,13 +360,19 @@ class Mysql implements Idb
 
 	/**
 	 * slave server select stratety
-	 * 	rewrite this method to offer a better strategy
+	 * 	offer a factor to generate a better strategy
 	 *
-	 * @return	Array the server connection info
+	 * @param	$factor	read server index selector factor
+	 * @return	$this
 	 */
-	public function slaveStrategy()
+	public function slaveStrategy($factor)
 	{
-		return $this->_host['__r'][0];
+		if ( isset($this->_host['__r']) ) 
+		{
+			$this->_rsidx = $factor % count($this->_host['__r']);
+		}
+
+		return $this;
 	}
 	
 	public function __destruct()
