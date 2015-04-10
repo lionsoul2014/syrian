@@ -141,5 +141,43 @@ class Loader
         
         exit('Syrain:Loader#model: Unable to load model ' . $_model);
     }
+
+    /**
+     * function to load and create helper instance
+     *
+     * @param	$_helper
+     * @param	$_section
+     * @param   $_inc   True for seach files in syrian/helper
+	 * @param	$_conf	configuration to create the instance
+     * @return	mixed(Array, Object, Bool)
+     */
+	public static function helper($_helper, $conf=NULL, $_section = NULL, $_inc = false)
+    {
+        //All the loaded helper.
+        static $_loaded = array();
+        
+        //$_class = ucfirst($_class);
+        $_cls = ($_section == NULL) ? $_helper : $_section . '/' . $_helper;
+        if ( isset($_loaded[$_cls]) ) return $_loaded[$_cls];
+        
+        //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
+        //Or check the APPPATH/lib 
+        $_dir  = (($_inc) ? BASEPATH . '/helper/' : SR_HELPERPATH);
+        $_dir .= $_cls;
+        
+        foreach( array($_dir . '.helper.php', $_dir . '.php') as $_file )
+        {
+            if ( file_exists($_file) )
+            {
+                require $_file;
+				$_class	= $_helper.'Helper';
+				$obj = new $_class($conf);
+                $_loaded[$_cls] = &$obj;
+                return $obj;
+            }
+        }
+        
+        exit('Syrian:Loader#helper: Unable to load helper ' . $_helper);
+    }
 }
 ?>

@@ -10,10 +10,11 @@
  //--------------------------------------------------------------
  
 //Syrian Version Number
-define('VERSION', '1.0.0');
+define('VERSION', '1.0.1');
 
 //Load the common resource loader
 require(BASEPATH . 'core/Loader.php');
+require(BASEPATH . 'core/Helper.php');
 
 //Load the input class manage the input of the controller/
 if ( defined('SR_CLI_MODE') )	;
