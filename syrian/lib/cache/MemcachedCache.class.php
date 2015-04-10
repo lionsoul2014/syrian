@@ -79,6 +79,12 @@ class MemcachedCache implements ICache
             $this->_mem->setOption(Memcached::OPT_PREFIX_KEY, $this->_prefix);
         }
 
+        if (isset($conf['ttl']) &&($ttl = intval($conf['ttl'])) > 0)
+        {
+            $this->_ttl = $ttl;
+        }
+
+
 
         if (empty($this->_mem->getServerList())){
             $this->_mem->addServers($conf['servers']);
@@ -102,8 +108,11 @@ class MemcachedCache implements ICache
     }
 
 	//set the global time to live seconds
-	public function setTtl($_ttl)
+	public function setTtl($_ttl = NULL)
 	{
+        if( ( $_ttl = intval($_ttl)) < 0)
+            $_ttl = 0;
+        
 		$this->_ttl = $_ttl;
 		return $this;
 	}
@@ -131,7 +140,8 @@ class MemcachedCache implements ICache
 
     public function setByKey($_key, $_data, $_ttl = NULL)
     {
-        if ( $_ttl === NULL ) $_ttl = $this->_ttl;
+        if ( $_ttl === NULL || ($_ttl = intval($_ttl) ) < 0 ) 
+            $_ttl = $this->_ttl;
         return $this->_mem->set($_key, $_data, $_ttl);
     }
 

@@ -93,9 +93,11 @@ class MemcachedSession implements ISession
            //throw new  Exception('Use Old Memcached server'); 
         }
 
-		if ( isset( $conf['ttl'] ) )
-			$this->_ttl	= $conf['ttl'];
 
+        if (isset($conf['ttl']) &&($ttl = intval($conf['ttl'])) > 0)
+        {
+            $this->_ttl = $ttl;
+        }
 
         //set use user level session
         session_module_name('user');
