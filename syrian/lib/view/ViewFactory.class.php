@@ -4,12 +4,26 @@
  * 
  * @author	chenxin<chenxin619315@gmail.com>
  */
-interface IView
+abstract class AView
 {
-	public function assign( $_name, $_value );
-	public function assoc( $_name, &$_value );
-    public function load( $_array );
-	public function getContent( $_tpl_file = NULL );
+	public function assign( $_name, $_value ){}
+	public function assoc( $_name, &$_value ){}
+    public function load( $_array ){}
+	public function getContent( $_tpl_file = NULL, $sanitize = false ){}
+
+	/**
+	 * sanitize the executed view content
+	 */
+	protected function sanitize($ret)
+	{
+		static $_rules = array(
+			//'/\/\/[^\n]*?\n{1,}/'	=> '',
+			'/\n{1,}/'				=> '',
+			'/\s{2,}/'				=> ' '	//@Note: not empty string here
+		);
+
+        return preg_replace(array_keys($_rules), $_rules, $ret);
+	}
 }
 
  //------------------------------------------------------------------

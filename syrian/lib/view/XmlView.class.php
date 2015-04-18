@@ -8,7 +8,7 @@
 
  //------------------------------------------------------
  
-class XmlView implements IView
+class XmlView extends AView
 {
     
 }

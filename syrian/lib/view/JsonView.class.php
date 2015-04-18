@@ -11,7 +11,7 @@
 
  //---------------------------------------------------------
  
-class JsonView implements IView
+class JsonView extends AView
 {
     /**
      * store all the mapping of assign or assco
@@ -70,11 +70,13 @@ class JsonView implements IView
      * return the content
      *
      * @param   $_tpl_file
+	 * @param	$sanitize sanitize the content ?
      * @return  string the executed html text
     */
-	public function getContent( $_tpl_file = NULL )
+	public function getContent( $_tpl_file = NULL, $sanitize = false )
     {
-        return json_encode( $this->_data );
+		$ret	= json_encode($this->_data);
+        return $sanitize ? $this->sanitize($ret) : $ret;
     }
 }
 ?>

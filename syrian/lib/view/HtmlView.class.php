@@ -10,7 +10,7 @@
 
  //-------------------------------------------------------------------
 
-class HtmlView implements IView
+class HtmlView extends AView
 {
     public  $_tpl_dir       = NULL;         //template directory. end with '/'
     public  $_cache_dir     = NULL;         //cache directory, end with '/'
@@ -220,9 +220,10 @@ class HtmlView implements IView
      *      $this->display will be invoke to finish the job
      *
      * @param   $_tpl_file
+	 * @param	$sanitize sanitize the content ?
      * @return  string the executed html text
     */
-    public function getContent( $_tpl_file = NULL )
+    public function getContent( $_tpl_file = NULL, $sanitize = false )
     {
         $_cache_file = $this->_cache_dir.$_tpl_file.'.php';
         $_tpl_file = $this->_tpl_dir.$_tpl_file;
@@ -236,11 +237,11 @@ class HtmlView implements IView
         //create a buffer and fetch the executed html content
         ob_start();
         require $_cache_file;
-        $_ret = ob_get_contents();
+        $ret = ob_get_contents();
         ob_end_clean();
         
         //return the executed html string
-        return $_ret;
+        return $sanitize ? $this->sanitize($ret) : $ret;
     }
 }
 ?>
