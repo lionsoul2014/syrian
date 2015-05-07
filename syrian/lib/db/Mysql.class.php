@@ -374,6 +374,16 @@ class Mysql implements Idb
 
 		return $this;
 	}
+
+	/**
+	 * return the last error message
+	 *
+	 * @return	string
+	*/
+	public function getLastError()
+	{
+		return mysqli_error($this->clink);
+	}
 	
 	public function __destruct()
 	{

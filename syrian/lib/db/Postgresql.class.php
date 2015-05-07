@@ -12,5 +12,6 @@ class Postgresql implements Idb
 	public function setDebug( $_debug ) {}
 	public function setSepRW( $srw ) {}
 	public function slaveStrategy( $factor ) {}
+	public function getLastError() {}
 }
 ?>
