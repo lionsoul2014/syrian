@@ -9,6 +9,8 @@
 
 class Net
 {
+	private static $defaultUserAgent = 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.19 (KHTML, like Gecko) Ubuntu/10.10 Chromium/18.0.1025.151 Chrome/18.0.1025.151 Safari/535.19';
+
 	/**
 	 * download the specifield image file with a validate url
 	 * 		and save it to the specifield local file.
@@ -21,15 +23,21 @@ class Net
 	 */
 	public static function saveRemoteImage($url, $toFile, $thumb=NULL, $conf=array(), $noThumbExt=NULL)
 	{
-		$timeout	= isset($conf['timeout']) ? $conf['timeout'] : 30;
-		$useragent	= isset($conf['useragent']) ? $conf['useragent'] : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.19 (KHTML, like Gecko) Ubuntu/10.10 Chromium/18.0.1025.151 Chrome/18.0.1025.151 Safari/535.19';
+		$_header = isset($conf['header']) ? $conf['header'] : NULL;
+		if ( $_header == NULL )
+		{
+			$useragent = isset($conf['useragent']) ? $conf['useragent'] : self::$defaultUserAgent;
+			$_header = array(
+				"User-Agent: {$useragent}"
+			);
+		}
 
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_HTTPGET, 1); 
-		curl_setopt($ch, CURLOPT_USERAGENT, $useragent);  
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_TIMEOUT, $timeout );
+		curl_setopt($ch, CURLOPT_TIMEOUT, isset($conf['timeout']) ? $conf['timeout'] : 30 );
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $_header);
 		curl_setopt($ch, CURLOPT_HEADER, 0);
 
 		//execute the curl to get the response
