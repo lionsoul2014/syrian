@@ -11,9 +11,10 @@
  
 class Controller
 {
-	public   	$uri  	= NULL;			//request uri
-    public   	$input  = NULL;			//request input
-	public   	$output = NULL;			//request output
+	public   	$uri  	= NULL;		//request uri
+    public   	$input  = NULL;		//request input
+	public   	$output = NULL;		//request output
+	public		$_G		= NULL;		//global resource
 	
 	/**
 	 * Construct method to create new instance of the controller
@@ -35,6 +36,8 @@ class Controller
 	*/
 	public function run()
 	{
+		$this->_G = new stdClass();
+
 		//user logic file to handler the request
 		$_logicScript = $this->uri->page . '.logic.php';
 		if ( file_exists($_logicScript) )
