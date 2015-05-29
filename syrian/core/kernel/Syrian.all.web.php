@@ -1193,6 +1193,7 @@ class Controller
 	*/
 	public function __construct()
 	{
+		$this->_G = new stdClass();
 	}
 	
 	/**
@@ -1204,8 +1205,6 @@ class Controller
 	*/
 	public function run()
 	{
-		$this->_G = new stdClass();
-
 		//user logic file to handler the request
 		$_logicScript = $this->uri->page . '.logic.php';
 		if ( file_exists($_logicScript) )
