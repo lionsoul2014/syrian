@@ -12,6 +12,21 @@
 //Syrian Version Number
 define('VERSION', '1.0.1');
 
+//check and define the including components
+//0x01: Function
+//0x02: Loader
+//0x04: Helper
+//0x08: Input
+//0x10:	Uri
+//0x20: Output
+//0x40: Model
+//0x80: Controller
+//0xFF: all of them
+//0x47: cli mode
+//0x7F: missing controller
+defined('SR_INC_COMPONENTS') or define('SR_INC_COMPONENTS', 0xFF);
+
+
 /**
  * Application common functions
  *
@@ -243,6 +258,9 @@ class Helper
 	}
 }
 
+//Load the input class manage the input of the controller/
+if ( (SR_INC_COMPONENTS & 0x08) != 0 ) 
+{
 /**
  * Syrian Input Manager Class
  * Offer interface to:
@@ -649,7 +667,11 @@ class Input
 		return $_ENV[$_key];
 	}
 }
+}
 
+//Load the Uri class offer qucik interface to access the request uri
+if ( (SR_INC_COMPONENTS & 0x10) != 0 ) 
+{
 /**
  * Syrian URI Manage Class
  * Offer interface to:
@@ -930,7 +952,11 @@ abstract class Uri
     */
     protected abstract function getController( $_module );
 }
+}
 
+//Load the Output class
+if ( (SR_INC_COMPONENTS & 0x20) != 0 ) 
+{
 /**
  * Syrian output manager class
  * 
@@ -1149,6 +1175,7 @@ class Output
         echo $_output;
     }
 }
+}
 
 /**
  * Syrian Model Super Class
@@ -1167,6 +1194,9 @@ class Model
     }
 }
 
+//Load the parent Controller class
+if ( (SR_INC_COMPONENTS & 0x80) != 0 ) 
+{
 /**
  * Opert Application Controller Class.
  * And this is the super class of the module controller class.
@@ -1212,5 +1242,6 @@ class Controller
 		else
 			$this->uri->redirect('/error/404');
 	}
+}
 }
 ?>
