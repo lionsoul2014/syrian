@@ -121,9 +121,10 @@ class Mysql implements Idb
 	 * 
 	 * @param	$_table
 	 * @param	$_array
+	 * @param	$onDuplicateKey
 	 * @return	mixed
 	 */
-	public function insert( $_table, &$_array )
+	public function insert( $_table, &$_array, $onDuplicateKey=NULL )
 	{
 		$_fileds = NULL;$_values = NULL;
 		$_tval = NULL;
@@ -136,10 +137,16 @@ class Mysql implements Idb
 			$_fileds .= ( $_fileds==NULL ) ? $_key : ',' . $_key;
 			$_values .= ( $_values==NULL ) ? '\''.$_tval.'\'' : ',\''.$_tval.'\'';
 		}
+
+		//check and append the on udplicate key handler
+		if ( $onDuplicateKey != NULL )
+		{
+			$onDuplicateKey = " ON DUPLICATE KEY {$onDuplicateKey}";
+		}
 		
 		if ( $_fileds !== NULL )
 		{
-			$_query = 'INSERT INTO ' . $_table . '(' . $_fileds . ') VALUES(' . $_values . ')';
+			$_query = "INSERT INTO {$_table} ({$_fileds}) VALUES({$_values}){$onDuplicateKey}";
 			if ( $this->query( $_query, Idb::WRITE_OPT, false ) != FALSE )
 			{
 				return mysqli_insert_id( $this->clink );
@@ -154,9 +161,10 @@ class Mysql implements Idb
 	 *
 	 * @param 	$_table
 	 * @param 	$_array
+	 * @param	$onDuplicateKey
 	 * @return	mixed
 	 */
-	public function batchInsert($_table, &$_array)
+	public function batchInsert($_table, &$_array, $onDuplicateKey=NULL)
 	{
 		$_fileds = NULL;$vstr = NULL;
 		$_tval = NULL;
@@ -181,13 +189,20 @@ class Mysql implements Idb
 			if ( $vstr == NULL) $vstr = "({$_value})";
 			else $vstr .= ",({$_value})";
 		}
+
+		//check and append the on udplicate key handler
+		if ( $onDuplicateKey != NULL )
+		{
+			$onDuplicateKey = " ON DUPLICATE KEY {$onDuplicateKey}";
+		}
 		
 		if ( $_fileds !== NULL )
 		{
-			$_query = 'INSERT INTO ' . $_table . '(' . $_fileds . ') VALUES' . $vstr;
+			$_query = "INSERT INTO {$_table} ({$_fileds}) VALUES {$vstr}{$onDuplicateKey}";
 			if ( $this->query( $_query, Idb::WRITE_OPT, false ) != FALSE )
 			{
-				return mysqli_insert_id( $this->clink );
+				//return mysqli_insert_id( $this->clink );
+				return mysqli_affected_rows( $this->clink );
 			}
 		}
 		
@@ -373,6 +388,16 @@ class Mysql implements Idb
 		}
 
 		return $this;
+	}
+
+	/**
+	 * get the last insert id
+	 *
+	 * @return	false || Integer
+	*/
+	public function getLastInsertId()
+	{
+		return mysqli_insert_id($this->clink);
 	}
 
 	/**
