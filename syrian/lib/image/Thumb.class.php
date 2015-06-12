@@ -57,6 +57,9 @@ class Thumb
 			
 		//load the args
 		$this->_Load_Args($_size, $_resize);
+        $img_size = getimagesize($src_path);
+        if ( $img_size[0] <= $this->_size[0] )  return true;
+
 		$this->img_src = $this->getImageSource($src_path);
 		if ($this->img_src == NULL) return;
 		$w_src = imagesx( $this->img_src );
