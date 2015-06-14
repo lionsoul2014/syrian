@@ -126,16 +126,12 @@ class Mysql implements Idb
 	 */
 	public function insert( $_table, &$_array, $onDuplicateKey=NULL )
 	{
-		$_fileds = NULL;$_values = NULL;
-		$_tval = NULL;
-		
-		foreach ( $_array as $_key => $_val )
+		$fields	= array();
+		$values	= array();
+		foreach ( $_array as $key => $val )
 		{
-			$_tval = &$_val;
-			if ( ! $this->_escape ) $_tval = addslashes($_val);
-			
-			$_fileds .= ( $_fileds==NULL ) ? $_key : ',' . $_key;
-			$_values .= ( $_values==NULL ) ? '\''.$_tval.'\'' : ',\''.$_tval.'\'';
+			$fields[] = $key;
+			$values[] = $this->_escape ? "'{$val}'" : '\''.addslashes($val).'\'';
 		}
 
 		//check and append the on udplicate key handler
@@ -144,9 +140,9 @@ class Mysql implements Idb
 			$onDuplicateKey = " ON DUPLICATE KEY {$onDuplicateKey}";
 		}
 		
-		if ( $_fileds !== NULL )
+		if ( ! empty($fields) )
 		{
-			$_query = "INSERT INTO {$_table} ({$_fileds}) VALUES({$_values}){$onDuplicateKey}";
+			$_query = 'INSERT INTO ' . $_table . '(' . implode(',', $fields) .') VALUES(' . implode(',', $values) . ')'. $onDuplicateKey;
 			if ( $this->query( $_query, Idb::WRITE_OPT, false ) != FALSE )
 			{
 				return mysqli_insert_id( $this->clink );
@@ -166,28 +162,24 @@ class Mysql implements Idb
 	 */
 	public function batchInsert($_table, &$_array, $onDuplicateKey=NULL)
 	{
-		$_fileds = NULL;$vstr = NULL;
-		$_tval = NULL;
-
 		//format the fields
-		foreach ( $_array[0] as $_key => $_val )
+		$fields	= array();
+		foreach ( $_array[0] as $key => $val )
 		{
-			$_fileds .= ($_fileds==NULL) ? $_key : ',' . $_key;
+			$fields[] = $key;
 		}
 		
 		//format the data
+		$values	= array();
 		foreach ( $_array as $record )
 		{
-			$_value	= NULL;
-			foreach ( $record as $_key => $_val )
+			$item	= array();
+			foreach ( $record as $key => $val )
 			{
-				$_tval = &$_val;
-				if ( ! $this->_escape ) $_tval = addslashes($_val);
-				$_value .= ($_value==NULL) ? '\''.$_tval.'\'' : ',\''.$_tval.'\'';
+				$item[] = $this->_escape ? "'{$val}'" : '\''.addslashes($val).'\'';
 			}
 
-			if ( $vstr == NULL) $vstr = "({$_value})";
-			else $vstr .= ",({$_value})";
+			$values[] = '(' . implode('', $item) . ')';
 		}
 
 		//check and append the on udplicate key handler
@@ -196,9 +188,9 @@ class Mysql implements Idb
 			$onDuplicateKey = " ON DUPLICATE KEY {$onDuplicateKey}";
 		}
 		
-		if ( $_fileds !== NULL )
+		if ( ! empty( $fields ) )
 		{
-			$_query = "INSERT INTO {$_table} ({$_fileds}) VALUES {$vstr}{$onDuplicateKey}";
+			$_query = 'INSERT INTO ' . $_table . '(' . implode(',', $fields) . ') VALUES' . implode('', $values) . $onDuplicateKey;
 			if ( $this->query( $_query, Idb::WRITE_OPT, false ) != FALSE )
 			{
 				//return mysqli_insert_id( $this->clink );
@@ -214,16 +206,18 @@ class Mysql implements Idb
 	 * 
 	 * @param	$_table
 	 * @param	$_where
+	 * @param	$affected_rows return the affected rows?
 	 * @return	bool
 	 */
-	public function delete( $_table, $_where )
+	public function delete( $_table, $_where, $affected_rows=true )
 	{
 		//for safe, where condition must needed
 		$_query = 'DELETE FROM ' . $_table . ' WHERE '.$_where;
 		if ( $this->query( $_query, Idb::WRITE_OPT, false ) != FALSE )
 		{
-			return mysqli_affected_rows($this->clink);
+			return $affected_rows ? mysqli_affected_rows($this->clink) : true;
 		}
+
 		return FALSE;
 	}
 	
@@ -260,39 +254,31 @@ class Mysql implements Idb
 	 * @param	$_table
 	 * @param	$_array
 	 * @param	$_where
-	 * @param	$_quote
+	 * @param	$slashes
+	 * @para	$affected_rows return the affected rows?
 	 * @return	mixed
 	 */
-	public function update( $_table, &$_array, $_where, $_quote = true )
+	public function update( $_table, &$_array, $_where, $slashes=true, $affected_rows=true )
 	{
-		$_keys = NULL;
-		$qstr = ($_quote) ? '\'' : "";
-		$_tval = NULL;
-		
-		foreach ( $_array as $_key => $_val )
+		$qstr	= ($slashes) ? '\'' : "";
+		$values	= array();
+		foreach ( $_array as $key => $val )
 		{
-			$_tval = &$_val;
-			if ( ! $this->_escape ) $_tval = addslashes($_val);
-			
-			if ( $_keys == NULL ) $_keys = $_key."={$qstr}".$_tval."{$qstr}";
-			else $_keys .= ','.$_key."={$qstr}".$_tval."{$qstr}";
+			$values[] = $this->_escape ? "{$_key}={$qstr}{$_tval}{$qstr}" : "{$key}={$qstr}".addslashes($val)."{$qstr}";
 		}
 		
-		if ( $_keys !== NULL )
+		if ( ! empty($values) )
 		{
-			$_query = 'UPDATE ' . $_table . ' SET ' . $_keys . ' WHERE '.$_where;
-			/*
-			 * return the query result directly
-			 * Unlike the delete operation will make the affected rows available
-			 *	TRUE for success and FALSE for failed
-			*/
-			if ( $this->query( $_query, Idb::WRITE_OPT, false ) == FALSE )
+			$_sql = 'UPDATE ' . $_table . ' SET ' . implode(',', $values) . ' WHERE '.$_where;
+			if ( $this->query( $_sql, Idb::WRITE_OPT, false ) == FALSE )
 			{
 				return FALSE;
 			}
 
-			//@Note: change to return the affect rows for the operation at 2015-03-11
-			return mysqli_affected_rows($this->clink);
+			/*
+			 * return the query result directly or return the affected rows
+			*/
+			return $affected_rows ? mysqli_affected_rows($this->clink) : true;
 		}
 		
 		return FALSE;
@@ -398,6 +384,16 @@ class Mysql implements Idb
 	public function getLastInsertId()
 	{
 		return mysqli_insert_id($this->clink);
+	}
+
+	/**
+	 * get the affected rows
+	 *
+	 * @return	false || Integer
+	*/
+	public function getAffectedRows()
+	{
+		return mysqli_affected_rows($this->clink);
 	}
 
 	/**
