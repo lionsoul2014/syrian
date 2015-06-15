@@ -179,7 +179,7 @@ class Mysql implements Idb
 				$item[] = $this->_escape ? "'{$val}'" : '\''.addslashes($val).'\'';
 			}
 
-			$values[] = '(' . implode('', $item) . ')';
+			$values[] = '(' . implode(',', $item) . ')';
 		}
 
 		//check and append the on udplicate key handler
@@ -190,7 +190,7 @@ class Mysql implements Idb
 		
 		if ( ! empty( $fields ) )
 		{
-			$_query = 'INSERT INTO ' . $_table . '(' . implode(',', $fields) . ') VALUES' . implode('', $values) . $onDuplicateKey;
+			$_query = 'INSERT INTO ' . $_table . '(' . implode(',', $fields) . ') VALUES' . implode(',', $values) . $onDuplicateKey;
 			if ( $this->query( $_query, Idb::WRITE_OPT, false ) != FALSE )
 			{
 				//return mysqli_insert_id( $this->clink );
