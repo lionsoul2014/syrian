@@ -3,7 +3,7 @@ class Oracle implements Idb
 {
 	public function execute( $_sql, $opt, $_row = false, $src = NULL ) {}
 	public function insert( $_table, &$_array, $onDuplicateKey=NULL ) {}
-	public function batchInsert( $_table, &$_array, $onDuplicateKey=NULL ) {}
+	public function batchInsert( $_table, &$_array, $onDuplicateKey=NULL, $affected_rows=false ) {}
 	public function delete( $_table, $_where, $affected_rows=true ) {}
 	public function getList( $_query, $_type = NULL, $srw = NULL ) {}
 	public function getOneRow( $_query, $_type = NULL, $srw = NULL ) {}

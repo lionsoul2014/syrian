@@ -122,9 +122,10 @@ class Mysql implements Idb
 	 * @param	$_table
 	 * @param	$_array
 	 * @param	$onDuplicateKey
+	 * @param	$affected_rows
 	 * @return	mixed
 	 */
-	public function insert( $_table, &$_array, $onDuplicateKey=NULL )
+	public function insert( $_table, &$_array, $onDuplicateKey=NULL, $affected_rows=false )
 	{
 		$fields	= array();
 		$values	= array();
@@ -145,7 +146,7 @@ class Mysql implements Idb
 			$_query = 'INSERT INTO ' . $_table . '(' . implode(',', $fields) .') VALUES(' . implode(',', $values) . ')'. $onDuplicateKey;
 			if ( $this->query( $_query, Idb::WRITE_OPT, false ) != FALSE )
 			{
-				return mysqli_insert_id( $this->clink );
+				return $affected_rows ? 1 : mysqli_insert_id( $this->clink );
 			}
 		}
 		
