@@ -86,8 +86,8 @@ class MemcachedSession implements ISession
         }
 
 
-
-        if (empty($this->_mem->getServerList())){
+        $servers = $this->_mem->getServerList();
+        if (empty($servers)){
             $this->_mem->addServers($conf['servers']);
         } else {
            //throw new  Exception('Use Old Memcached server'); 
