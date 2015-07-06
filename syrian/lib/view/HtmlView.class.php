@@ -65,7 +65,7 @@ class HtmlView extends AView
                                 => '$1["$2"]',
                         
         //include|require file
-        '/(include|require)\s+([a-z0-9\.\/-]+)/i'
+        '/(include|require)\s+([a-z0-9_\.\/-]+)/i'
                                 => '$1 \$this->getIncludeFile(\'$2\')'
     );
 
