@@ -9,6 +9,7 @@
 interface ISession
 {
 	public function start();
+	public function destroy();
 	public function setSessionId($_sessid);
 	public function getSessionId();
 

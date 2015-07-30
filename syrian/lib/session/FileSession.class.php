@@ -42,12 +42,12 @@ class FileSession implements ISession
         //set use user level session
         session_module_name('user');
         session_set_save_handler(
-            array($this, 'open'),
-            array($this, 'close'),
-            array($this, 'read'),
-            array($this, 'write'),
-            array($this, 'destroy'),
-            array($this, 'gc')
+            array($this, '_open'),
+            array($this, '_close'),
+            array($this, '_read'),
+            array($this, '_write'),
+            array($this, '_destroy'),
+            array($this, '_gc')
         );
 
 		$_more	= 86400;
@@ -87,6 +87,15 @@ class FileSession implements ISession
 		session_start();
 	}
 
+	/**
+	 * destroy the current session
+	*/
+	public function destroy()
+	{
+		session_destroy();
+		//$this->_destroy($this->_sessid);
+	}
+
 	//get the current session id
 	//invoke it after the invoke the start method
 	public function getSessionId()
@@ -109,7 +118,7 @@ class FileSession implements ISession
 	 *		is started automatically or manually with session_start().
 	 * Return value is TRUE for success, FALSE for failure.
 	 */
-    function open( $_save_path, $_sessname )
+    function _open( $_save_path, $_sessname )
 	{
 		//use the default _save_path without user define save_path
 		if ( $this->_save_path == NULL ) $this->_save_path = $_save_path;
@@ -120,7 +129,7 @@ class FileSession implements ISession
 	 * It is also invoked when session_write_close() is called.
 	 * Return value should be TRUE for success, FALSE for failure.
 	*/
-    function close()
+    function _close()
 	{
         return TRUE;
     }
@@ -131,7 +140,7 @@ class FileSession implements ISession
 	 * This callback is called internally by PHP when the session starts or when session_start()
 	 * 		is called. Before this callback is invoked PHP will invoke the open callback.
 	*/
-    function read( $_sessid )
+    function _read( $_sessid )
 	{
 		//check if the R8C is appended
 		if ( ($pos = strpos($_sessid, '---')) !== false )
@@ -174,7 +183,7 @@ class FileSession implements ISession
 	 * 		the passed session ID. When retrieving this data, the read callback must
 	 * 		return the exact value that was originally passed to the write callback.
 	*/
-    function write( $_sessid, $_data )
+    function _write( $_sessid, $_data )
 	{
 		if ( $_data == NULL || $_data == '' ) return FALSE;
 		$_sessid = $this->_sessid;
@@ -205,7 +214,7 @@ class FileSession implements ISession
 	 * This callback is executed when a session is destroyed with session_destroy().
 	 * Return value should be TRUE for success, FALSE for failure.
 	*/
-    function destroy( $_sessid )
+    function _destroy( $_sessid )
 	{
 		//delete the session data
 		$_file = "{$this->_save_path}/{$this->_hval}/{$this->_sessid}{$this->_ext}";
@@ -226,7 +235,7 @@ class FileSession implements ISession
 	 * 		in order to purge old session data.
 	 * The frequency is controlled by session.gc_probability and session.gc_divisor. 
 	*/
-    function gc( $_lifetime )
+    function _gc( $_lifetime )
 	{
         return TRUE;
     }
