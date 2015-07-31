@@ -210,11 +210,12 @@ class Util
 	 * convert the unix timestamp to seconds ago, hours ago, days ago
 	 * 	month ago or years ago
 	 *
-	 * 	@param 	$timer
+	 * @param 	$timer
+	 * @param	$ctime	current time 
 	 */
-	public static function getTimeString( $timer )
+	public static function getTimeString( $timer, $ctime = NULL )
 	{
-		$t 		= time() - $timer;
+		$t 		= ($ctime == NULL ? time() : $ctime) - $timer;
 		if ( $t < 0 ) return date('Y年m月d日', $timer);
 
 		if ( $t < 5 )			return '刚刚';							//just now
