@@ -148,8 +148,13 @@ class MemcachedSession implements ISession
 	//destroy the currrent session
 	public function destroy()
 	{
-		session_destroy();
-		//$this->_destroy($this->_sessid);
+		if ( $this->_sessid != null )
+		{
+			$this->_destroy($this->_sessid);
+		} else {
+			session_destroy();
+			//$this->_destroy($this->_sessid);
+		}
 	}
 
 	//get the current session id
