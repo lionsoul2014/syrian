@@ -96,9 +96,9 @@ class FileSession implements ISession
 		{
 			$this->_destroy($this->_sessid);
 		} else {
-			session_destroy();
 			//$this->_destroy($this->_sessid);
 		}
+		session_destroy();
 	}
 
 	//get the current session id
