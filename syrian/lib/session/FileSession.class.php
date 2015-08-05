@@ -108,12 +108,16 @@ class FileSession implements ISession
 	*/
 	public function destroy()
 	{
-		if ( $this->_sessid != null )
+		//1. clear the session data
+		$_SESSION = array();
+
+		//2. destroy the session file or stored data
+		if ( $this->_sessid != NULL )
 		{
 			$this->_destroy($this->_sessid);
-		} else {
-			//$this->_destroy($this->_sessid);
 		}
+		
+		//3. destroy the session
 		session_destroy();
 	}
 
