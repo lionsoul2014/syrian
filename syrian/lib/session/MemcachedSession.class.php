@@ -116,18 +116,29 @@ class MemcachedSession implements ISession
 			$_more = $conf['more_for_cookie'];
 		}
 
-        if (isset($conf['session_name']) && $conf['session_name']){
-            $this->_session_name = $conf['session_name']; 
-            session_name($this->_session_name);
-        }
+		$cookie_domain = '';
+		if ( isset($conf['cookie_domain']) ) $cookie_domain = $conf['cookie_domain'];
+		else if ( isset($conf['domain_strategy']) )
+		{
+			$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+			switch ( $conf['domain_strategy'] )
+			{
+			case 'cur_host': $cookie_domain = $host; break;
+			case 'all_sub_host':
+				$pnum = 0;
+				$hostLen = min(strlen($host), 255);
+				for ( $i = 0; $i < $hostLen; $i++ ) {if ( $host[$i] == '.' ) $pnum++;}
+				
+				//define the sub host ($pnum could be 0 like localhost)
+				if ( $pnum == 0 ) $cookie_domain = $host;
+				else if ( $pnum == 1 ) $cookie_domain = ".{$host}";
+				else $cookie_domain = substr($host, strpos($host, '.'));
+				break;
+			}
+		}
+
 		//set the session id cookies lifetime
-		//and make the cookies last longer than the session, so got a change
-		//to clear the session file itself
-        if (isset($conf['cookie_domain']) && $conf['cookie_domain'])
-            session_set_cookie_params($this->_ttl + $_more, '/', $conf['cookie_domain']);
-        else 
-            session_set_cookie_params($this->_ttl + $_more, '/');
-       
+        session_set_cookie_params($this->_ttl + $_more, '/', $cookie_domain);
     }
 
 	//start the session
