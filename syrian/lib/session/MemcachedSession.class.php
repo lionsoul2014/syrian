@@ -116,6 +116,12 @@ class MemcachedSession implements ISession
 			$_more = $conf['more_for_cookie'];
 		}
 
+        if ( isset($conf['session_name']) && $conf['session_name'] )
+		{
+            $this->_session_name = $conf['session_name']; 
+            session_name($this->_session_name);
+        }
+
 		$cookie_domain = '';
 		if ( isset($conf['cookie_domain']) ) $cookie_domain = $conf['cookie_domain'];
 		else if ( isset($conf['domain_strategy']) )
