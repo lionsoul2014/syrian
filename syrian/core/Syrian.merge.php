@@ -256,6 +256,24 @@ class Helper
 	public function __construct($conf)
 	{
 	}
+	
+	/**
+	 * load the specifield method by name
+	 *
+	 * @param	$args
+	*/
+	public function load()
+	{
+		$_argv = func_get_args();
+		$_args = func_num_args();
+		if ( $_args > 0 && method_exists($this, $_argv[0]) )
+		{
+			$cacher	= array_shift($_argv);
+			return $this->{$cacher}($_argv);
+		}
+
+		exit("Error: Unable to load cacher {$_argv[0]}\n");
+	}
 }
 
 //Load the input class manage the input of the controller/
