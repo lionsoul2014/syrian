@@ -148,7 +148,7 @@ class Filter
         
         $_errno = 1;
         //2. data length check
-        if ( $_model[1] != NULL ) {
+        if ( isset($_model[1]) && $_model[1] != NULL ) {
             switch ( $_model[1][0] ) {
             case 0:             //length limit
                 $_length = strlen($_val);
@@ -165,18 +165,20 @@ class Filter
         }
         
         //3. sanitize
-        if ( $_model[2] == NULL ) return $_val;
-        if ( ( $_model[2] & OP_SANITIZE_TRIM ) != 0 )
-            $_val = trim($_val);
-        if ( ( $_model[2] & OP_SANITIZE_SCRIPT ) != 0 )
-            $_val = self::sanitizeScript($_val);
-        if ( ( $_model[2] & OP_SANITIZE_HTML ) != 0 )
-            $_val = self::sanitizeHtml($_val);
-        if ( ( $_model[2] & OP_SANITIZE_INT ) != 0 )
-            $_val = intval( $_val );
-        if ( ( $_model[2] & OP_MAGIC_QUOTES ) != 0
-            && ini_get('magic_quotes_gpc') == 0 )
-            $_val = addslashes( $_val );
+		if ( isset($_model[2]) ) {
+			if ( $_model[2] == NULL ) return $_val;
+        	if ( ( $_model[2] & OP_SANITIZE_TRIM ) != 0 )
+        	    $_val = trim($_val);
+        	if ( ( $_model[2] & OP_SANITIZE_SCRIPT ) != 0 )
+        	    $_val = self::sanitizeScript($_val);
+        	if ( ( $_model[2] & OP_SANITIZE_HTML ) != 0 )
+        	    $_val = self::sanitizeHtml($_val);
+        	if ( ( $_model[2] & OP_SANITIZE_INT ) != 0 )
+        	    $_val = intval( $_val );
+        	if ( ( $_model[2] & OP_MAGIC_QUOTES ) != 0
+        	    && ini_get('magic_quotes_gpc') == 0 )
+        	    $_val = addslashes( $_val );
+		}
             
         return $_val;
     }
