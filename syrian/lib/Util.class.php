@@ -338,5 +338,59 @@ class Util
 
 		return false;
 	}
+
+	/**
+	 * get the access device code
+	 * format: p|m+[a,i,w,l,m,x]
+	 * values:
+	 * pm: pc max
+	 * pl: pc linux
+	 * pw: pc window
+	 * px: pc unknow
+	 * ma: mobile android
+	 * ma: mobile ios
+	 * mw: mobile window (wp)
+	 * mx: mobile unkown
+	 * mm: mobile mac (ios tablet)
+	*/
+	public static function getDevice($uAgent=NULL)
+	{
+		if ( $uAgent == NULL && isset($_SERVER['HTTP_USER_AGENT']) ) {
+			$uAgent = $_SERVER['HTTP_USER_AGENT'];
+		}
+
+		if ( $uAgent == NULL ) return 'xx';
+		
+		//define the mobile source
+		$isMobile	= false;
+		if ( isset($_SERVER['HTTP_X_WAP_PROFILE']) ) {
+			$isMobile = true;
+		} else if ( isset($_SERVER['HTTP_VIA']) && strpos($_SERVER['HTTP_VIA'], 'wap') !== false ) {
+			$isMobile = true;
+		} else {
+			$lowerAgent	= strtolower($uAgent);
+			$mobileOS	= array(
+				'phone', 'mobile', 'tablet', 'android', 'iphone', 'blackberry', 'symbian', 'nokia', 'palmos', 'j2me'
+			);
+			foreach ( $mobileOS as $os )
+			{
+				if ( strpos($lowerAgent, $os) !== false )
+				{
+					$isMobile = true;
+					break;
+				}
+			}
+		}
+
+		//define the device part
+		$device	= 'x';
+		if ( stripos($uAgent, 'Android') !== false )		$device = 'a';	//Android
+		else if ( stripos($uAgent, 'iPhone') !== false )	$device = 'i';	//ios
+		else if ( stripos($uAgent, 'Linux') !== false )		$device = 'l';	//linux
+		else if ( stripos($uAgent, 'Windows') !== false ) 	$device = 'w';	//winnt
+		else if ( stripos($uAgent, 'Mac') !== false )		$device = 'm';
+
+		return ($isMobile?'m':'p') . $device;
+	}
 }
 ?>
