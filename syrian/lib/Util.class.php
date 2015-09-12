@@ -113,39 +113,57 @@ class Util
 	 * @param 	$array
 	 * @param 	$key
 	 * @param 	$glue
-	 * @param 	$dup 	remove the dupliate value when it's true
+	 * @param 	$dup remove the dupliate value when it's true
+	 * @param	$leftQuote left quote string
+	 * @param	$rightQuote right quote string
 	 * @return 	string
 	 */
-	public static function implode(&$array, $key, $glue, $dup = false)
+	public static function implode(
+		&$array, $key, $glue, $dup=false, $leftQuote=NULL, $rightQuote=NULL)
 	{
-		$str 	= NULL;
 		if ( $array == false || empty($array) ) return NULL;
 
-		$idx 	= NULL;
-		if ( $dup )		$idx = array();
+		//$str 	= NULL;
+		//$idx 	= NULL;
+		//if ( $dup )		$idx = array();
 
-		foreach ( $array as $value ) 
+		//foreach ( $array as $value ) 
+		//{
+		//	if ( $str == NULL ) 
+		//	{
+		//		$str = $value[$key];
+		//		if ( $dup ) $idx["{$value[$key]}"] = true;
+		//		continue;
+		//	}
+
+		//	if ( $dup == false ) 
+		//		$str .= "{$glue}{$value[$key]}";
+		//	else 
+		//	{
+		//		//remove the duplicate
+		//		$v 		= $value[$key];
+		//		if ( isset( $idx["{$v}"] ) ) continue;
+		//		$str   .= "{$glue}{$v}";
+		//		$idx["{$v}"] = true;
+		//	}
+		//}
+
+		$value	= array();
+		$idx	= array();
+		foreach ( $array as $val )
 		{
-			if ( $str == NULL ) 
+			$v	= $val["{$key}"];
+			if ( $dup == false || ! isset($idx["{$v}"]) )
 			{
-				$str = $value[$key];
-				if ( $dup ) $idx["{$value[$key]}"] = true;
-				continue;
+				$value[] = "{$leftQuote}{$v}{$rightQuote}";
 			}
 
-			if ( $dup == false ) 
-				$str .= "{$glue}{$value[$key]}";
-			else 
-			{
-				//remove the duplicate
-				$v 		= $value[$key];
-				if ( isset( $idx["{$v}"] ) ) continue;
-				$str   .= "{$glue}{$v}";
-				$idx["{$v}"] = true;
-			}
+			$idx["{$v}"] = true;
 		}
 
-		return $str;
+		unset($idx);
+
+		return implode($glue, $value);
 	}
 
 	/**
@@ -157,21 +175,28 @@ class Util
 	 * @param 	$quote 		wether to quote its original array value
 	 * @param 	Array
 	 */
-	public static function makeIndex( &$arr, $key, $quote = false )
+	public static function makeIndex( &$arr, $key, $quote=false )
 	{
 		if ( $arr == false ) return array();
 
-		$index 	= array();
-		$length = count($arr);
-		for ( $i = 0; $i < $length; $i++ )
-		{
-			if ( $quote == false )
-			{
-				$index["{$arr[$i][$key]}"] = true;
-				continue;
-			}
+		//$index 	= array();
+		//$length = count($arr);
+		//for ( $i = 0; $i < $length; $i++ )
+		//{
+		//	if ( $quote == false )
+		//	{
+		//		$index["{$arr[$i][$key]}"] = true;
+		//		continue;
+		//	}
 
-			$index["{$arr[$i][$key]}"] = &$arr[$i];
+		//	$index["{$arr[$i][$key]}"] = &$arr[$i];
+		//}
+
+		$index 	= array();
+		foreach ( $arr as $val )
+		{
+			$_m_key = $val["{$key}"];
+			$index["{$_m_key}"] = $quote ? $val : true;
 		}
 
 		return $index;
@@ -184,23 +209,40 @@ class Util
 	 *
 	 * @param 	$array
 	 * @param 	$key
+	 * @param	$count	only count the number of each group
 	 * @return 	Array
 	 */
-	public static function groupBy( &$array, $key )
+	public static function groupBy( &$array, $key, $count=false )
 	{
 		if ( $array == false ) return array();
 
-		$index 		= array();		//returning index array
-		$length 	= count($array);
-		for ( $i = 0; $i < $length; $i++ )
-		{
-			$vkey 	= $array[$i]["{$key}"];
-			if ( ! isset( $index["{$vkey}"] ) )
-			{
-				$index["{$vkey}"] = array();
-			}
+		//$index 	= array();		//returning index array
+		//$length 	= count($array);
+		//for ( $i = 0; $i < $length; $i++ )
+		//{
+		//	$vkey 	= $array[$i]["{$key}"];
+		//	if ( ! isset( $index["{$vkey}"] ) )
+		//	{
+		//		$index["{$vkey}"] = array();
+		//	}
 
-			$index["{$vkey}"][]	= &$array[$i];
+		//	$index["{$vkey}"][]	= &$array[$i];
+		//}
+
+		$index	= array();
+		if ( $count == false ) {
+			foreach ( $array as $val ) {
+				$_m_key = $val["{$key}"];
+				if ( ! isset($index["{$_m_key}"]) ) $index["{$_m_key}"] = array();
+				$index["{$_m_key}"][] = &$val;
+				unset($val);
+			}
+		} else {
+			foreach ( $array as $val ) {
+				$_m_key = $val["{$key}"];
+				if ( ! isset($index["{$_m_key}"]) ) $index["{$_m_key}"] = 1;
+				else $index["{$_m_key}"]++;
+			}
 		}
 
 		return $index;
@@ -391,6 +433,28 @@ class Util
 		else if ( stripos($uAgent, 'Mac') !== false )		$device = 'm';
 
 		return ($isMobile?'m':'p') . $device;
+	}
+
+	/**
+	 * get the time period for a day
+	 * std: am(00-12:00), pm(12:00-24:00)
+	 * could be:
+	 * am: 06:00 - 12:00(less)
+	 * pm: 12:00 - 18:00(less)
+	 * ng: 18:00 - 24:00(less)
+	 *
+	 * @return	string
+	*/
+	public static function getDayTimeKey($time=NULL)
+	{
+		if ( $time == NULL ) $time = time();
+
+		$H = date('H', $time);
+		if ( $H >= 0  && $H < 6  )	return 'bd';
+		if ( $H >= 6  && $H < 12 )	return 'am';
+		if ( $H >= 12 && $H < 18 )	return 'pm';
+		//if ( $H >= 18 && $H < 24 )	return 'ng';
+		return 'ng';
 	}
 }
 ?>
