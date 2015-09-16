@@ -275,7 +275,7 @@ class Util
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		if ( $_header != NULL )
 		{
-			curl_setopt($ch, CURLOPT_HTTPHEADER, $_header);
+			curl_setopt($curl, CURLOPT_HTTPHEADER, $_header);
 		}
 		$ret	= curl_exec($curl);
 		$info	= curl_getinfo($curl);
