@@ -7,7 +7,7 @@
 
  //------------------------------------------------------
  
-class ArticleController extends C_Controller
+class ArticleController extends STDController
 {	
 	public function __construc( )
 	{
@@ -34,10 +34,10 @@ class ArticleController extends C_Controller
 		$pageno = $this->input->getInt('paegno');
 		if ( $pageno == false ) $pageno = 1;
 
-		$this->view->assoc('data', $this->model->getList($pageno));
+		$this->view->assign('data', $this->model->getSoftList($pageno));
 		
 		//get the executed html content
-		$ret 	= $this->view->getContent('list.html');
+		$ret 	= $this->view->getContent('article/list.html');
 		//$this->output->compress(9);
 		$this->output->display($ret);
 	}
@@ -45,7 +45,7 @@ class ArticleController extends C_Controller
 	public function about()
 	{
 		//get the executed html content
-		$ret 	= $this->view->getContent('about.html');
+		$ret 	= $this->view->getContent('article/about.html');
 		
 		//$this->output->compress(9);		//set the compress level
 		$this->output->display($ret);

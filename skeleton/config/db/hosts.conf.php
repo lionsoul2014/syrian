@@ -7,7 +7,8 @@ return array(
         'user'      => 'root',
         'pass'      => '153759',
         'db'        => 'db_opert',
-        'charset'   => 'utf8'
+        'charset'   => 'utf8',
+        'serial'    => 'main-db'
     ),
     
     'user' => array(
@@ -16,7 +17,8 @@ return array(
         'user'  => 'root',
         'pass'  => '123456',
         'db'    => 'db_opert',
-        'charset'   => 'utf8'
+        'charset'   => 'utf8',
+        'serial'    => 'user-db'
     ),
     
     //mongo style

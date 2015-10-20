@@ -14,7 +14,7 @@ class ArticleModel extends SQLModel
         $this->primary_key  = 'Id';
     }
     
-    public function getList($_pageno = 1)
+    public function getSoftList($_pageno = 1)
     {
         return array(
             array(
