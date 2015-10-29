@@ -195,8 +195,8 @@ class Page
         if ( ($_style & UI_INPUT) != 0 )
         {
             if ( ($_style & UI_INPUT_PAGES) != 0 )
-                $_html .= '<a class="ui-page-pages ui-page-nobb ui-page-lb">'.str_replace('{pages}', $this->_pages, $this->_lang['pages']).'</a>';
-            $_html .= '<form name="ui_page_form" action="'.$_SERVER['PHP_SELF'].'" method="get">';
+            $_html .= '<a class="ui-page-pages ui-page-nobb ui-page-lb">'.str_replace('{pages}', $this->_pages, $this->_lang['pages']).'</a>';
+            $_html .= '<form name="ui_page_form" action="'.($_SERVER['REQUEST_URI']).'" method="get" id="ui-page-form">';
             $_html .= '<a class="ui-input-box">'.str_replace('{input}', '<input type="text" name="'.$_name.'" class="ui-page-input" value="'.$this->_pageno.'"/>', $this->_lang['input']).'</a>';
             $_html .= '<a class="ui-submit-box"><input type="button" onclick="if(document.ui_page_form.elements[0].value.match(/([0-9]{1,})/)!=null) document.ui_page_form.submit();" value="'.$this->_lang['submit'].'" class="ui-page-button"/></a>';
             if ( $_forms != NULL )
