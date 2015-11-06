@@ -88,16 +88,23 @@ class Util
 	 */
 	public static function getIpAddress( $convert = false ) 
 	{
-		$ip = ''; 
-		if (getenv('HTTP_CLIENT_IP')) 				$ip = getenv('HTTP_CLIENT_IP'); 
-		//获取客户端用代理服务器访问时的真实ip 地址
-		else if (getenv('HTTP_X_FORWARDED_FOR')) 	$ip = getenv('HTTP_X_FORWARDED_FOR');
-		else if (getenv('HTTP_X_FORWARDED')) 		$ip = getenv('HTTP_X_FORWARDED');
-		else if (getenv('HTTP_FORWARDED_FOR')) 		$ip = getenv('HTTP_FORWARDED_FOR'); 
-		else if (getenv('HTTP_FORWARDED')) 			$ip = getenv('HTTP_FORWARDED');
-		else  										$ip = $_SERVER['REMOTE_ADDR'];
+		$ip = ""; 
+		foreach ( array('HTTP_CLIENT_IP', 
+			'HTTP_X_FORWARDED_FOR', 
+			'HTTP_X_FORWARDED', 
+			'HTTP_FORWARDED_FOR', 
+			'HTTP_FORWARDED', 
+			'REMOTE_ADDR') as $e )
+		{
+			if ( getenv($e) )
+			{
+				$ip = getenv($e);
+				break;
+			}
+		}
 
-		if ( $convert ) 	$ip = sprintf("%u", ip2long($ip));
+		if ( ($comma=strpos($ip, ',')) !== false ) $ip = substr($ip, 0, $comma);
+		if ( $convert ) $ip = sprintf("%u", ip2long($ip));
 
 		return $ip;
 	}
