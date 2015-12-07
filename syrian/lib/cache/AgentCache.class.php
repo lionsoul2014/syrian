@@ -20,7 +20,7 @@ class AgentCache
         }
         //send the last modified time
         header('Last-Modified: ' . gmdate('D, d M Y H:i:s', time() + $_cache_time) . ' GMT');
-		if ( $_strict ) header('Cache-Control: max-age=' . $_cache_time);
+        if ( $_strict ) header('Cache-Control: max-age=' . $_cache_time);
         //header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $_cache_time) . ' GMT');
     }
 }

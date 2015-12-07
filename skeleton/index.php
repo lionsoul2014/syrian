@@ -11,7 +11,7 @@ define('SR_LIBPATH',    APPPATH.'lib/');      //library directory name
 define('SR_CONFPATH',   APPPATH.'config/');   //config directory name
 define('SR_MODELPATH',  APPPATH.'model/');    //model directory name
 define('SR_CTRLPATH',   APPPATH.'app/');      //controller directory name
-define('SR_HELPERPATH', APPPATH.'helper/');	  //helper directory name
+define('SR_HELPERPATH', APPPATH.'helper/');      //helper directory name
 define('SR_VIEWPATH',   APPPATH.'template/'); //template directory name
 define('SR_CACHEPATH',  APPPATH.'cache/');    //cache directory name
 
@@ -40,7 +40,7 @@ $_CTRL = $URI->getController('article');
 if ( $_CTRL == NULL ) $URI->redirect('error/404');
 
 //---------------------------------------------------
-date_default_timezone_set('PRC');			//set the default time zone
+date_default_timezone_set('PRC');            //set the default time zone
 
 $_CTRL->run();      //run the project
 ?>

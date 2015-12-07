@@ -31,7 +31,7 @@ class JsonView extends AView
      * @param   $_name
      * @param   $_value
     */
-	public function assign( $_name, $_value )
+    public function assign( $_name, $_value )
     {
         $this->_data[$_name] = &$_value;
         
@@ -45,7 +45,7 @@ class JsonView extends AView
      * @param   $_name
      * @param   $_value
     */
-	public function assoc( $_name, &$_value )
+    public function assoc( $_name, &$_value )
     {
         $this->_data[$_name] = &$_value;
         
@@ -70,12 +70,12 @@ class JsonView extends AView
      * return the content
      *
      * @param   $_tpl_file
-	 * @param	$sanitize sanitize the content ?
+     * @param    $sanitize sanitize the content ?
      * @return  string the executed html text
     */
-	public function getContent( $_tpl_file = NULL, $sanitize = false )
+    public function getContent( $_tpl_file = NULL, $sanitize = false )
     {
-		$ret	= json_encode($this->_data);
+        $ret    = json_encode($this->_data);
         return $sanitize ? $this->sanitize($ret) : $ret;
     }
 }

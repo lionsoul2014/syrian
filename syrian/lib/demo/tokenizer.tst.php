@@ -10,11 +10,11 @@ $s_time = timer();
 $_ret = $_tokenizer->split($_text);
 $e_time = timer();
 foreach ( $_ret as $_val )
-	echo $_val . '/ ';
+    echo $_val . '/ ';
 echo '<br />Done, Cost: ' . ( $e_time - $s_time ) . "sec <br />";
-	
+    
 function timer() {
-	list($msec, $sec) = explode(' ', microtime());	
-	return ((float)$msec + (float)$sec);
+    list($msec, $sec) = explode(' ', microtime());    
+    return ((float)$msec + (float)$sec);
 }
 ?>

@@ -8,9 +8,9 @@
 
 class MemcachedCache implements ICache
 {
-    private $_ttl 			= 0;
-	private	$_baseKey		= '';
-	private	$_fname  		= '';
+    private $_ttl             = 0;
+    private    $_baseKey        = '';
+    private    $_fname          = '';
     private $_mem           = NULL;
     private $_key           = '';
     private $_prefix        = ''; //prefix used inter the memcached
@@ -27,8 +27,8 @@ class MemcachedCache implements ICache
         'murmur'    => Memcached::HASH_MURMUR
     );
 
-	/**
-	 * construct method to initialize the class
+    /**
+     * construct method to initialize the class
      * 
      * demo config data:
      *  $_conf = array(
@@ -44,10 +44,10 @@ class MemcachedCache implements ICache
      *       'prefix'        => 'ses_'
      *   );
      *  
-	 * @param	$conf
-	 */
+     * @param    $conf
+     */
     public function __construct( &$conf )
-	{
+    {
         if (!isset($conf['servers']) || empty($conf['servers'])){
            throw new Exception('Memcached server should not be empty'); 
         }
@@ -107,15 +107,15 @@ class MemcachedCache implements ICache
         return $this;
     }
 
-	//set the global time to live seconds
-	public function setTtl($_ttl = NULL)
-	{
+    //set the global time to live seconds
+    public function setTtl($_ttl = NULL)
+    {
         if( ( $_ttl = intval($_ttl)) < 0)
             $_ttl = 0;
         
-		$this->_ttl = $_ttl;
-		return $this;
-	}
+        $this->_ttl = $_ttl;
+        return $this;
+    }
 
     // we don't need the $_time param, just for implements ICache
     public function get($_time = NULL) {

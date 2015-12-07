@@ -3,8 +3,8 @@
  * Syrian Initialize Script
  * Load the common functons and base classes
  *
- * @author	chenxin <chenxin619315@gmail.com>
- * @link	http://www.lionsoul.org/syrian
+ * @author    chenxin <chenxin619315@gmail.com>
+ * @link    http://www.lionsoul.org/syrian
  */
 
  //--------------------------------------------------------------
@@ -17,7 +17,7 @@ define('VERSION', '1.0.1');
 //0x02: Loader
 //0x04: Helper
 //0x08: Input
-//0x10:	Uri
+//0x10:    Uri
 //0x20: Output
 //0x40: Model
 //0x80: Controller
@@ -30,8 +30,8 @@ defined('SR_INC_COMPONENTS') or define('SR_INC_COMPONENTS', 0xFF);
 /**
  * Application common functions
  *
- * @author	chenxin <chenxin619315@gmail.com>
- * @link	http://www.lionsoul.org/syrian
+ * @author    chenxin <chenxin619315@gmail.com>
+ * @link    http://www.lionsoul.org/syrian
  */
 
  //-----------------------------------------------------------------
@@ -41,18 +41,18 @@ defined('SR_INC_COMPONENTS') or define('SR_INC_COMPONENTS', 0xFF);
 */
 if ( ! function_exists('_G') )
 {
-	function _G($key, $val=NULL)
-	{
-		static $_GRE = array();
+    function _G($key, $val=NULL)
+    {
+        static $_GRE = array();
 
-		if ( $val == NULL )
-		{
-			return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
-		}
+        if ( $val == NULL )
+        {
+            return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
+        }
 
-		$_GRE["{$key}"] = &$val;
-		return true;
-	}
+        $_GRE["{$key}"] = &$val;
+        return true;
+    }
 }
 
 /**
@@ -74,12 +74,12 @@ class Loader
     /**
      * Import class file from the specified path
      * The function will check script file $_path.class.php first
-     * 	and then $_path.php
+     *     and then $_path.php
      *
-     * @param	$_class
+     * @param    $_class
      * @param   $_section
-     * @param	$_inc	If $_inc is TRUE check the syrian/lib  or check APPPATH/lib
-     * @return	bool	true for loaded successfuly and false for not
+     * @param    $_inc    If $_inc is TRUE check the syrian/lib  or check APPPATH/lib
+     * @return    bool    true for loaded successfuly and false for not
      */
     public static function import($_class, $_section = NULL, $_inc = true)
     {
@@ -111,13 +111,13 @@ class Loader
     
     /**
      * function to load data from the specified file
-     * 	and return the return of the included file as the final result
+     *     and return the return of the included file as the final result
      *
-     * @param	$_config
-     * @param	$_section
+     * @param    $_config
+     * @param    $_section
      * @param   $_inc   True for seach files in syrian/config
-	 * @param	$_key	specifield key
-     * @return	mixed(Array, Object, Bool)
+     * @param    $_key    specifield key
+     * @return    mixed(Array, Object, Bool)
      */
     public static function config( $_config, $_section=NULL, $_inc=false, $key=NULL )
     {
@@ -134,14 +134,14 @@ class Loader
             if ( file_exists($_file) )
             {
                 //return include $_file;
-                $conf	= include $_file;
-				
-				if ( $key != NULL )
-				{
-					return isset($conf["{$key}"]) ? $conf["{$key}"] : NULL;
-				}
+                $conf    = include $_file;
+                
+                if ( $key != NULL )
+                {
+                    return isset($conf["{$key}"]) ? $conf["{$key}"] : NULL;
+                }
 
-				return $conf;
+                return $conf;
             }
         }
         
@@ -151,11 +151,11 @@ class Loader
     
     /**
      * function to load the specifile model maybe from the
-     * 		specifile path and return the instance of the model
+     *         specifile path and return the instance of the model
      *
-     * @param	$_model
-     * @param	$_section
-     * @return	Object
+     * @param    $_model
+     * @param    $_section
+     * @return    Object
     */
     public static function model( $_model, $_section = NULL )
     {
@@ -178,7 +178,7 @@ class Loader
         {
             if ( file_exists( $_file ) )
             {
-                include $_file;				//include the model class file
+                include $_file;                //include the model class file
                 
                 $o = NULL;
                 $_class = $_model.'Model';
@@ -201,13 +201,13 @@ class Loader
     /**
      * function to load and create helper instance
      *
-     * @param	$_helper
-     * @param	$_section
+     * @param    $_helper
+     * @param    $_section
      * @param   $_inc   True for seach files in syrian/helper
-	 * @param	$_conf	configuration to create the instance
-     * @return	mixed(Array, Object, Bool)
+     * @param    $_conf    configuration to create the instance
+     * @return    mixed(Array, Object, Bool)
      */
-	public static function helper($_helper, $conf=NULL, $_section = NULL, $_inc = false)
+    public static function helper($_helper, $conf=NULL, $_section = NULL, $_inc = false)
     {
         //All the loaded helper.
         static $_loaded = array();
@@ -226,8 +226,8 @@ class Loader
             if ( file_exists($_file) )
             {
                 require $_file;
-				$_class	= $_helper.'Helper';
-				$obj = new $_class($conf);
+                $_class    = $_helper.'Helper';
+                $obj = new $_class($conf);
                 $_loaded[$_cls] = &$obj;
                 return $obj;
             }
@@ -240,40 +240,40 @@ class Loader
 /**
  * Syrian Application Helper super Class.
  *
- * @author	chenxin <chenxin619315@gmail.com>
- * @link	http://www.lionsoul.org/syrian
+ * @author    chenxin <chenxin619315@gmail.com>
+ * @link    http://www.lionsoul.org/syrian
  */
 
  //-----------------------------------------------------------------
  
 class Helper
 {
-	/**
-	 * Construct method to create new instance of the Helper
-	 *
-	 * @param	$conf
-	*/
-	public function __construct($conf)
-	{
-	}
-	
-	/**
-	 * load the specifield method by name
-	 *
-	 * @param	$args
-	*/
-	public function load()
-	{
-		$_argv = func_get_args();
-		$_args = func_num_args();
-		if ( $_args > 0 && method_exists($this, $_argv[0]) )
-		{
-			$cacher	= array_shift($_argv);
-			return $this->{$cacher}($_argv);
-		}
+    /**
+     * Construct method to create new instance of the Helper
+     *
+     * @param    $conf
+    */
+    public function __construct($conf)
+    {
+    }
+    
+    /**
+     * load the specifield method by name
+     *
+     * @param    $args
+    */
+    public function load()
+    {
+        $_argv = func_get_args();
+        $_args = func_num_args();
+        if ( $_args > 0 && method_exists($this, $_argv[0]) )
+        {
+            $cacher    = array_shift($_argv);
+            return $this->{$cacher}($_argv);
+        }
 
-		exit("Error: Unable to load cacher {$_argv[0]}\n");
-	}
+        exit("Error: Unable to load cacher {$_argv[0]}\n");
+    }
 }
 
 //Load the input class manage the input of the controller/
@@ -286,404 +286,404 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 )
  * 1. Quick lanch the input source
  * 2. Data type check and convertor
  *
- * @author	chenxin <chenxin619315@gmail.com>
- * @link	http://www.lionsoul.org/syrian
+ * @author    chenxin <chenxin619315@gmail.com>
+ * @link    http://www.lionsoul.org/syrian
  */
 
  //--------------------------------------------------------------
 //normal data type
-defined('OP_NULL')		or define('OP_NULL', 		1 <<  0);
-defined('OP_LATIN')		or define('OP_LATIN', 		1 <<  1);
-defined('OP_URL')		or define('OP_URL', 		1 <<  2);
-defined('OP_EMAIL')		or define('OP_EMAIL', 		1 <<  3);
-defined('OP_QQ')		or define('OP_QQ',			1 <<  4);
-defined('OP_DATE')		or define('OP_DATE', 		1 <<  5);
-defined('OP_NUMERIC')	or define('OP_NUMERIC', 	1 <<  6);
-defined('OP_STRING')	or define('OP_STRING',		1 <<  7);
-defined('OP_ZIP')		or define('OP_ZIP', 		1 <<  8);
-defined('OP_CELLPHONE') or define('OP_CELLPHONE', 	1 <<  9);
-defined('OP_TEL')		or define('OP_TEL', 		1 << 10);
-defined('OP_IDENTIRY')  or define('OP_IDENTIRY', 	1 << 11);
+defined('OP_NULL')        or define('OP_NULL',         1 <<  0);
+defined('OP_LATIN')        or define('OP_LATIN',         1 <<  1);
+defined('OP_URL')        or define('OP_URL',         1 <<  2);
+defined('OP_EMAIL')        or define('OP_EMAIL',         1 <<  3);
+defined('OP_QQ')        or define('OP_QQ',            1 <<  4);
+defined('OP_DATE')        or define('OP_DATE',         1 <<  5);
+defined('OP_NUMERIC')    or define('OP_NUMERIC',     1 <<  6);
+defined('OP_STRING')    or define('OP_STRING',        1 <<  7);
+defined('OP_ZIP')        or define('OP_ZIP',         1 <<  8);
+defined('OP_CELLPHONE') or define('OP_CELLPHONE',     1 <<  9);
+defined('OP_TEL')        or define('OP_TEL',         1 << 10);
+defined('OP_IDENTIRY')  or define('OP_IDENTIRY',     1 << 11);
 
 //santilize type
-defined('OP_SANITIZE_TRIM')		or define('OP_SANITIZE_TRIM', 		1 << 0);
-defined('OP_SANITIZE_SCRIPT')	or define('OP_SANITIZE_SCRIPT', 	1 << 1);
-defined('OP_SANITIZE_HTML')		or define('OP_SANITIZE_HTML', 		1 << 2);
-defined('OP_MAGIC_QUOTES')		or define('OP_MAGIC_QUOTES', 		1 << 3);
-defined('OP_SANITIZE_INT')		or define('OP_SANITIZE_INT', 		1 << 4);
+defined('OP_SANITIZE_TRIM')        or define('OP_SANITIZE_TRIM',         1 << 0);
+defined('OP_SANITIZE_SCRIPT')    or define('OP_SANITIZE_SCRIPT',     1 << 1);
+defined('OP_SANITIZE_HTML')        or define('OP_SANITIZE_HTML',         1 << 2);
+defined('OP_MAGIC_QUOTES')        or define('OP_MAGIC_QUOTES',         1 << 3);
+defined('OP_SANITIZE_INT')        or define('OP_SANITIZE_INT',         1 << 4);
 
 if ( ! function_exists('OP_LIMIT') )
 {
-	function OP_LIMIT( $s, $e = -1 ) {return ( $e == -1 ? array(0, $s) : array(0, $s, $e) );}
+    function OP_LIMIT( $s, $e = -1 ) {return ( $e == -1 ? array(0, $s) : array(0, $s, $e) );}
 }
 
 if ( ! function_exists('OP_SIZE') )
 {
-	function OP_SIZE( $s, $e = -1 ) {return ($e == -1 ? array(1, $s) : array(1, $s, $e));}
+    function OP_SIZE( $s, $e = -1 ) {return ($e == -1 ? array(1, $s) : array(1, $s, $e));}
 }
 
 class Input
 {
-	private static $_loaded = false;
-	
-	public function __construct()
-	{
-	   //Do nothing here
-	}
-	
-	/**
-	 * check and load the Filter class if it is not load
-	 *
-	 * @see	lib.util.filter.Filter
-	*/
-	private static function checkAndLoadFilter()
-	{
-		//check the load status of Filter class
-		if ( self::$_loaded == false )
-		{
-			//echo 'Filter class loaded';
-			Loader::import('Filter');
-			self::$_loaded = true;
-		}
-	}
+    private static $_loaded = false;
+    
+    public function __construct()
+    {
+       //Do nothing here
+    }
+    
+    /**
+     * check and load the Filter class if it is not load
+     *
+     * @see    lib.util.filter.Filter
+    */
+    private static function checkAndLoadFilter()
+    {
+        //check the load status of Filter class
+        if ( self::$_loaded == false )
+        {
+            //echo 'Filter class loaded';
+            Loader::import('Filter');
+            self::$_loaded = true;
+        }
+    }
    
    /**
     * fetch item from $_GET data source
     *
-    * @param	$_key
-    * @param	$_model
-	* @param	$_default
-    * @param	$_errno
-    * @return	Mixed(Array, String, Bool)
+    * @param    $_key
+    * @param    $_model
+    * @param    $_default
+    * @param    $_errno
+    * @return    Mixed(Array, String, Bool)
    */
-	public function get( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
-	{
-		if ( ! isset( $_GET[$_key] ) ) return $_default;
-		
-		//apply the model if it is not null
-		if ( $_model != NULL )
-		{
-			//check the load status of Filter class
-			self::checkAndLoadFilter();
-			
-			return Filter::get( $_GET, $_key, $_model, $_errno );
-		}
-		
-		//normal string fetch
-		return $_GET[$_key];
-	}
-	
-	/**
-	 * Fetch an integer form $_GET global array
-	 *
-	 * @param	$_key
-	 * @param	$_default
-	 * @param	$allow_nagative
-	 * @return	Mixed(Integer or false)
-	*/
-	public function getInt( $_key, $_default=false, $allow_nagative=false )
-	{
-		if ( ! isset( $_GET[$_key] ) ) return $_default;
-		
-		$v	= intval($_GET[$_key]);
-		if ( $v < 0 && $allow_nagative == false )
-		{
-			return false;
-		}
+    public function get( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    {
+        if ( ! isset( $_GET[$_key] ) ) return $_default;
+        
+        //apply the model if it is not null
+        if ( $_model != NULL )
+        {
+            //check the load status of Filter class
+            self::checkAndLoadFilter();
+            
+            return Filter::get( $_GET, $_key, $_model, $_errno );
+        }
+        
+        //normal string fetch
+        return $_GET[$_key];
+    }
+    
+    /**
+     * Fetch an integer form $_GET global array
+     *
+     * @param    $_key
+     * @param    $_default
+     * @param    $allow_nagative
+     * @return    Mixed(Integer or false)
+    */
+    public function getInt( $_key, $_default=false, $allow_nagative=false )
+    {
+        if ( ! isset( $_GET[$_key] ) ) return $_default;
+        
+        $v    = intval($_GET[$_key]);
+        if ( $v < 0 && $allow_nagative == false )
+        {
+            return false;
+        }
 
-		return $v;
-	}
-	
-	/**
-	 * fetch item from $_GET with a specifiel model
-	 *
-	 * @param	$_model
-	 * @param	$_errno
-	 * @return	Mixed
-	*/
-	public function getModel( $_model, &$_errno )
-	{
-		//check the load status of Filter class
-		self::checkAndLoadFilter();
-			
-		return Filter::loadFromModel($_GET, $_model, $_errno);
-	}
-	
-	//----------------------------------------------------------
-	
-	/**
-	 * fetch item from $_POST data source
-	 *
-	 * @param	$_key
-	 * @param	$_model
-	 * @param	$_default
-	 * @param	$_errno
-	 * @return	Mixed
-	*/
-	public function post( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
-	{
-		if ( ! isset($_POST[$_key]) ) return $_default;
-		
-		//apply the model if it is not null
-		if ( $_model != NULL )
-		{
-			//check the load status of Filter class
-			self::checkAndLoadFilter();
-			
-			return Filter::get( $_POST, $_key, $_model, $_errno );
-		}
-		
-		//normal string fetch
-		return $_POST[$_key];
-	}
-	
-	/**
-	 * Fetch an integer form $_POST global array
-	 *
-	 * @param	$_POST
-	 * @param	$_default
-	 * @param	$allow_nagative
-	 * @return	Mixed(Integer or false)
-	*/
-	public function postInt( $_key, $_default=false, $allow_nagative=false )
-	{
-		if ( ! isset( $_POST[$_key] ) ) return $_default;
-		
-		$v	= intval($_POST[$_key]);
-		if ( $v < 0 && $allow_nagative == false )
-		{
-			return false;
-		}
+        return $v;
+    }
+    
+    /**
+     * fetch item from $_GET with a specifiel model
+     *
+     * @param    $_model
+     * @param    $_errno
+     * @return    Mixed
+    */
+    public function getModel( $_model, &$_errno )
+    {
+        //check the load status of Filter class
+        self::checkAndLoadFilter();
+            
+        return Filter::loadFromModel($_GET, $_model, $_errno);
+    }
+    
+    //----------------------------------------------------------
+    
+    /**
+     * fetch item from $_POST data source
+     *
+     * @param    $_key
+     * @param    $_model
+     * @param    $_default
+     * @param    $_errno
+     * @return    Mixed
+    */
+    public function post( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    {
+        if ( ! isset($_POST[$_key]) ) return $_default;
+        
+        //apply the model if it is not null
+        if ( $_model != NULL )
+        {
+            //check the load status of Filter class
+            self::checkAndLoadFilter();
+            
+            return Filter::get( $_POST, $_key, $_model, $_errno );
+        }
+        
+        //normal string fetch
+        return $_POST[$_key];
+    }
+    
+    /**
+     * Fetch an integer form $_POST global array
+     *
+     * @param    $_POST
+     * @param    $_default
+     * @param    $allow_nagative
+     * @return    Mixed(Integer or false)
+    */
+    public function postInt( $_key, $_default=false, $allow_nagative=false )
+    {
+        if ( ! isset( $_POST[$_key] ) ) return $_default;
+        
+        $v    = intval($_POST[$_key]);
+        if ( $v < 0 && $allow_nagative == false )
+        {
+            return false;
+        }
 
-		return $v;
-	}
-	
-	/**
-	 * fetch item from $_POST with a specifiel model
-	 *
-	 * @param	$_model
-	 * @param	$_errno
-	 * @return	Mixed
-	*/
-	public function postModel( $_model, &$_errno )
-	{
-		//check the load status of Filter class
-		self::checkAndLoadFilter();
-		
-		return Filter::loadFromModel($_POST, $_model, $_errno);
-	}
-	
-	//----------------------------------------------------------
-	
-	/**
-	 * fetch item from $_COOKIE data source
-	 *
-	 * @param	$_key
-	 * @param	$_model
-	 * @param	$_default
-	 * @param	$_errno
-	 * @return	Mixed
-	*/
-	public function cookie( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
-	{
-		if ( ! isset($_COOKIE[$_key]) ) return $_default;
-		
-		//apply the model if it is not null
-		if ( $_model != NULL )
-		{
-			//check the load status of Filter class
-			self::checkAndLoadFilter();
-			
-			return Filter::get( $_COOKIE, $_key, $_model, $_errno );
-		}
-		
-		//normal string fetch
-		return $_COOKIE[$_key];
-	}
-	
-	/**
-	 * Fetch an integer form $_COOKIE global array
-	 *
-	 * @param	$_key
-	 * @param	$_default
-	 * @param	$allow_nagative
-	 * @return	Mixed(Integer or false)
-	*/
-	public function cookieInt( $_key, $_default=false, $allow_nagative=false )
-	{
-		if ( ! isset( $_COOKIE[$_key] ) ) return $_default;
-		
-		$v	= intval($_COOKIE[$_key]);
-		if ( $v < 0 && $allow_nagative == false )
-		{
-			return false;
-		}
+        return $v;
+    }
+    
+    /**
+     * fetch item from $_POST with a specifiel model
+     *
+     * @param    $_model
+     * @param    $_errno
+     * @return    Mixed
+    */
+    public function postModel( $_model, &$_errno )
+    {
+        //check the load status of Filter class
+        self::checkAndLoadFilter();
+        
+        return Filter::loadFromModel($_POST, $_model, $_errno);
+    }
+    
+    //----------------------------------------------------------
+    
+    /**
+     * fetch item from $_COOKIE data source
+     *
+     * @param    $_key
+     * @param    $_model
+     * @param    $_default
+     * @param    $_errno
+     * @return    Mixed
+    */
+    public function cookie( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    {
+        if ( ! isset($_COOKIE[$_key]) ) return $_default;
+        
+        //apply the model if it is not null
+        if ( $_model != NULL )
+        {
+            //check the load status of Filter class
+            self::checkAndLoadFilter();
+            
+            return Filter::get( $_COOKIE, $_key, $_model, $_errno );
+        }
+        
+        //normal string fetch
+        return $_COOKIE[$_key];
+    }
+    
+    /**
+     * Fetch an integer form $_COOKIE global array
+     *
+     * @param    $_key
+     * @param    $_default
+     * @param    $allow_nagative
+     * @return    Mixed(Integer or false)
+    */
+    public function cookieInt( $_key, $_default=false, $allow_nagative=false )
+    {
+        if ( ! isset( $_COOKIE[$_key] ) ) return $_default;
+        
+        $v    = intval($_COOKIE[$_key]);
+        if ( $v < 0 && $allow_nagative == false )
+        {
+            return false;
+        }
 
-		return $v;
-	}
-	
-	/**
-	 * fetch item from $_COOKIE with a specifiel model
-	 *
-	 * @param	$_model
-	 * @param	$_errno
-	 * @return	Mixed
-	*/
-	public function cookieModel( $_model, &$_errno )
-	{
-		//check the load status of Filter class
-		self::checkAndLoadFilter();
-			
-		return Filter::loadFromModel($_COOKIE, $_model, $_errno);
-	}
-	
-	//----------------------------------------------------------
-	
-	/**
-	 * fetch item from $_SESSION data source
-	 *
-	 * @param	$_key
-	 * @param	$_model
-	 * @param	$_default
-	 * @param	$_errno
-	 * @return	Mixed
-	*/
-	public function session( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
-	{
-		if ( ! isset($_SESSION[$_key]) ) return $_default;
-		
-		//apply the model if it is not null
-		if ( $_model != NULL )
-		{
-			//check the load status of Filter class
-			self::checkAndLoadFilter();
-			
-			return Filter::get( $_SESSION, $_key, $_model, $_errno );
-		}
-		
-		//normal string fetch
-		return $_SESSION[$_key];
-	}
-	
-	//----------------------------------------------------------
-	
-	/**
-	 * fetch item from $_REQUEST data source
-	 *
-	 * @param	$_key
-	 * @param	$_model
-	 * @param	$_default
-	 * @param	$_errno
-	 * @return	Mixed
-	*/
-	public function request( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
-	{
-		if ( ! isset($_REQUEST[$_key]) ) return $_default;
-		
-		//apply the model if it is not null
-		if ( $_model != NULL )
-		{
-			//check the load status of Filter class
-			self::checkAndLoadFilter();
-			
-			return Filter::get( $_REQUEST, $_key, $_model, $_errno );
-		}
-		
-		//normal string fetch
-		return $_REQUEST[$_key];
-	}
-	
-	/**
-	 * Fetch an integer form $_REQUEST global array
-	 *
-	 * @param	$_key
-	 * @param	$_default
-	 * @param	$allow_nagative
-	 * @return	Mixed(Integer or false)
-	*/
-	public function requestInt( $_key, $_default=false, $allow_nagative=false )
-	{
-		if ( ! isset( $_REQUEST[$_key] ) ) return $_default;
-		
-		$v	= intval($_REQUEST[$_key]);
-		if ( $v < 0 && $allow_nagative == false )
-		{
-			return false;
-		}
+        return $v;
+    }
+    
+    /**
+     * fetch item from $_COOKIE with a specifiel model
+     *
+     * @param    $_model
+     * @param    $_errno
+     * @return    Mixed
+    */
+    public function cookieModel( $_model, &$_errno )
+    {
+        //check the load status of Filter class
+        self::checkAndLoadFilter();
+            
+        return Filter::loadFromModel($_COOKIE, $_model, $_errno);
+    }
+    
+    //----------------------------------------------------------
+    
+    /**
+     * fetch item from $_SESSION data source
+     *
+     * @param    $_key
+     * @param    $_model
+     * @param    $_default
+     * @param    $_errno
+     * @return    Mixed
+    */
+    public function session( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    {
+        if ( ! isset($_SESSION[$_key]) ) return $_default;
+        
+        //apply the model if it is not null
+        if ( $_model != NULL )
+        {
+            //check the load status of Filter class
+            self::checkAndLoadFilter();
+            
+            return Filter::get( $_SESSION, $_key, $_model, $_errno );
+        }
+        
+        //normal string fetch
+        return $_SESSION[$_key];
+    }
+    
+    //----------------------------------------------------------
+    
+    /**
+     * fetch item from $_REQUEST data source
+     *
+     * @param    $_key
+     * @param    $_model
+     * @param    $_default
+     * @param    $_errno
+     * @return    Mixed
+    */
+    public function request( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    {
+        if ( ! isset($_REQUEST[$_key]) ) return $_default;
+        
+        //apply the model if it is not null
+        if ( $_model != NULL )
+        {
+            //check the load status of Filter class
+            self::checkAndLoadFilter();
+            
+            return Filter::get( $_REQUEST, $_key, $_model, $_errno );
+        }
+        
+        //normal string fetch
+        return $_REQUEST[$_key];
+    }
+    
+    /**
+     * Fetch an integer form $_REQUEST global array
+     *
+     * @param    $_key
+     * @param    $_default
+     * @param    $allow_nagative
+     * @return    Mixed(Integer or false)
+    */
+    public function requestInt( $_key, $_default=false, $allow_nagative=false )
+    {
+        if ( ! isset( $_REQUEST[$_key] ) ) return $_default;
+        
+        $v    = intval($_REQUEST[$_key]);
+        if ( $v < 0 && $allow_nagative == false )
+        {
+            return false;
+        }
 
-		return $v;
-	}
-	
-	/**
-	 * fetch item from $_REQUEST with a specifiel model
-	 *
-	 * @param	$_model
-	 * @param	$_errno
-	 * @return	Mixed
-	*/
-	public function requestModel( $_model, &$_errno )
-	{
-		//check the load status of Filter class
-		self::checkAndLoadFilter();
-			
-		return Filter::loadFromModel($_REQUEST, $_model, $_errno);
-	}
-	
-	//----------------------------------------------------------
-	
-	/**
-	 * fetch item from $_SERVER data source
-	 *
-	 * @param	$_key
-	 * @param	$_model
-	 * @param	$_default
-	 * @param	$_errno
-	 * @return	Mixed
-	*/
-	public function server( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
-	{
-		if ( ! isset($_SERVER[$_key]) ) return $_default;
-		
-		//apply the model if it is not null
-		if ( $_model != NULL )
-		{
-			//check the load status of Filter class
-			self::checkAndLoadFilter();
-			
-			return Filter::get( $_SERVER, $_key, $_model, $_errno );
-		}
-		
-		//normal string fetch
-		return $_SERVER[$_key];
-	}
-	
-	//---------------------------------------------------------
-	
-	/**
-	 * fetch item from $_SERVER data source
-	 *
-	 * @param	$_key
-	 * @param	$_model
-	 * @param	$_default
-	 * @param	$_errno
-	 * @return	Mixed
-	*/
-	public function env( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
-	{
-		if ( ! isset($_ENV[$_key]) ) return $_default;
-		
-		//apply the model if it is not null
-		if ( $_model != NULL )
-		{
-			//check the load status of Filter class
-			self::checkAndLoadFilter();
-			
-			return Filter::get( $_ENV, $_key, $_model, $_errno );
-		}
-		
-		//normal string fetch
-		return $_ENV[$_key];
-	}
+        return $v;
+    }
+    
+    /**
+     * fetch item from $_REQUEST with a specifiel model
+     *
+     * @param    $_model
+     * @param    $_errno
+     * @return    Mixed
+    */
+    public function requestModel( $_model, &$_errno )
+    {
+        //check the load status of Filter class
+        self::checkAndLoadFilter();
+            
+        return Filter::loadFromModel($_REQUEST, $_model, $_errno);
+    }
+    
+    //----------------------------------------------------------
+    
+    /**
+     * fetch item from $_SERVER data source
+     *
+     * @param    $_key
+     * @param    $_model
+     * @param    $_default
+     * @param    $_errno
+     * @return    Mixed
+    */
+    public function server( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    {
+        if ( ! isset($_SERVER[$_key]) ) return $_default;
+        
+        //apply the model if it is not null
+        if ( $_model != NULL )
+        {
+            //check the load status of Filter class
+            self::checkAndLoadFilter();
+            
+            return Filter::get( $_SERVER, $_key, $_model, $_errno );
+        }
+        
+        //normal string fetch
+        return $_SERVER[$_key];
+    }
+    
+    //---------------------------------------------------------
+    
+    /**
+     * fetch item from $_SERVER data source
+     *
+     * @param    $_key
+     * @param    $_model
+     * @param    $_default
+     * @param    $_errno
+     * @return    Mixed
+    */
+    public function env( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    {
+        if ( ! isset($_ENV[$_key]) ) return $_default;
+        
+        //apply the model if it is not null
+        if ( $_model != NULL )
+        {
+            //check the load status of Filter class
+            self::checkAndLoadFilter();
+            
+            return Filter::get( $_ENV, $_key, $_model, $_errno );
+        }
+        
+        //normal string fetch
+        return $_ENV[$_key];
+    }
 }
 }
 
@@ -698,8 +698,8 @@ if ( (SR_INC_COMPONENTS & 0x10) != 0 )
  * 2. make the style request url
  * 3. redirect to the specifield url
  *
- * @author	chenxin <chenxin619315@gmail.com>
- * @link	http://www.lionsoul.org/Syrian
+ * @author    chenxin <chenxin619315@gmail.com>
+ * @link    http://www.lionsoul.org/Syrian
  */
 
  //---------------------------------------------------------
@@ -1091,45 +1091,45 @@ class Output
     public function setStatusHeader( $_code, $_string = '' )
     {
         static $_status = array(
-            200	=> 'OK',
-            201	=> 'Created',
-            202	=> 'Accepted',
-            203	=> 'Non-Authoritative Information',
-            204	=> 'No Content',
-            205	=> 'Reset Content',
-            206	=> 'Partial Content',
+            200    => 'OK',
+            201    => 'Created',
+            202    => 'Accepted',
+            203    => 'Non-Authoritative Information',
+            204    => 'No Content',
+            205    => 'Reset Content',
+            206    => 'Partial Content',
 
-            300	=> 'Multiple Choices',
-            301	=> 'Moved Permanently',
-            302	=> 'Found',
-            304	=> 'Not Modified',
-            305	=> 'Use Proxy',
-            307	=> 'Temporary Redirect',
+            300    => 'Multiple Choices',
+            301    => 'Moved Permanently',
+            302    => 'Found',
+            304    => 'Not Modified',
+            305    => 'Use Proxy',
+            307    => 'Temporary Redirect',
 
-            400	=> 'Bad Request',
-            401	=> 'Unauthorized',
-            403	=> 'Forbidden',
-            404	=> 'Not Found',
-            405	=> 'Method Not Allowed',
-            406	=> 'Not Acceptable',
-            407	=> 'Proxy Authentication Required',
-            408	=> 'Request Timeout',
-            409	=> 'Conflict',
-            410	=> 'Gone',
-            411	=> 'Length Required',
-            412	=> 'Precondition Failed',
-            413	=> 'Request Entity Too Large',
-            414	=> 'Request-URI Too Long',
-            415	=> 'Unsupported Media Type',
-            416	=> 'Requested Range Not Satisfiable',
-            417	=> 'Expectation Failed',
+            400    => 'Bad Request',
+            401    => 'Unauthorized',
+            403    => 'Forbidden',
+            404    => 'Not Found',
+            405    => 'Method Not Allowed',
+            406    => 'Not Acceptable',
+            407    => 'Proxy Authentication Required',
+            408    => 'Request Timeout',
+            409    => 'Conflict',
+            410    => 'Gone',
+            411    => 'Length Required',
+            412    => 'Precondition Failed',
+            413    => 'Request Entity Too Large',
+            414    => 'Request-URI Too Long',
+            415    => 'Unsupported Media Type',
+            416    => 'Requested Range Not Satisfiable',
+            417    => 'Expectation Failed',
 
-            500	=> 'Internal Server Error',
-            501	=> 'Not Implemented',
-            502	=> 'Bad Gateway',
-            503	=> 'Service Unavailable',
-            504	=> 'Gateway Timeout',
-            505	=> 'HTTP Version Not Supported'
+            500    => 'Internal Server Error',
+            501    => 'Not Implemented',
+            502    => 'Bad Gateway',
+            503    => 'Service Unavailable',
+            504    => 'Gateway Timeout',
+            505    => 'HTTP Version Not Supported'
         );
         
         if ( ! isset($_status[$_code]) ) exit('Error: Invalid http status code');
@@ -1198,15 +1198,15 @@ class Output
 /**
  * Syrian Model Super Class
  *
- * @author	chenxin <chenxin619315@gmail.com>
- * @link	http://www.lionsoul.org/syrian
+ * @author    chenxin <chenxin619315@gmail.com>
+ * @link    http://www.lionsoul.org/syrian
  */
 
 //--------------------------------------------------------
  
 class Model
 {
-	public function __construct()
+    public function __construct()
     {
         
     }
@@ -1219,47 +1219,47 @@ if ( (SR_INC_COMPONENTS & 0x80) != 0 )
  * Opert Application Controller Class.
  * And this is the super class of the module controller class.
  *
- * @author	chenxin <chenxin619315@gmail.com>
- * @link	http://www.lionsoul.org/syrian
+ * @author    chenxin <chenxin619315@gmail.com>
+ * @link    http://www.lionsoul.org/syrian
  */
 
  //-----------------------------------------------------------------
  
 class Controller
 {
-	public   	$uri  	= NULL;		//request uri
-    public   	$input  = NULL;		//request input
-	public   	$output = NULL;		//request output
-	public		$_G		= NULL;		//global resource
-	
-	/**
-	 * Construct method to create new instance of the controller
-	 *
-	 * @param	$uri
-	 * @param	$input
-	 * @param	$output
-	*/
-	public function __construct()
-	{
-		$this->_G = new stdClass();
-	}
-	
-	/**
-	 * the entrance of the current controller
-	 * default to invoke the uri->page.logic.php to handler
-	 * 	the request, you may need to rewrite this method to self define
-	 *
-	 * @access	public
-	*/
-	public function run()
-	{
-		//user logic file to handler the request
-		$_logicScript = $this->uri->page . '.logic.php';
-		if ( file_exists($_logicScript) )
-			include $_logicScript;
-		else
-			$this->uri->redirect('/error/404');
-	}
+    public       $uri      = NULL;        //request uri
+    public       $input  = NULL;        //request input
+    public       $output = NULL;        //request output
+    public        $_G        = NULL;        //global resource
+    
+    /**
+     * Construct method to create new instance of the controller
+     *
+     * @param    $uri
+     * @param    $input
+     * @param    $output
+    */
+    public function __construct()
+    {
+        $this->_G = new stdClass();
+    }
+    
+    /**
+     * the entrance of the current controller
+     * default to invoke the uri->page.logic.php to handler
+     *     the request, you may need to rewrite this method to self define
+     *
+     * @access    public
+    */
+    public function run()
+    {
+        //user logic file to handler the request
+        $_logicScript = $this->uri->page . '.logic.php';
+        if ( file_exists($_logicScript) )
+            include $_logicScript;
+        else
+            $this->uri->redirect('/error/404');
+    }
 }
 }
 ?>
