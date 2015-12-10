@@ -1505,10 +1505,10 @@ class simple_html_dom
     {
         // Per sourceforge: http://sourceforge.net/tracker/?func=detail&aid=3061408&group_id=218559&atid=1044037
         // If the attribute is already defined inside a tag, only pay atetntion to the first one as opposed to the last one.
-        if (isset($node->attr[$name]))
-        {
-            return;
-        }
+        //if (isset($node->attr[$name]))
+        //{
+        //    return;
+        //}
 
         $space[2] = $this->copy_skip($this->token_blank);
         switch ($this->char) {
