@@ -2,7 +2,7 @@
 /**
  * image handl class based on imagick
  * 
- * @author	dongyado<dongyado@gmail.com>
+ * @author    dongyado<dongyado@gmail.com>
  *
  */
 
@@ -10,13 +10,13 @@
  
 class Image
 {
-	
-	private $img_src		= NULL;  	//source image
-	private $img_dst		= NULL;  	//destination image
+    
+    private $img_src        = NULL;      //source image
+    private $img_dst        = NULL;      //destination image
     private $image          = NULL;
     private $type           = NULL;
-	
-	public  function __construct(){}
+    
+    public  function __construct(){}
 
 
     /**
@@ -26,7 +26,7 @@ class Image
      * */
     public function open($src_path)
     {
-		if ( ! file_exists($src_path) ) return false;
+        if ( ! file_exists($src_path) ) return false;
         $this->image = new Imagick($src_path);
         $this->img_src = $src_path;
 
@@ -206,55 +206,55 @@ class Image
      * */
     public function save($dst_path)
     {
-		if ( ! file_exists($dst_path) ) self::createPath($dst_path);
+        if ( ! file_exists($dst_path) ) self::createPath($dst_path);
         if ($this->type == 'gif')
         {
              return  $this->image->writeImages($dst_path, true);
         } 
         return $this->image->writeImage($dst_path);
     }
-	
-	
-	public function __destruct()
-	{
+    
+    
+    public function __destruct()
+    {
         $this->image->destroy();
-	}
+    }
 
 
-	/**
-	 * check the existence of the upload direcotry, 
-	 * 		if it is not exists create it
+    /**
+     * check the existence of the upload direcotry, 
+     *         if it is not exists create it
      *
-     * @param 	$path
-	 */
-	public static function createPath( $path )
-	{
-		$dirArray = array();
-		$baseDir = '';
+     * @param     $path
+     */
+    public static function createPath( $path )
+    {
+        $dirArray = array();
+        $baseDir = '';
 
-		while ($path != '.' && $path != '..' ) 
-		{
-			if ( file_exists($path) ) 
-			{
-				$baseDir = $path;
-				break;	 
-			}
+        while ($path != '.' && $path != '..' ) 
+        {
+            if ( file_exists($path) ) 
+            {
+                $baseDir = $path;
+                break;     
+            }
 
-			$dirArray[]	= basename($path);   //basename part
-			$path 		= dirname($path); 
-		}
+            $dirArray[]    = basename($path);   //basename part
+            $path         = dirname($path); 
+        }
 
-		for ( $i = count($dirArray) - 1; $i >= 0; $i-- )
-		{
-			if ( strpos($dirArray[$i], '.') !== FALSE ) 
-			{
-				break;
-			}
+        for ( $i = count($dirArray) - 1; $i >= 0; $i-- )
+        {
+            if ( strpos($dirArray[$i], '.') !== FALSE ) 
+            {
+                break;
+            }
 
-			@mkdir( $baseDir . '/' . $dirArray[$i] );
-			$baseDir = $baseDir . '/' .$dirArray[$i];
-		}
-	} 
+            @mkdir( $baseDir . '/' . $dirArray[$i] );
+            $baseDir = $baseDir . '/' .$dirArray[$i];
+        }
+    } 
 }
 
 //$thumb = new Image();

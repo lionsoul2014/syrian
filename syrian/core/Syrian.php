@@ -3,8 +3,8 @@
  * Syrian Initialize Script
  * Load the common functons and base classes
  *
- * @author	chenxin <chenxin619315@gmail.com>
- * @link	http://www.lionsoul.org/syrian
+ * @author    chenxin <chenxin619315@gmail.com>
+ * @link    http://www.lionsoul.org/syrian
  */
 
  //--------------------------------------------------------------
@@ -17,7 +17,7 @@ define('VERSION', '1.0.1');
 //0x02: Loader
 //0x04: Helper
 //0x08: Input
-//0x10:	Uri
+//0x10:    Uri
 //0x20: Output
 //0x40: Model
 //0x80: Controller

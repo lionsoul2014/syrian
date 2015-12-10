@@ -220,7 +220,7 @@ class HtmlView extends AView
      *      $this->display will be invoke to finish the job
      *
      * @param   $_tpl_file
-	 * @param	$sanitize sanitize the content ?
+     * @param    $sanitize sanitize the content ?
      * @return  string the executed html text
     */
     public function getContent( $_tpl_file = NULL, $sanitize = false )

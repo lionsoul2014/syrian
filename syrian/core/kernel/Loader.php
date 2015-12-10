@@ -18,12 +18,12 @@ class Loader
     /**
      * Import class file from the specified path
      * The function will check script file $_path.class.php first
-     * 	and then $_path.php
+     *     and then $_path.php
      *
-     * @param	$_class
+     * @param    $_class
      * @param   $_section
-     * @param	$_inc	If $_inc is TRUE check the syrian/lib  or check APPPATH/lib
-     * @return	bool	true for loaded successfuly and false for not
+     * @param    $_inc    If $_inc is TRUE check the syrian/lib  or check APPPATH/lib
+     * @return    bool    true for loaded successfuly and false for not
      */
     public static function import($_class, $_section = NULL, $_inc = true)
     {
@@ -55,13 +55,13 @@ class Loader
     
     /**
      * function to load data from the specified file
-     * 	and return the return of the included file as the final result
+     *     and return the return of the included file as the final result
      *
-     * @param	$_config
-     * @param	$_section
+     * @param    $_config
+     * @param    $_section
      * @param   $_inc   True for seach files in syrian/config
-	 * @param	$_key	specifield key
-     * @return	mixed(Array, Object, Bool)
+     * @param    $_key    specifield key
+     * @return    mixed(Array, Object, Bool)
      */
     public static function config( $_config, $_section=NULL, $_inc=false, $key=NULL )
     {
@@ -78,14 +78,14 @@ class Loader
             if ( file_exists($_file) )
             {
                 //return include $_file;
-                $conf	= include $_file;
-				
-				if ( $key != NULL )
-				{
-					return isset($conf["{$key}"]) ? $conf["{$key}"] : NULL;
-				}
+                $conf    = include $_file;
+                
+                if ( $key != NULL )
+                {
+                    return isset($conf["{$key}"]) ? $conf["{$key}"] : NULL;
+                }
 
-				return $conf;
+                return $conf;
             }
         }
         
@@ -95,11 +95,11 @@ class Loader
     
     /**
      * function to load the specifile model maybe from the
-     * 		specifile path and return the instance of the model
+     *         specifile path and return the instance of the model
      *
-     * @param	$_model
-     * @param	$_section
-     * @return	Object
+     * @param    $_model
+     * @param    $_section
+     * @return    Object
     */
     public static function model( $_model, $_section = NULL )
     {
@@ -122,7 +122,7 @@ class Loader
         {
             if ( file_exists( $_file ) )
             {
-                include $_file;				//include the model class file
+                include $_file;                //include the model class file
                 
                 $o = NULL;
                 $_class = $_model.'Model';
@@ -145,13 +145,13 @@ class Loader
     /**
      * function to load and create helper instance
      *
-     * @param	$_helper
-     * @param	$_section
+     * @param    $_helper
+     * @param    $_section
      * @param   $_inc   True for seach files in syrian/helper
-	 * @param	$_conf	configuration to create the instance
-     * @return	mixed(Array, Object, Bool)
+     * @param    $_conf    configuration to create the instance
+     * @return    mixed(Array, Object, Bool)
      */
-	public static function helper($_helper, $conf=NULL, $_section = NULL, $_inc = false)
+    public static function helper($_helper, $conf=NULL, $_section = NULL, $_inc = false)
     {
         //All the loaded helper.
         static $_loaded = array();
@@ -170,8 +170,8 @@ class Loader
             if ( file_exists($_file) )
             {
                 require $_file;
-				$_class	= $_helper.'Helper';
-				$obj = new $_class($conf);
+                $_class    = $_helper.'Helper';
+                $obj = new $_class($conf);
                 $_loaded[$_cls] = &$obj;
                 return $obj;
             }

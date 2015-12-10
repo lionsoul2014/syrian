@@ -1,9 +1,9 @@
 <?php
 /**
  * user level session handler class and base on file
- *	
- *	R8C security was append after the session_id
- *		and take the '__' as the dilimiter
+ *    
+ *    R8C security was append after the session_id
+ *        and take the '__' as the dilimiter
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
@@ -12,32 +12,32 @@
 
 class FileSession implements ISession
 {
-	private $_partitions	= 1000;
-	private $_save_path		= NULL;
-    private $_ttl 			= 0;
-	private	$_ext			= '.ses';
-	private	$_sessid		= NULL;
-	private $_R8C			= NULL;
+    private $_partitions    = 1000;
+    private $_save_path        = NULL;
+    private $_ttl             = 0;
+    private    $_ext            = '.ses';
+    private    $_sessid        = NULL;
+    private $_R8C            = NULL;
     private $_session_name  = NULL;
 
-	//valud of session_id's hash value
-	private $_hval			= -1;
+    //valud of session_id's hash value
+    private $_hval            = -1;
     
-	/**
-	 * construct method to initialize the class
-	 *
-	 * @param	$conf
-	 */
+    /**
+     * construct method to initialize the class
+     *
+     * @param    $conf
+     */
     public function __construct( &$conf )
-	{
-		if ( isset( $conf['save_path'] ) ) 
-			$this->_save_path = $conf['save_path'];
-		if ( isset( $conf['ttl'] ) )
-			$this->_ttl	= $conf['ttl'];
-		if ( isset( $conf['partitions'] ) )
-			$this->_partitions = $conf['partitions'];
-		if ( isset( $conf['file_ext'] ) )
-			$this->_ext = $conf['file_ext'];
+    {
+        if ( isset( $conf['save_path'] ) ) 
+            $this->_save_path = $conf['save_path'];
+        if ( isset( $conf['ttl'] ) )
+            $this->_ttl    = $conf['ttl'];
+        if ( isset( $conf['partitions'] ) )
+            $this->_partitions = $conf['partitions'];
+        if ( isset( $conf['file_ext'] ) )
+            $this->_ext = $conf['file_ext'];
 
         //set use user level session
         session_module_name('user');
@@ -50,271 +50,271 @@ class FileSession implements ISession
             array($this, '_gc')
         );
 
-		$_more	= 86400;
-		if ( isset( $conf['more_for_cookie'] ) )
-		{
-			$_more = $conf['more_for_cookie'];
-		}
+        $_more    = 86400;
+        if ( isset( $conf['more_for_cookie'] ) )
+        {
+            $_more = $conf['more_for_cookie'];
+        }
         
 
         if ( isset($conf['session_name']) && $conf['session_name'] )
-		{
+        {
             $this->_session_name = $conf['session_name']; 
             session_name($this->_session_name);
         }
 
-		$cookie_domain = '';
-		if ( isset($conf['cookie_domain']) ) $cookie_domain = $conf['cookie_domain'];
-		else if ( isset($conf['domain_strategy']) )
-		{
-			$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
-			switch ( $conf['domain_strategy'] )
-			{
-			case 'cur_host': $cookie_domain = $host; break;
-			case 'all_sub_host':
-				$pnum = 0;
-				$hostLen = min(strlen($host), 255);
-				for ( $i = 0; $i < $hostLen; $i++ ) {if ( $host[$i] == '.' ) $pnum++;}
-				
-				//define the sub host ($pnum could be 0 like localhost)
-				if ( $pnum == 0 ) $cookie_domain = $host;
-				else if ( $pnum == 1 ) $cookie_domain = ".{$host}";
-				else $cookie_domain = substr($host, strpos($host, '.'));
-				break;
-			}
-		}
+        $cookie_domain = '';
+        if ( isset($conf['cookie_domain']) ) $cookie_domain = $conf['cookie_domain'];
+        else if ( isset($conf['domain_strategy']) )
+        {
+            $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+            switch ( $conf['domain_strategy'] )
+            {
+            case 'cur_host': $cookie_domain = $host; break;
+            case 'all_sub_host':
+                $pnum = 0;
+                $hostLen = min(strlen($host), 255);
+                for ( $i = 0; $i < $hostLen; $i++ ) {if ( $host[$i] == '.' ) $pnum++;}
+                
+                //define the sub host ($pnum could be 0 like localhost)
+                if ( $pnum == 0 ) $cookie_domain = $host;
+                else if ( $pnum == 1 ) $cookie_domain = ".{$host}";
+                else $cookie_domain = substr($host, strpos($host, '.'));
+                break;
+            }
+        }
 
-		//set the session id cookies lifetime
-		session_set_cookie_params($this->_ttl + $_more, '/', $cookie_domain);
+        //set the session id cookies lifetime
+        session_set_cookie_params($this->_ttl + $_more, '/', $cookie_domain);
     }
 
-	//start the session
-	public function start()
-	{
-		if ( $this->_sessid != NULL ) 
-		{
-			if ( $this->_R8C == NULL ) $_sessid = $this->_sessid;
-			else $_sessid = $this->_sessid.'---'.$this->_R8C;
+    //start the session
+    public function start()
+    {
+        if ( $this->_sessid != NULL ) 
+        {
+            if ( $this->_R8C == NULL ) $_sessid = $this->_sessid;
+            else $_sessid = $this->_sessid.'---'.$this->_R8C;
 
-			//set the session id
-			session_id($_sessid);
-		}
+            //set the session id
+            session_id($_sessid);
+        }
 
-		session_start();
-	}
+        session_start();
+    }
 
-	/**
-	 * destroy the current session
-	*/
-	public function destroy()
-	{
-		//1. clear the session data
-		$_SESSION = array();
+    /**
+     * destroy the current session
+    */
+    public function destroy()
+    {
+        //1. clear the session data
+        $_SESSION = array();
 
-		//2. destroy the session file or stored data
-		if ( $this->_sessid != NULL )
-		{
-			$this->_destroy($this->_sessid);
-		}
-		
-		//3. destroy the session
-		session_destroy();
-	}
+        //2. destroy the session file or stored data
+        if ( $this->_sessid != NULL )
+        {
+            $this->_destroy($this->_sessid);
+        }
+        
+        //3. destroy the session
+        session_destroy();
+    }
 
-	//get the current session id
-	//invoke it after the invoke the start method
-	public function getSessionId()
-	{
-		return $this->_sessid;
-	}
+    //get the current session id
+    //invoke it after the invoke the start method
+    public function getSessionId()
+    {
+        return $this->_sessid;
+    }
 
-	//set the current session id
-	//only a-z,0-9,A-Z is valid chars for the new session id
-	//invoke it before the invoke of method start
-	public function setSessionId( $_sessid )
-	{
-		//set the session id
-		$this->_sessid = $_sessid;
-		return $this;
-	}
+    //set the current session id
+    //only a-z,0-9,A-Z is valid chars for the new session id
+    //invoke it before the invoke of method start
+    public function setSessionId( $_sessid )
+    {
+        //set the session id
+        $this->_sessid = $_sessid;
+        return $this;
+    }
     
-	/**
-	 * It is the first callback function executed when the session
-	 *		is started automatically or manually with session_start().
-	 * Return value is TRUE for success, FALSE for failure.
-	 */
+    /**
+     * It is the first callback function executed when the session
+     *        is started automatically or manually with session_start().
+     * Return value is TRUE for success, FALSE for failure.
+     */
     function _open( $_save_path, $_sessname )
-	{
-		//use the default _save_path without user define save_path
-		if ( $this->_save_path == NULL ) $this->_save_path = $_save_path;
+    {
+        //use the default _save_path without user define save_path
+        if ( $this->_save_path == NULL ) $this->_save_path = $_save_path;
         return TRUE;
     }
 
-	/**
-	 * It is also invoked when session_write_close() is called.
-	 * Return value should be TRUE for success, FALSE for failure.
-	*/
+    /**
+     * It is also invoked when session_write_close() is called.
+     * Return value should be TRUE for success, FALSE for failure.
+    */
     function _close()
-	{
+    {
         return TRUE;
     }
     
-	/**
-	 * The read callback must always return a session encoded (serialized) string,
-	 * 		or an empty string if there is no data to read.
-	 * This callback is called internally by PHP when the session starts or when session_start()
-	 * 		is called. Before this callback is invoked PHP will invoke the open callback.
-	*/
+    /**
+     * The read callback must always return a session encoded (serialized) string,
+     *         or an empty string if there is no data to read.
+     * This callback is called internally by PHP when the session starts or when session_start()
+     *         is called. Before this callback is invoked PHP will invoke the open callback.
+    */
     function _read( $_sessid )
-	{
-		//check if the R8C is appended
-		if ( ($pos = strpos($_sessid, '---')) !== false )
-		{
-			$this->_R8C = substr($_sessid, $pos+3);
-			$_sessid = substr($_sessid, 0, $pos);
-		}
-		
-		//set the global session id when it is null
-		if ( $this->_sessid == NULL ) $this->_sessid = $_sessid;
+    {
+        //check if the R8C is appended
+        if ( ($pos = strpos($_sessid, '---')) !== false )
+        {
+            $this->_R8C = substr($_sessid, $pos+3);
+            $_sessid = substr($_sessid, 0, $pos);
+        }
+        
+        //set the global session id when it is null
+        if ( $this->_sessid == NULL ) $this->_sessid = $_sessid;
 
-		//take the _hval as the partitions number
-		if ( $this->_hval == -1 )
-		{
-			$this->_hval = self::bkdrHash($_sessid, $this->_partitions);
-		}
+        //take the _hval as the partitions number
+        if ( $this->_hval == -1 )
+        {
+            $this->_hval = self::bkdrHash($_sessid, $this->_partitions);
+        }
 
-		//make the final session file
-		$_file = "{$this->_save_path}/{$this->_hval}/{$_sessid}{$this->_ext}";
+        //make the final session file
+        $_file = "{$this->_save_path}/{$this->_hval}/{$_sessid}{$this->_ext}";
 
-		//check the existence and the lifetime
-		if ( ! file_exists($_file) ) return '';
+        //check the existence and the lifetime
+        if ( ! file_exists($_file) ) return '';
 
-		//@Note: atime update maybe closed by filesystem
-		$ctime = max(filemtime($_file), fileatime($_file));
-		if ( $ctime + $this->_ttl < time() )
-		{
-			@unlink($_file);
-			return '';
-		}
+        //@Note: atime update maybe closed by filesystem
+        $ctime = max(filemtime($_file), fileatime($_file));
+        if ( $ctime + $this->_ttl < time() )
+        {
+            @unlink($_file);
+            return '';
+        }
 
-		//get and return the content of the session file
-		$_txt = file_get_contents($_file);
-		return ($_txt == FALSE ? '' : $_txt);
+        //get and return the content of the session file
+        $_txt = file_get_contents($_file);
+        return ($_txt == FALSE ? '' : $_txt);
     }
     
-	/**
-	 * The write callback is called when the session needs to be saved and closed.
-	 * 	The serialized session data passed to this callback should be stored against
-	 * 		the passed session ID. When retrieving this data, the read callback must
-	 * 		return the exact value that was originally passed to the write callback.
-	*/
+    /**
+     * The write callback is called when the session needs to be saved and closed.
+     *     The serialized session data passed to this callback should be stored against
+     *         the passed session ID. When retrieving this data, the read callback must
+     *         return the exact value that was originally passed to the write callback.
+    */
     function _write( $_sessid, $_data )
-	{
-		if ( $_data == NULL || $_data == '' ) return FALSE;
-		$_sessid = $this->_sessid;
+    {
+        if ( $_data == NULL || $_data == '' ) return FALSE;
+        $_sessid = $this->_sessid;
 
-		//take the _hval as the partitions number
-		if ( $this->_hval == -1 )
-		{
-			$this->_hval = self::bkdrHash($_sessid, $this->partitions);
-		}
+        //take the _hval as the partitions number
+        if ( $this->_hval == -1 )
+        {
+            $this->_hval = self::bkdrHash($_sessid, $this->partitions);
+        }
 
-		//make the final session file
-		$_baseDir = "{$this->_save_path}/{$this->_hval}";
-		if ( ! file_exists($_baseDir) )	@mkdir($_baseDir, 0777);
+        //make the final session file
+        $_baseDir = "{$this->_save_path}/{$this->_hval}";
+        if ( ! file_exists($_baseDir) )    @mkdir($_baseDir, 0777);
 
-		//write the data to the final session file
-		$_sfile	= "{$_baseDir}/{$_sessid}{$this->_ext}";
-		if ( @file_put_contents($_sfile, $_data) != FALSE )
-		{
-			//chmod the newly created file
-			@chmod($_sfile, 0755);
-			return TRUE;
-		}
+        //write the data to the final session file
+        $_sfile    = "{$_baseDir}/{$_sessid}{$this->_ext}";
+        if ( @file_put_contents($_sfile, $_data) != FALSE )
+        {
+            //chmod the newly created file
+            @chmod($_sfile, 0755);
+            return TRUE;
+        }
 
-		return FALSE;
+        return FALSE;
     }
     
-	/**
-	 * This callback is executed when a session is destroyed with session_destroy().
-	 * Return value should be TRUE for success, FALSE for failure.
-	*/
+    /**
+     * This callback is executed when a session is destroyed with session_destroy().
+     * Return value should be TRUE for success, FALSE for failure.
+    */
     function _destroy( $_sessid )
-	{
-		//delete the session data
-		$_file = "{$this->_save_path}/{$this->_hval}/{$this->_sessid}{$this->_ext}";
-		if ( file_exists($_file) ) @unlink($_file);
+    {
+        //delete the session data
+        $_file = "{$this->_save_path}/{$this->_hval}/{$this->_sessid}{$this->_ext}";
+        if ( file_exists($_file) ) @unlink($_file);
 
-		//delete the PHPSESSId cookies
-		$sessname = session_name();
-		if ( isset($_COOKIE[$sessname]) ) 
-		{
-			setcookie($sessname, '', time() - 42000, '/');
-		}
+        //delete the PHPSESSId cookies
+        $sessname = session_name();
+        if ( isset($_COOKIE[$sessname]) ) 
+        {
+            setcookie($sessname, '', time() - 42000, '/');
+        }
 
         return TRUE;
     }
     
-	/**
-	 * The garbage collector callback is invoked internally by PHP periodically
-	 * 		in order to purge old session data.
-	 * The frequency is controlled by session.gc_probability and session.gc_divisor. 
-	*/
+    /**
+     * The garbage collector callback is invoked internally by PHP periodically
+     *         in order to purge old session data.
+     * The frequency is controlled by session.gc_probability and session.gc_divisor. 
+    */
     function _gc( $_lifetime )
-	{
+    {
         return TRUE;
     }
 
-	//check the specifield mapping is exists or not
-	public function has( $key )
-	{
-		return isset($_SESSION[$key]);
-	}
+    //check the specifield mapping is exists or not
+    public function has( $key )
+    {
+        return isset($_SESSION[$key]);
+    }
 
-	//get the value mapping with the specifield key
-	public function get( $key )
-	{
-		if ( ! isset($_SESSION[$key]) ) return NULL;
-		return $_SESSION[$key];
-	}
+    //get the value mapping with the specifield key
+    public function get( $key )
+    {
+        if ( ! isset($_SESSION[$key]) ) return NULL;
+        return $_SESSION[$key];
+    }
 
-	//set the value mapping with the specifield key
-	public function set( $key, $val )
-	{
-		$_SESSION[$key] = &$val;
-		return $this;
-	}
+    //set the value mapping with the specifield key
+    public function set( $key, $val )
+    {
+        $_SESSION[$key] = &$val;
+        return $this;
+    }
 
-	//get the R8C
-	public function getR8C()
-	{
-		return $this->_R8C;
-	}
+    //get the R8C
+    public function getR8C()
+    {
+        return $this->_R8C;
+    }
 
-	//set the current R8C invoke it before invoke start
-	//@param	$r8c
-	public function setR8C( $r8c )
-	{
-		$this->_R8C	= $r8c;
-		return $this;
-	}
+    //set the current R8C invoke it before invoke start
+    //@param    $r8c
+    public function setR8C( $r8c )
+    {
+        $this->_R8C    = $r8c;
+        return $this;
+    }
 
-	//------------------------------------------------------------
-	//bkdr hash function
-	private static function bkdrHash( $_str, $_size )
-	{
-		$_hash	= 0;
-		$len 	= strlen($_str);
-	
-		for ( $i = 0; $i < $len; $i++ ) 
-		{
-			$_hash = ( int ) ( $_hash * 1331 + ( ord($_str[$i]) % 127 ) );
-		}
-		
-		if ( $_hash < 0 ) 			$_hash *= -1;
-		if ( $_hash >= $_size ) 	$_hash = ( int ) $_hash % $_size; 
-		
-		return ( $_hash & 0x7FFFFFFF );
-	}
+    //------------------------------------------------------------
+    //bkdr hash function
+    private static function bkdrHash( $_str, $_size )
+    {
+        $_hash    = 0;
+        $len     = strlen($_str);
+    
+        for ( $i = 0; $i < $len; $i++ ) 
+        {
+            $_hash = ( int ) ( $_hash * 1331 + ( ord($_str[$i]) % 127 ) );
+        }
+        
+        if ( $_hash < 0 )             $_hash *= -1;
+        if ( $_hash >= $_size )     $_hash = ( int ) $_hash % $_size; 
+        
+        return ( $_hash & 0x7FFFFFFF );
+    }
 }
 ?>

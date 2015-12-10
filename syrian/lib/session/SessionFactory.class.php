@@ -8,17 +8,17 @@
 */
 interface ISession
 {
-	public function start();
-	public function destroy();
-	public function setSessionId($_sessid);
-	public function getSessionId();
+    public function start();
+    public function destroy();
+    public function setSessionId($_sessid);
+    public function getSessionId();
 
-	public function has( $key );
+    public function has( $key );
     public function get( $key );
     public function set( $key, $val );
 
-	public function getR8C();
-	public function setR8C( $r8c );
+    public function getR8C();
+    public function setR8C( $r8c );
 }
 
  //----------------------------------------------------

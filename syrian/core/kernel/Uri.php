@@ -7,8 +7,8 @@
  * 2. make the style request url
  * 3. redirect to the specifield url
  *
- * @author	chenxin <chenxin619315@gmail.com>
- * @link	http://www.lionsoul.org/Syrian
+ * @author    chenxin <chenxin619315@gmail.com>
+ * @link    http://www.lionsoul.org/Syrian
  */
 
  //---------------------------------------------------------

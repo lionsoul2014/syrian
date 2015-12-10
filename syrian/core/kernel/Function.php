@@ -2,8 +2,8 @@
 /**
  * Application common functions
  *
- * @author	chenxin <chenxin619315@gmail.com>
- * @link	http://www.lionsoul.org/syrian
+ * @author    chenxin <chenxin619315@gmail.com>
+ * @link    http://www.lionsoul.org/syrian
  */
 
  //-----------------------------------------------------------------
@@ -13,17 +13,17 @@
 */
 if ( ! function_exists('_G') )
 {
-	function _G($key, $val=NULL)
-	{
-		static $_GRE = array();
+    function _G($key, $val=NULL)
+    {
+        static $_GRE = array();
 
-		if ( $val == NULL )
-		{
-			return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
-		}
+        if ( $val == NULL )
+        {
+            return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
+        }
 
-		$_GRE["{$key}"] = &$val;
-		return true;
-	}
+        $_GRE["{$key}"] = &$val;
+        return true;
+    }
 }
 ?>
