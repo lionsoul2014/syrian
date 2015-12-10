@@ -210,6 +210,51 @@ class Util
 	}
 
 	/**
+	 * sort array by specified filed
+	 *
+	 * @param array 
+	 * @param string $filed array sort key
+	 * @param intger $order sort order, default is SORT_ASC, another is SORT_DESC
+	 * 
+	 * @return array new array that has been sorted
+	**/
+	public static function arraySort(&$array, $field, $order = SORT_ASC)
+	{
+		$ret_array  = array();
+		$sort_array = array();
+
+		if ( count($array) > 0 ) {
+			foreach ($array as $k => $v) {
+				if ( is_array($v) ) {
+					foreach ($v as $k1 => $v1) {
+						if ( $k1 == $field ) {
+							$sort_array[$k] = $v1;
+						}
+					}
+				} else {
+					$sort_array[$k] = $v;
+				}
+			}
+
+			switch ($order) {
+				case SORT_ASC:
+					echo 1;
+					asort($sort_array);
+					break;
+				case SORT_DESC:
+					arsort($sort_array);
+					break;
+			}
+
+			foreach ($sort_array as $key => $value) {
+				$ret_array[$key] = $array[$key];
+			}
+		}
+
+		return $ret_array;
+	}
+
+	/**
 	 * group the specifield array by specifield field
 	 * 	and take the value of the group key as the key the array of the 
 	 * same items with the some group key value.
