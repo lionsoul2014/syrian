@@ -508,5 +508,29 @@ class Util
 		//if ( $H >= 18 && $H < 24 )	return 'ng';
 		return 'ng';
 	}
+
+    /**
+     * convert an integer to a binary string 
+     *
+     * @param   intval
+     * @param   $bytesort
+     * @reteurn String
+     */
+    public static function int2BinaryString($v, $bytesort = 0)
+    {
+        return (
+            $bytesort == 0 ? 
+            (
+                 chr(($v>>24)&0xFF)
+                .chr(($v>>16)&0xFF)
+                .chr(($v>> 8)&0xFF)
+                .chr($v&0xFF)
+            ) : (chr($v&0xFF)
+                .chr(($v>> 8)&0xFF)
+                .chr(($v>>16)&0xFF)
+                .chr(($v>>24)&0xFF)
+            )
+        );
+    }
 }
 ?>
