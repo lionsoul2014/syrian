@@ -10,14 +10,17 @@
  //--------------------------------------------------------------
  
 //Syrian Version Number
-define('VERSION', '1.0.1');
+define('SR_VERSION', '1.1.2');
+
+//sapi mode define
+defined('SR_CLI_MODE') or define('SR_CLI_MODE', strncmp(php_sapi_name(), 'cli', 3)=='cli');
 
 //check and define the including components
 //0x01: Function
 //0x02: Loader
 //0x04: Helper
 //0x08: Input
-//0x10:    Uri
+//0x10: Uri
 //0x20: Output
 //0x40: Model
 //0x80: Controller
@@ -45,4 +48,18 @@ require(BASEPATH . 'core/kernel/Model.php');
 
 //Load the parent Controller class
 if ( (SR_INC_COMPONENTS & 0x80) != 0 ) require(BASEPATH . 'core/kernel/Controller.php');
+
+/**
+ * framework initialize
+ * 1. parse and load the arguments for cli mode
+ * 2. check and set the process title
+ * @date: 2015-12-25
+*/
+if ( SR_CLI_MODE ) {
+    _cli_initialize();
+
+    if ( isset($_SERVER['PROCESS_TITLE']) ) {
+        @cli_set_process_title($_SERVER['PROCESS_TITLE']);
+    }
+}
 ?>

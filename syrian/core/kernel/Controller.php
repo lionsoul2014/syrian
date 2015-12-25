@@ -11,10 +11,10 @@
  
 class Controller
 {
-    public       $uri      = NULL;        //request uri
+    public       $uri    = NULL;        //request uri
     public       $input  = NULL;        //request input
     public       $output = NULL;        //request output
-    public        $_G        = NULL;        //global resource
+    public        $_G    = NULL;        //global resource
     
     /**
      * Construct method to create new instance of the controller
@@ -39,10 +39,11 @@ class Controller
     {
         //user logic file to handler the request
         $_logicScript = $this->uri->page . '.logic.php';
-        if ( file_exists($_logicScript) )
+        if ( file_exists($_logicScript) ) {
             include $_logicScript;
-        else
+        } else {
             $this->uri->redirect('/error/404');
+        }
     }
 }
 ?>

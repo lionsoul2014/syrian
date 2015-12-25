@@ -10,7 +10,7 @@
  * @link    http://www.lionsoul.org/syrian
  */
 
- //--------------------------------------------------------------
+//--------------------------------------------------------------
 //normal data type
 defined('OP_NULL')      or define('OP_NULL',        1 <<  0);
 defined('OP_LATIN')     or define('OP_LATIN',       1 <<  1);
@@ -61,12 +61,36 @@ class Input
     private static function checkAndLoadFilter()
     {
         //check the load status of Filter class
-        if ( self::$_loaded == false )
-        {
-            //echo 'Filter class loaded';
+        if ( self::$_loaded == false ) {
             Loader::import('Filter');
             self::$_loaded = true;
         }
+    }
+
+    /**
+     * string to boolean
+     * string true, integer larger than 0 will be consider to true or false 
+     *
+     * @param   $val
+     * @return  boolean
+    */
+    public static function string2Boolean($val)
+    {
+        if ( is_bool($val) ) {
+            return $val;
+        } else if ( is_string($val) ) {
+            $val = strtolower($val);
+            if ( $val == 'true' ) return true;
+            else if ( $val == 'false' ) return false;
+            else {
+                $i = intval($val);
+                return $i > 0 ? true : false;
+            }
+        } else if ( is_integer($val) ) {
+            return $val > 0 ? true : false;
+        }
+
+        return false;
     }
    
    /**
@@ -83,8 +107,7 @@ class Input
         if ( ! isset( $_GET[$_key] ) ) return $_default;
         
         //apply the model if it is not null
-        if ( $_model != NULL )
-        {
+        if ( $_model != NULL ) {
             //check the load status of Filter class
             self::checkAndLoadFilter();
             
@@ -108,12 +131,23 @@ class Input
         if ( ! isset( $_GET[$_key] ) ) return $_default;
         
         $v    = intval($_GET[$_key]);
-        if ( $v < 0 && $allow_nagative == false )
-        {
+        if ( $v < 0 && $allow_nagative == false ) {
             return false;
         }
 
         return $v;
+    }
+
+    /**
+     * Fetch an boolean from $_GET global array
+     *
+     * @param   $_key
+     * @return  boolean
+    */
+    public function getBoolean($_key)
+    {
+        if ( ! isset($_GET[$_key]) ) return false;
+        return self::string2Boolean($_GET[$_key]);
     }
     
     /**
@@ -123,7 +157,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function getModel( $_model, &$_errno )
+    public function getModel( $_model, &$_errno=NULL )
     {
         //check the load status of Filter class
         self::checkAndLoadFilter();
@@ -147,8 +181,7 @@ class Input
         if ( ! isset($_POST[$_key]) ) return $_default;
         
         //apply the model if it is not null
-        if ( $_model != NULL )
-        {
+        if ( $_model != NULL ) {
             //check the load status of Filter class
             self::checkAndLoadFilter();
             
@@ -172,12 +205,23 @@ class Input
         if ( ! isset( $_POST[$_key] ) ) return $_default;
         
         $v    = intval($_POST[$_key]);
-        if ( $v < 0 && $allow_nagative == false )
-        {
+        if ( $v < 0 && $allow_nagative == false ) {
             return false;
         }
 
         return $v;
+    }
+
+    /**
+     * Fetch an boolean from $_POST global array
+     *
+     * @param   $_key
+     * @return  boolean
+    */
+    public function postBoolean($_key)
+    {
+        if ( ! isset($_POST[$_key]) ) return false;
+        return self::string2Boolean($_POST[$_key]);
     }
     
     /**
@@ -187,7 +231,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function postModel( $_model, &$_errno )
+    public function postModel( $_model, &$_errno=NULL )
     {
         //check the load status of Filter class
         self::checkAndLoadFilter();
@@ -211,8 +255,7 @@ class Input
         if ( ! isset($_COOKIE[$_key]) ) return $_default;
         
         //apply the model if it is not null
-        if ( $_model != NULL )
-        {
+        if ( $_model != NULL ) {
             //check the load status of Filter class
             self::checkAndLoadFilter();
             
@@ -236,12 +279,23 @@ class Input
         if ( ! isset( $_COOKIE[$_key] ) ) return $_default;
         
         $v    = intval($_COOKIE[$_key]);
-        if ( $v < 0 && $allow_nagative == false )
-        {
+        if ( $v < 0 && $allow_nagative == false ) {
             return false;
         }
 
         return $v;
+    }
+
+    /**
+     * Fetch an boolean from $_COOKIE global array
+     *
+     * @param   $_key
+     * @return  boolean
+    */
+    public function cookieBoolean($_key)
+    {
+        if ( ! isset($_COOKIE[$_key]) ) return false;
+        return self::string2Boolean($_COOKIE[$_key]);
     }
     
     /**
@@ -251,7 +305,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function cookieModel( $_model, &$_errno )
+    public function cookieModel( $_model, &$_errno=NULL )
     {
         //check the load status of Filter class
         self::checkAndLoadFilter();
@@ -275,8 +329,7 @@ class Input
         if ( ! isset($_SESSION[$_key]) ) return $_default;
         
         //apply the model if it is not null
-        if ( $_model != NULL )
-        {
+        if ( $_model != NULL ) {
             //check the load status of Filter class
             self::checkAndLoadFilter();
             
@@ -303,8 +356,7 @@ class Input
         if ( ! isset($_REQUEST[$_key]) ) return $_default;
         
         //apply the model if it is not null
-        if ( $_model != NULL )
-        {
+        if ( $_model != NULL ) {
             //check the load status of Filter class
             self::checkAndLoadFilter();
             
@@ -328,12 +380,23 @@ class Input
         if ( ! isset( $_REQUEST[$_key] ) ) return $_default;
         
         $v    = intval($_REQUEST[$_key]);
-        if ( $v < 0 && $allow_nagative == false )
-        {
+        if ( $v < 0 && $allow_nagative == false ) {
             return false;
         }
 
         return $v;
+    }
+
+    /**
+     * Fetch an boolean from $_REQUEST global array
+     *
+     * @param   $_key
+     * @return  boolean
+    */
+    public function requestBoolean($_key)
+    {
+        if ( ! isset($_REQUEST[$_key]) ) return false;
+        return self::string2Boolean($_REQUEST[$_key]);
     }
     
     /**
@@ -343,7 +406,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function requestModel( $_model, &$_errno )
+    public function requestModel( $_model, &$_errno=NULL )
     {
         //check the load status of Filter class
         self::checkAndLoadFilter();
@@ -367,8 +430,7 @@ class Input
         if ( ! isset($_SERVER[$_key]) ) return $_default;
         
         //apply the model if it is not null
-        if ( $_model != NULL )
-        {
+        if ( $_model != NULL ) {
             //check the load status of Filter class
             self::checkAndLoadFilter();
             
@@ -395,8 +457,7 @@ class Input
         if ( ! isset($_ENV[$_key]) ) return $_default;
         
         //apply the model if it is not null
-        if ( $_model != NULL )
-        {
+        if ( $_model != NULL ) {
             //check the load status of Filter class
             self::checkAndLoadFilter();
             

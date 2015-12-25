@@ -65,10 +65,9 @@ abstract class Uri
     public function __construct( $_rewrite = false, $_style = URI_STD_STYLE )
     {
         //copy
-        $this->url      = $_SERVER['REQUEST_URI'];
-        $this->self     = $_SERVER['REQUEST_URI'];
-        if ( ($args = strpos($this->self, '?') ) !== false )
-        {
+        $this->url  = $_SERVER['REQUEST_URI'];
+        $this->self = $_SERVER['REQUEST_URI'];
+        if ( ($args = strpos($this->self, '?') ) !== false ) {
             $this->self = substr($this->self, 0, $args);
         }
          
@@ -79,11 +78,10 @@ abstract class Uri
         /*
          * Analysis and initialize the base
         */
-        $self           = $_SERVER['PHP_SELF'];
+        $self   = $_SERVER['PHP_SELF'];
         if ( $self[0] != '/' ) $self = '/' . $self;
 
-        if ( ($pos = stripos($self, '.php')) !== FALSE )
-        {
+        if ( ($pos = stripos($self, '.php')) !== FALSE ) {
             while ( $self[$pos] != '/' ) $pos--;
              //get the base part, include the '/' mark at $i
             if ( $pos > 0 ) $this->_base = substr($self, 0, $pos + 1);
@@ -108,8 +106,9 @@ abstract class Uri
         $_url   = substr_replace($this->url, '/', 0, strlen($this->_base));
         $_len   = strlen($_url);
         
-        if ( ($pos = stripos($_url, '.php')) !== FALSE )
+        if ( ($pos = stripos($_url, '.php')) !== FALSE ) {
             $_spos = $pos + 4;
+        }
         
         /*
          * move forward the start position, cause:
@@ -123,10 +122,11 @@ abstract class Uri
         $_extp = stripos($_url, '.', $_spos);
         
         //determine the end index
-        if ( $_args !== FALSE && $_extp !== FALSE )
+        if ( $_args !== FALSE && $_extp !== FALSE ) {
             $_epos = min($_args, $_extp);
-        else
+        } else {
             $_epos = max($_args, $_extp);
+        }
         
         /*
          * mark the final end position
@@ -142,7 +142,7 @@ abstract class Uri
          *      also, initialize the _parts globals variable here
         */
         $_ret = explode('/', $this->_request);
-        $this->_parts       = &$_ret;
+        $this->_parts   = &$_ret;
         
         return true;
     }
@@ -184,8 +184,7 @@ abstract class Uri
          * like 'key=val&key2=val2'
         */
         $_str = ''; $item = NULL;
-        foreach ( $_args as $_key => $_val )
-        {
+        foreach ( $_args as $_key => $_val ) {
             $item = $_key . '=' . $_val;
             $_str .= ($_str == '') ? $item : '&' . $item;
         }
@@ -245,8 +244,7 @@ abstract class Uri
         if ( $_klen + 2 > $_plen  ) return false;
         $_idx  = $_plen - $_klen - 1;
         
-        foreach ( $_keys as $_key )
-        {
+        foreach ( $_keys as $_key ) {
             //mapping $_counter's value of _parts with key $_key
             //  in global $_GET array
             $_GET[$_key] = $this->_parts[$_idx];

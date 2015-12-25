@@ -24,6 +24,7 @@ interface Idb
     public function getLastInsertId();
     public function getAffectedRows();
     public function getLastError();
+    public function getLastErrno();
 }
 
  //------------------------------------------------------------------

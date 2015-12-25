@@ -28,8 +28,7 @@ class Helper
     {
         $_argv = func_get_args();
         $_args = func_num_args();
-        if ( $_args > 0 && method_exists($this, $_argv[0]) )
-        {
+        if ( $_args > 0 && method_exists($this, $_argv[0]) ) {
             $cacher    = array_shift($_argv);
             return $this->{$cacher}($_argv);
         }

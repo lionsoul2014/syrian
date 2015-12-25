@@ -37,7 +37,13 @@ Loader::import('STDUri', 'core');
 $URI = new STDUri(SR_URI_REWRITE, SR_LINK_STYLE);
 $URI->parseUrl();
 $_CTRL = $URI->getController('article');
-if ( $_CTRL == NULL ) $URI->redirect('error/404');
+if ( $_CTRL == NULL ) {
+    if ( SR_CLI_MODE ) {
+        exit("Error: Unable to loacate the Controller\n");
+    } else {
+        $URI->redirect('error/404');
+    }
+}
 
 //---------------------------------------------------
 date_default_timezone_set('PRC');            //set the default time zone

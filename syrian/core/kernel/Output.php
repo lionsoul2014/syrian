@@ -57,8 +57,9 @@ class Output
         if ( $this->_zlib_oc == TRUE  ) return;
         
         //check and set the level
-        if ( $_level >= 1 && $_level <= 9 )
+        if ( $_level >= 1 && $_level <= 9 ) {
             $this->_gzip_oc = $_level;
+        }
     }
     
     /**
@@ -73,8 +74,8 @@ class Output
          *  the output data itself and it will cause bad result for broswer
          * if we modified the content-length with a wrong value
         */
-        if ( $this->_zlib_oc && strncasecmp($_header, 'content-length') == 0 )
-        {
+        if ( $this->_zlib_oc 
+            && strncasecmp($_header, 'content-length') == 0 ) {
             return;
         }
         
@@ -163,16 +164,11 @@ class Output
         $_protocol = isset( $_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : FALSE;
         
         //send the status header (for to replace the old one)
-        if ( substr(php_sapi_name(), 0, 3) == 'cgi' )
-        {
+        if ( substr(php_sapi_name(), 0, 3) == 'cgi' ) {
             header("Status: {$_code} {$_string}", true);
-        }
-        else if ( $_protocol == 'HTTP/1.0' )
-        {
+        } else if ( $_protocol == 'HTTP/1.0' ) {
             header("HTTP/1.0 {$_code} {$_string}", true, $_code);
-        }
-        else
-        {
+        } else {
             header("HTTP/1.1 {$_code} {$_string}", true, $_code);
         }
     }
@@ -190,23 +186,19 @@ class Output
         if ( $_output == '' ) $_output = &$this->_final_output;
         
         //Try to send the server heaer
-        if ( count($this->_header) > 0 )
-        {
-            foreach ( $this->_header as $header )
-            {
+        if ( count($this->_header) > 0 ) {
+            foreach ( $this->_header as $header ) {
                 header("$header[0]: $header[1]");
             }
         }
         
         //Try to send the server response content
         // if $this->_gzip_oc is enabled then compress the output
-        if ( $this->_gzip_oc != -1 && extension_loaded('zlib') )
-        {
+        if ( $this->_gzip_oc != -1 && extension_loaded('zlib') ) {
             $_cond = isset($_SERVER['HTTP_ACCEPT_ENCODING'])
                 && (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== FALSE);
                 
-            if ( $_cond )
-            {
+            if ( $_cond ) {
                 $_output = gzencode($_output, $this->_gzip_oc);
                 header('Content-Encoding: gzip');  
                 header('Vary: Accept-Encoding');  

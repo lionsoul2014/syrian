@@ -39,10 +39,8 @@ class Loader
         $_dir  = (($_inc) ? BASEPATH . '/lib/' : SR_LIBPATH);
         $_dir .= $_cls;
         
-        foreach( array($_dir . '.class.php', $_dir . '.php') as $_file )
-        {
-            if ( file_exists($_file) )
-            {
+        foreach( array($_dir . '.class.php', $_dir . '.php') as $_file ) {
+            if ( file_exists($_file) ) {
                 require $_file;
                 $_loaded[$_cls] = true;
                 return true;
@@ -73,15 +71,12 @@ class Loader
         $_dir .= $_config;
         
         //search the config file and include it
-        foreach ( array($_dir . '.conf.php', $_dir . '.php' ) as $_file )
-        {
-            if ( file_exists($_file) )
-            {
+        foreach ( array($_dir . '.conf.php', $_dir . '.php' ) as $_file ) {
+            if ( file_exists($_file) ) {
                 //return include $_file;
-                $conf    = include $_file;
+                $conf = include $_file;
                 
-                if ( $key != NULL )
-                {
+                if ( $key != NULL ) {
                     return isset($conf["{$key}"]) ? $conf["{$key}"] : NULL;
                 }
 
@@ -110,27 +105,24 @@ class Loader
         
         //check the loaded of the class
         $_cls = ($_section == NULL) ? $_model : $_section . '/' . $_model;
-        if ( isset( $_loaded[$_cls] ) )
-        {
+        if ( isset( $_loaded[$_cls] ) ) {
             return $_loaded[$_cls];
         }
         
         //model base directory
         $_dir = SR_MODELPATH . $_cls;
             
-        foreach ( array( $_dir . '.model.php', $_dir . '.php' ) as $_file )
-        {
-            if ( file_exists( $_file ) )
-            {
+        foreach ( array( $_dir . '.model.php', $_dir . '.php' ) as $_file ) {
+            if ( file_exists( $_file ) ) {
                 include $_file;                //include the model class file
                 
                 $o = NULL;
                 $_class = $_model.'Model';
-                if ( class_exists($_class) ) 
-                {
+                if ( class_exists($_class) )  {
                     $o = new $_class();
+                } else {
+                    $o = new $_model();
                 }
-                else $o = new $_model();
 
                 //mark loaded for the current class
                 $_loaded[$_cls] = $o;
@@ -165,10 +157,8 @@ class Loader
         $_dir  = (($_inc) ? BASEPATH . '/helper/' : SR_HELPERPATH);
         $_dir .= $_cls;
         
-        foreach( array($_dir . '.helper.php', $_dir . '.php') as $_file )
-        {
-            if ( file_exists($_file) )
-            {
+        foreach( array($_dir . '.helper.php', $_dir . '.php') as $_file ) {
+            if ( file_exists($_file) ) {
                 require $_file;
                 $_class    = $_helper.'Helper';
                 $obj = new $_class($conf);
