@@ -42,14 +42,14 @@ class Mysql implements Idb
     {
         $_link = mysqli_connect($conf['host'], $conf['user'], $conf['pass'], $conf['db'], $conf['port']);
         while ( $_link == FALSE && $retry > 0 ) {
-            //sleep for a 1 sec
+            //sleep for 1 sec
             usleep(1000000);
             $_link = mysqli_connect($conf['host'], $conf['user'], $conf['pass'], $conf['db'], $conf['port']);
             $retry--;
         }
 
         if ( $_link == FALSE ) {
-            die("Error: cannot connected to the database server.");
+            exit("Error: cannot connected to the database server.\n");
         }
         
         $_charset = $conf['charset'];
@@ -61,9 +61,9 @@ class Mysql implements Idb
     }
     
     /**
-     * send an query string to the mysql server    <br />
+     * send an query string to the mysql server
      * @Note: use $_srw argument instead of $this->_srw to make the single
-     *     specifield method read/write separate define available ...
+     *  specifield method read/write separate define available ...
      * 
      * @param   $_query query string
      * @param   $opt    could be read or write operation
@@ -118,7 +118,7 @@ class Mysql implements Idb
          * 2006: lost connect with mysql (invalid session)
         */
         $query_ret = mysqli_query($this->clink, $_query);
-        if ( $query_ret == false 
+        if ( $query_ret === false 
             && SR_CLI_MODE == true && mysqli_errno($this->clink) == 2006 ) {
             switch ( $_sidx ) {
             case 0:
