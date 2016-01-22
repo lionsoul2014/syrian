@@ -21,29 +21,24 @@ class Util
 		$dirArray = array();
 		$baseDir = '';
 
-		while ($filename != '.' && $filename != '..') 
-		{
-			if ( file_exists($filename) ) 
-			{
+		while ($filename != '.' && $filename != '..') {
+			if ( file_exists($filename) ) {
 				$baseDir = $filename;
 				break;	 
 			}
 
-			$dirArray[] 	= basename($filename);   //basename part
-			$filename 		= dirname($filename); 
+			$dirArray[] = basename($filename);   //basename part
+			$filename 	= dirname($filename); 
 		}
 
-		for ( $i = count($dirArray) - 1; $i >= 0; $i--) 
-		{
-			if ( strpos($dirArray[$i], '.') !== FALSE ) 
-			{
+		for ( $i = count($dirArray) - 1; $i >= 0; $i--) {
+			if ( strpos($dirArray[$i], '.') !== FALSE ) {
 				break;
 			}
 
 			$baseDir = $baseDir . '/' .$dirArray[$i];
 			@mkdir( $baseDir );
-			if ( $mode != NULL )
-			{
+			if ( $mode != NULL ) {
 				@chmod($baseDir);
 			}
 		}
@@ -64,15 +59,14 @@ class Util
 
 		//get the substring
 		$substr = ''; 
-		if ( $CH == 'utf8' )
-		{
-			for( $i = 0; $i < $len - 3; $i++ ) 
+		if ( $CH == 'utf8' ) {
+			for( $i = 0; $i < $len - 3; $i++ ) {
 				$substr .= ord($str[$i])>127 ? $str[$i].$str[++$i].$str[++$i] : $str[$i]; 
-		}
-		else if ( $CH == 'gbk' || $CH == 'gb2312' )
-		{
-			for( $i = 0; $i < $len - 2; $i++ ) 
+            }
+		} else if ( $CH == 'gbk' || $CH == 'gb2312' ) {
+			for( $i = 0; $i < $len - 2; $i++ ) {
 				$substr .= ord($str[$i])>127 ? $str[$i].$str[++$i] : $str[$i]; 
+            }
 		}
 
 		return $substr; 
@@ -94,10 +88,8 @@ class Util
 			'HTTP_X_FORWARDED', 
 			'HTTP_FORWARDED_FOR', 
 			'HTTP_FORWARDED', 
-			'REMOTE_ADDR') as $e )
-		{
-			if ( getenv($e) )
-			{
+			'REMOTE_ADDR') as $e ) {
+			if ( getenv($e) ) {
 				$ip = getenv($e);
 				break;
 			}
@@ -157,11 +149,9 @@ class Util
 
 		$value	= array();
 		$idx	= array();
-		foreach ( $array as $val )
-		{
+		foreach ( $array as $val ) {
 			$v	= $val["{$key}"];
-			if ( $dup == false || ! isset($idx["{$v}"]) )
-			{
+			if ( $dup == false || ! isset($idx["{$v}"]) ) {
 				$value[] = "{$leftQuote}{$v}{$rightQuote}";
 			}
 
@@ -200,8 +190,7 @@ class Util
 		//}
 
 		$index 	= array();
-		foreach ( $arr as $val )
-		{
+		foreach ( $arr as $val ) {
 			$_m_key = $val["{$key}"];
 			$index["{$_m_key}"] = $quote ? $val : true;
 		}
@@ -309,7 +298,7 @@ class Util
 	 */
 	public static function getTimeString( $timer, $ctime = NULL )
 	{
-		$t 		= ($ctime == NULL ? time() : $ctime) - $timer;
+		$t 	= ($ctime == NULL ? time() : $ctime) - $timer;
 		if ( $t < 0 ) return date('Y年m月d日', $timer);
 
 		if ( $t < 5 )			return '刚刚';							//just now
@@ -358,8 +347,7 @@ class Util
 	public static function httpGet( $url, $_header = NULL )
 	{
 		$curl = curl_init();
-		if( stripos($url, 'https://') !==FALSE )
-		{
+		if( stripos($url, 'https://') !==FALSE ) {
 			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
 		}
@@ -367,16 +355,14 @@ class Util
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_HEADER, 0);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		if ( $_header != NULL )
-		{
+		if ( $_header != NULL ) {
 			curl_setopt($curl, CURLOPT_HTTPHEADER, $_header);
 		}
 		$ret	= curl_exec($curl);
 		$info	= curl_getinfo($curl);
 		curl_close($curl);
 
-		if( intval( $info["http_code"] ) == 200 )
-		{
+		if( intval( $info["http_code"] ) == 200 ) {
 			return $ret;
 		}
 
@@ -392,19 +378,16 @@ class Util
 	public static function httpPost( $url, $param, $_header = NULL )
 	{
 		$curl	= curl_init();
-		if( stripos( $url, 'https://') !== FALSE )
-		{
+		if( stripos( $url, 'https://') !== FALSE ) {
 			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
 		}
 
 		$postfields	= NULL;
 		if ( is_string($param) ) $postfields = $param;
-		else
-		{
+		else {
 			$args	= array();
-			foreach ( $param as $key => $val)
-			{
+			foreach ( $param as $key => $val) {
 				$args[]	= $key . '=' . urlencode($val);
 			}
 
@@ -417,16 +400,14 @@ class Util
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($curl, CURLOPT_POST, true);
 		curl_setopt($curl, CURLOPT_POSTFIELDS, $postfields);
-		if ( $_header != NULL )
-		{
-			curl_setopt($ch, CURLOPT_HTTPHEADER, $_header);
+		if ( $_header != NULL ) {
+			curl_setopt($curl, CURLOPT_HTTPHEADER, $_header);
 		}
 		$ret	= curl_exec($curl);
 		$info	= curl_getinfo($curl);
 		curl_close($curl);
 
-		if( intval($info['http_code']) == 200 )
-		{
+		if( intval($info['http_code']) == 200 ) {
 			return $ret;
 		}
 

@@ -61,8 +61,16 @@ if ( ! function_exists('_cli_initialize') ) {
                     if ( $eIdx === false ) break;
                     $args_name = substr($query_string, $sIdx, $eIdx - $sIdx);
 
+                    /**
+                     * both '&' and ':' could be as the arguments
+                     * separate mark At 2016-01-22
+                    */
                     $sIdx   = $eIdx + 1;
-                    $eIdx   = strpos($query_string, '&', $sIdx);
+                    $eIdx   = strpos($query_string, ':', $sIdx);
+                    if ( $eIdx === false ) {
+                        $eIdx = strpos($query_string, '&', $sIdx);
+                    }
+
                     if ( $eIdx === false ) {
                         if ( $sIdx >= $query_len ) break;
                         $args_val = substr($query_string, $sIdx);

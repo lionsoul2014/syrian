@@ -290,10 +290,27 @@ class Mysql implements Idb
      */
     public function update( $_table, &$_array, $_where, $slashes=true, $affected_rows=true )
     {
-        $qstr   = ($slashes) ? '\'' : "";
+        $gqstr  = ($slashes) ? '\'' : "";
         $values = array();
         foreach ( $_array as $key => $val ) {
-            $values[] = $this->_escape ? "{$_key}={$qstr}{$_tval}{$qstr}" : "{$key}={$qstr}".addslashes($val)."{$qstr}";
+            $qstr = $gqstr;
+            $rval = NULL;
+
+            /**
+             * field value quote control
+             * more control can be implemented here!
+            */
+            if ( is_array($val) ) {
+                $rval = $val['value'];
+                if ( isset($val['quote']) 
+                    && $val['quote'] == false ) {
+                    $qstr = "";
+                }
+            } else {
+                $rval = $val;
+            }
+
+            $values[] = "{$key}={$qstr}" . ($this->_escape ? $rval : addslashes($rval)) . $qstr;
         }
         
         if ( ! empty($values) ) {
