@@ -130,7 +130,7 @@ class Input
     {
         if ( ! isset( $_GET[$_key] ) ) return $_default;
         
-        $v    = intval($_GET[$_key]);
+        $v = intval($_GET[$_key]);
         if ( $v < 0 && $allow_nagative == false ) {
             return false;
         }
@@ -148,6 +148,25 @@ class Input
     {
         if ( ! isset($_GET[$_key]) ) return false;
         return self::string2Boolean($_GET[$_key]);
+    }
+
+    /**
+     * Fetch an Id from $_GET global array
+     * 24-chars and 32 chars unique id
+     *
+     * @param   $_key
+     * @return  Mixed String or false
+    */
+    public function getUID($_key, $default=false)
+    {
+        if ( ! isset($_GET[$_key]) ) return $default;
+
+        $v   = $_GET[$_key];
+        $len = strlen($v);
+        if ( $len != 24 && $len != 32 ) return false;
+        if ( self::isValidUid($v) == false ) return false;
+
+        return $v;
     }
     
     /**
@@ -204,7 +223,7 @@ class Input
     {
         if ( ! isset( $_POST[$_key] ) ) return $_default;
         
-        $v    = intval($_POST[$_key]);
+        $v = intval($_POST[$_key]);
         if ( $v < 0 && $allow_nagative == false ) {
             return false;
         }
@@ -222,6 +241,25 @@ class Input
     {
         if ( ! isset($_POST[$_key]) ) return false;
         return self::string2Boolean($_POST[$_key]);
+    }
+    
+    /**
+     * Fetch an Id from $_POST global array
+     * 24-chars and 32 chars unique id
+     *
+     * @param   $_key
+     * @return  Mixed String or false
+    */
+    public function postUID($_key, $default=false)
+    {
+        if ( ! isset($_POST[$_key]) ) return $default;
+
+        $v   = $_POST[$_key];
+        $len = strlen($v);
+        if ( $len != 24 && $len != 32 ) return false;
+        if ( self::isValidUid($v) == false ) return false;
+
+        return $v;
     }
     
     /**
@@ -278,7 +316,7 @@ class Input
     {
         if ( ! isset( $_COOKIE[$_key] ) ) return $_default;
         
-        $v    = intval($_COOKIE[$_key]);
+        $v = intval($_COOKIE[$_key]);
         if ( $v < 0 && $allow_nagative == false ) {
             return false;
         }
@@ -296,6 +334,25 @@ class Input
     {
         if ( ! isset($_COOKIE[$_key]) ) return false;
         return self::string2Boolean($_COOKIE[$_key]);
+    }
+
+    /**
+     * Fetch an Id from $_COOKIE global array
+     * 24-chars and 32 chars unique id
+     *
+     * @param   $_key
+     * @return  Mixed String or false
+    */
+    public function cookieUID($_key, $default=false)
+    {
+        if ( ! isset($_COOKIE[$_key]) ) return $default;
+
+        $v   = $_COOKIE[$_key];
+        $len = strlen($v);
+        if ( $len != 24 && $len != 32 ) return false;
+        if ( self::isValidUid($v) == false ) return false;
+
+        return $v;
     }
     
     /**
@@ -398,6 +455,25 @@ class Input
         if ( ! isset($_REQUEST[$_key]) ) return false;
         return self::string2Boolean($_REQUEST[$_key]);
     }
+
+    /**
+     * Fetch an Id from $_REQUEST global array
+     * 24-chars and 32 chars unique id
+     *
+     * @param   $_key
+     * @return  Mixed String or false
+    */
+    public function requestUID($_key, $default=false)
+    {
+        if ( ! isset($_REQUEST[$_key]) ) return $default;
+
+        $v   = $_REQUEST[$_key];
+        $len = strlen($v);
+        if ( $len != 24 && $len != 32 ) return false;
+        if ( self::isValidUid($v) == false ) return false;
+
+        return $v;
+    }
     
     /**
      * fetch item from $_REQUEST with a specifiel model
@@ -423,7 +499,7 @@ class Input
      * @param    $_model
      * @param    $_default
      * @param    $_errno
-     * @return    Mixed
+     * @return   Mixed
     */
     public function server( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
     {
@@ -467,5 +543,29 @@ class Input
         //normal string fetch
         return $_ENV[$_key];
     }
+
+
+    //-----------------------------------------------------
+
+    /**
+     * check the specifiled string is made of ascii char
+     * Only chars from a-z or 0-9
+     *
+     * @param   $string
+     * @return  boolean
+    */
+    private static function isValidUid($string)
+    {
+        $len = strlen($string);
+        for ( $i = 0; $i < $len; $i++ ) {
+            $ascii = ord($string[$i]);
+            if ( $ascii >= 48 && $ascii <= 57 )  continue;
+            if ( $ascii >= 97 && $ascii <= 122 ) continue;
+            return false;
+        }
+
+        return true;
+    }
+
 }
 ?>
