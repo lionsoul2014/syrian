@@ -348,6 +348,8 @@ class Helper
 
 //Load the input class manage the input of the controller/
 if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
+    //--------------------------------------------------------------
+    //normal data type
     defined('OP_NULL')      or define('OP_NULL',        1 <<  0);
     defined('OP_LATIN')     or define('OP_LATIN',       1 <<  1);
     defined('OP_URL')       or define('OP_URL',         1 <<  2);
@@ -491,18 +493,23 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * 24-chars and 32 chars unique id
          *
          * @param   $_key
+         * @param   $compatible compatible with the xxxInt ?
+         * @param   $default
          * @return  Mixed String or false
         */
-        public function getUID($_key, $default=false)
+        public function getUID($_key, $compatible=false, $default=false)
         {
             if ( ! isset($_GET[$_key]) ) return $default;
 
             $v   = $_GET[$_key];
             $len = strlen($v);
-            if ( $len != 24 && $len != 32 ) return false;
-            if ( self::isValidUid($v) == false ) return false;
+            if ( $len == 24 || $len == 32 ) {
+                return self::isValidUid($v) ? $v : false;
+            } else if ( $compatible && $len <= 19 ) {
+                return intval($v);
+            }
 
-            return $v;
+            return false;
         }
         
         /**
@@ -584,18 +591,22 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * 24-chars and 32 chars unique id
          *
          * @param   $_key
+         * @param   $compatible
          * @return  Mixed String or false
         */
-        public function postUID($_key, $default=false)
+        public function postUID($_key, $compatible=false, $default=false)
         {
             if ( ! isset($_POST[$_key]) ) return $default;
 
             $v   = $_POST[$_key];
             $len = strlen($v);
-            if ( $len != 24 && $len != 32 ) return false;
-            if ( self::isValidUid($v) == false ) return false;
+            if ( $len == 24 || $len == 32 ) {
+                return self::isValidUid($v) ? $v : false;
+            } else if ( $compatible && $len <= 19 ) {
+                return intval($v);
+            }
 
-            return $v;
+            return false;
         }
         
         /**
@@ -677,18 +688,22 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * 24-chars and 32 chars unique id
          *
          * @param   $_key
+         * @param   $compatible
          * @return  Mixed String or false
         */
-        public function cookieUID($_key, $default=false)
+        public function cookieUID($_key, $compatible=false, $default=false)
         {
             if ( ! isset($_COOKIE[$_key]) ) return $default;
 
             $v   = $_COOKIE[$_key];
             $len = strlen($v);
-            if ( $len != 24 && $len != 32 ) return false;
-            if ( self::isValidUid($v) == false ) return false;
+            if ( $len == 24 || $len == 32 ) {
+                return self::isValidUid($v) ? $v : false;
+            } else if ( $compatible && $len <= 19 ) {
+                return intval($v);
+            }
 
-            return $v;
+            return false;
         }
         
         /**
@@ -797,18 +812,22 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * 24-chars and 32 chars unique id
          *
          * @param   $_key
+         * @param   $compatible
          * @return  Mixed String or false
         */
-        public function requestUID($_key, $default=false)
+        public function requestUID($_key, $compatible=false, $default=false)
         {
             if ( ! isset($_REQUEST[$_key]) ) return $default;
 
             $v   = $_REQUEST[$_key];
             $len = strlen($v);
-            if ( $len != 24 && $len != 32 ) return false;
-            if ( self::isValidUid($v) == false ) return false;
+            if ( $len == 24 || $len == 32 ) {
+                return self::isValidUid($v) ? $v : false;
+            } else if ( $compatible && $len <= 19 ) {
+                return intval($v);
+            }
 
-            return $v;
+            return false;
         }
         
         /**
@@ -895,13 +914,17 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
             $len = strlen($string);
             for ( $i = 0; $i < $len; $i++ ) {
                 $ascii = ord($string[$i]);
-                if ( $ascii >= 48 && $ascii <= 57 )  continue;
-                if ( $ascii >= 97 && $ascii <= 122 ) continue;
+                if ( ($ascii >= 48 && $ascii <= 57) 
+                    || ($ascii >= 97 && $ascii <= 122) ) {
+                    continue;
+                }
+
                 return false;
             }
 
             return true;
         }
+
     }
 }
 

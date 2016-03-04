@@ -24,8 +24,7 @@ class Net
     public static function saveRemoteImage($url, $toFile, $thumb=NULL, $conf=array(), $noThumbExt=NULL)
     {
         $_header = isset($conf['header']) ? $conf['header'] : NULL;
-        if ( $_header == NULL )
-        {
+        if ( $_header == NULL ) {
             $useragent = isset($conf['useragent']) ? $conf['useragent'] : self::$defaultUserAgent;
             $_header = array(
                 "User-Agent: {$useragent}"
@@ -41,42 +40,38 @@ class Net
         curl_setopt($ch, CURLOPT_HEADER, 0);
 
         //execute the curl to get the response
-        $R         = curl_exec($ch);
-        $info    = curl_getinfo($ch);
-        $ret    = false;
-        if ( isset($info['http_code']) && $info['http_code'] == 200 )
-        {
-            $ext             = NULL;
-            $contentType    = strtolower($info['content_type']);
+        $R    = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        $ret  = false;
+        if ( isset($info['http_code']) && $info['http_code'] == 200 ) {
+            $ext = NULL;
+            $contentType = strtolower($info['content_type']);
 
-            static $EXTS    = array(
-                'image/jpeg'        => 'jpg',
-                'image/jpg'            => 'jpg',
-                'image/pjpeg'        => 'jpg',
-                'image/png'            => 'png',
-                'image/gif'            => 'gif',
-                'image/x-xbitmap'    => 'bmp'
+            static $EXTS = array(
+                'image/jpeg'      => 'jpg',
+                'image/jpg'       => 'jpg',
+                'image/pjpeg'     => 'jpg',
+                'image/png'       => 'png',
+                'image/gif'       => 'gif',
+                'image/x-xbitmap' => 'bmp'
             );
 
-            if ( isset($EXTS[$contentType]) ) $ext    = $EXTS[$contentType];
+            if ( isset($EXTS[$contentType]) ) $ext = $EXTS[$contentType];
 
             //check the extension and save the image
-            $toFile    = "{$toFile}.{$ext}";
-            if ( $ext != NULL && file_put_contents($toFile, $R) != false )
-            {
-                $ret     = basename($toFile);
+            $toFile = "{$toFile}.{$ext}";
+            if ( $ext != NULL && file_put_contents($toFile, $R) != false ) {
+                $ret = basename($toFile);
             }
 
             //define the to thumb
             $toThumb = true;
-            if ( $noThumbExt != NULL && isset($noThumbExt[$ext]) )
-            {
+            if ( $noThumbExt != NULL && isset($noThumbExt[$ext]) ) {
                 $toThumb = false;
             }
 
             //make a thumb image for the downloaded images
-            if ( $toThumb && $ret != false && $thumb != NULL )
-            {
+            if ( $toThumb && $ret != false && $thumb != NULL ) {
                 Loader::import('Thumb', 'image');
                 Thumb::_getInstance()->write(array($thumb['width'], 
                     $thumb['height']), $toFile, $toFile, $thumb['style']);
