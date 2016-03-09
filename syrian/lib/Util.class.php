@@ -342,9 +342,10 @@ class Util
 	 *
 	 * @param	string $url
 	 * @param	Array header
+     * @param   setting
 	 * @return	Mixed(false or the http response body)
 	 */
-	public static function httpGet( $url, $_header = NULL )
+	public static function httpGet( $url, $_header=NULL, $setting=NULL )
 	{
 		$curl = curl_init();
 		if( stripos($url, 'https://') !==FALSE ) {
@@ -358,6 +359,14 @@ class Util
 		if ( $_header != NULL ) {
 			curl_setopt($curl, CURLOPT_HTTPHEADER, $_header);
 		}
+
+        //check and apply the setting
+        if ( $setting != NULL ) {
+            foreach ( $setting as $key => $val ) {
+                curl_setopt($curl, $key, $val);
+            }
+        }
+
 		$ret	= curl_exec($curl);
 		$info	= curl_getinfo($curl);
 		curl_close($curl);
@@ -373,9 +382,10 @@ class Util
 	 * simple POST post request
 	 * @param	string	$url
 	 * @param	array	$param
+     * @param   array   $setting
 	 * @return	Mixed	false or the http response content
 	 */
-	public static function httpPost( $url, $param, $_header = NULL )
+	public static function httpPost( $url, $param, $_header=NULL, $setting=NULL )
 	{
 		$curl	= curl_init();
 		if( stripos( $url, 'https://') !== FALSE ) {
@@ -403,6 +413,14 @@ class Util
 		if ( $_header != NULL ) {
 			curl_setopt($curl, CURLOPT_HTTPHEADER, $_header);
 		}
+
+        //check and apply the setting
+        if ( $setting != NULL ) {
+            foreach ( $setting as $key => $val ) {
+                curl_setopt($curl, $key, $val);
+            }
+        }
+
 		$ret	= curl_exec($curl);
 		$info	= curl_getinfo($curl);
 		curl_close($curl);
