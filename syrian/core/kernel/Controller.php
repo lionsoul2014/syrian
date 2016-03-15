@@ -3,7 +3,7 @@
  * Opert Application Controller Class.
  * And this is the super class of the module controller class.
  *
- * @author    chenxin <chenxin619315@gmail.com>
+ * @author  chenxin <chenxin619315@gmail.com>
  * @link    http://www.lionsoul.org/syrian
  */
 
@@ -11,10 +11,10 @@
  
 class Controller
 {
-    public       $uri    = NULL;        //request uri
-    public       $input  = NULL;        //request input
-    public       $output = NULL;        //request output
-    public        $_G    = NULL;        //global resource
+    public  $uri    = NULL;        //request uri
+    public  $input  = NULL;        //request input
+    public  $output = NULL;        //request output
+    public  $_G     = NULL;        //global resource
     
     /**
      * Construct method to create new instance of the controller
@@ -31,7 +31,7 @@ class Controller
     /**
      * the entrance of the current controller
      * default to invoke the uri->page.logic.php to handler
-     *     the request, you may need to rewrite this method to self define
+     * the request, you may need to rewrite this method to define the handler youself
      *
      * @access    public
     */

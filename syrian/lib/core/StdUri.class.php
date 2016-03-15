@@ -6,7 +6,7 @@
  * @author chenxin <chenxin619315@gmail.com>
 */
 
-class STDUri extends Uri
+class StdUri extends Uri
 {
     public function __construct( $_rewrite, $_style )
     {

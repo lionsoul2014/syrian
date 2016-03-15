@@ -1,6 +1,17 @@
 <?php if ( ! defined('BASEPATH') ) exit('No Direct Access Allowed!');
 /**
  * Syrian Application Helper super Class.
+ * helper defination:
+ * quick way to create and initialize the logic class
+ * that will be show up at many logic, so
+ * it could help reduce the uneccessary logic code.
+ * 
+ * Loader::import(xxxx)
+ * $conf = Loader::config(xxxx):
+ * $obj = new XXXX($conf);
+ * //serials of initialize working
+ * //return ready to fly(well initialized) object
+ * return $obj;
  *
  * @author    chenxin <chenxin619315@gmail.com>
  * @link    http://www.lionsoul.org/syrian

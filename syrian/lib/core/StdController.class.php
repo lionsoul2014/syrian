@@ -7,7 +7,7 @@
 
  //--------------------------------------------------
 
-class STDController extends Controller
+class StdController extends Controller
 {
     public function __construc( )
     {

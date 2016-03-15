@@ -1,5 +1,5 @@
 <?php
-class ArticleModel extends SQLModel
+class ArticleModel extends StdModel
 {
     public function __construct()
     {
