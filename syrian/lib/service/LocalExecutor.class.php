@@ -51,8 +51,8 @@ class LocalExecutor
         }
 
         //define the class file
-        $clsFile = SERVICEPATH.implode('/', $pathArr).'/main.php';
-        $clsName = implode('',  $nameArr);
+        $clsFile = SR_SERVICEPATH.implode('/', $pathArr).'/main.php';
+        $clsName = implode('',  $nameArr).'Service';
 
         if ( ! file_exists($clsFile) ) {
             return NULL;
@@ -78,7 +78,7 @@ class LocalExecutor
      * @param   $args Array
      * @return  Mixed
     */
-    public function execute($serv_path, $args)
+    public function execute($serv_path, $args, $asyn=true, $priority=NULL)
     {
         $servInfo = $this->getService($serv_path);
         if ( $servInfo == NULL ) {

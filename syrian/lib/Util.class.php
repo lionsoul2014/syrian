@@ -465,10 +465,8 @@ class Util
 			$mobileOS	= array(
 				'phone', 'mobile', 'tablet', 'android', 'iphone', 'blackberry', 'symbian', 'nokia', 'palmos', 'j2me'
 			);
-			foreach ( $mobileOS as $os )
-			{
-				if ( strpos($lowerAgent, $os) !== false )
-				{
+			foreach ( $mobileOS as $os ) {
+				if ( strpos($lowerAgent, $os) !== false ) {
 					$isMobile = true;
 					break;
 				}

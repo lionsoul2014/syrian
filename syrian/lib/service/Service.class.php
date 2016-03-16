@@ -28,7 +28,7 @@ class Service
      * default to invoke the $this->{$method}() to handler
      * the request, you may need to rewrite this method to define the handler youself
      *
-     * @param   $instance
+     * @param   $handler
      * @param   $args
      * @access  public
     */
@@ -43,8 +43,63 @@ class Service
         }
 
         //invoke the handler
-        return $this->{$handler}($args);
+        return $this->{$handler}(new ServiceInputBean($args));
     }
 
 }
+
+/**
+ * service input class
+ *
+ * @author  chenxin<chenxin619315@gmail.com>
+*/
+class ServiceInputBean
+{
+    /**
+     * input source
+     *
+     * @access  private
+    */
+    private $args = NULL;
+
+    /**
+     * construct method
+     *
+     * @param   $args
+    */
+    public function __construct($args)
+    {
+        $this->args = $args==NULL ? array() : $args;
+    }
+
+    /**
+     * get the value with the specifield key
+     *
+     * @param   $key
+     * @param   $default
+     * @return  Mixed
+    */
+    public function get($key, $default=NULL)
+    {
+        return isset($this->args[$key]) ? $this->args[$key] : $default;
+    }
+
+    /**
+     * set the value mapping with the specifield key
+     *
+     * @param   $key
+     * @param   $val
+     * @return  Boolean
+    */
+    public function set($key, $val, $override=true)
+    {
+        if ( $override || ! isset($this->args[$key]) ) {
+            $this->args[$key] = $val;
+            return true;
+        }
+
+        return false;
+    }
+}
+
 ?>
