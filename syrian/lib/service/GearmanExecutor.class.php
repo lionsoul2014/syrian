@@ -76,7 +76,7 @@ class GearmanExecutor
             $ret = $asyn ? $gmc->doLowBackground($handler, $workload) : $gmc->doLow($handler, $workload);
             break;
         case E_PRIORITY_NORMAL:
-            $ret = $asyn ? @$gmc->doBackground($handler, $workload) : $gmc->doNormal($handler, $workload);
+            $ret = $asyn ? $gmc->doBackground($handler, $workload) : $gmc->doNormal($handler, $workload);
             break;
         case E_PRIORITY_HIGHT:
             $ret = $asyn ? $gmc->doHighBackground($handler, $args) : $gmc->doHigh($handler, $workload);
