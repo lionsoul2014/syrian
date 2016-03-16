@@ -33,10 +33,6 @@ class LocalExecutor
     protected function getService($path)
     {
         $path = str_replace('/', '.', strtolower($path));
-        if ( isset(self::$POOL[$path]) ) {
-            return self::$POOL[$path];
-        }
-
         $part = explode('.', $path);
         if ( count($part) < 2 ) {
             return NULL;
@@ -50,8 +46,13 @@ class LocalExecutor
             $nameArr[] = ucfirst($val);
         }
 
+        $clsPath = implode('/', $pathArr);
+        if ( isset(self::$POOL[$clsPath]) ) {
+            return self::$POOL[$clsPath];
+        }
+
         //define the class file
-        $clsFile = SR_SERVICEPATH.implode('/', $pathArr).'/main.php';
+        $clsFile = SR_SERVICEPATH."{$clsPath}/main.php";
         $clsName = implode('',  $nameArr).'Service';
 
         if ( ! file_exists($clsFile) ) {
@@ -66,7 +67,7 @@ class LocalExecutor
 
         $obj = new $clsName();
         $ret = array($method, $obj);
-        self::$POOL[$path] = $ret;
+        self::$POOL[$clsPath] = $ret;
 
         return $ret;
     }
