@@ -44,6 +44,12 @@ class Output
     public function __construct()
     {
         $this->_zlib_oc = @ini_get('zlib.output_compression');
+
+        //check and auto append the charset header
+        //@Note: added at 2016-03-20
+        if ( defined('SR_CHARSET') ) {
+            $this->_header['Content-Type'] = 'text/html; charset=' . SR_CHARSET;
+        }
     }
     
     /**
@@ -79,7 +85,7 @@ class Output
             return;
         }
         
-        $this->_header[] = array($_header, $_replace);
+        $this->_header[$_header] = $_replace;
         return $this;
     }
     
@@ -184,11 +190,11 @@ class Output
     {
         //define the output string
         if ( $_output == '' ) $_output = &$this->_final_output;
-        
+
         //Try to send the server heaer
         if ( count($this->_header) > 0 ) {
-            foreach ( $this->_header as $header ) {
-                header("$header[0]: $header[1]");
+            foreach ( $this->_header as $hKey $hVal ) {
+                header("{$hKey}: {$hVal}");
             }
         }
         
