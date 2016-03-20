@@ -1198,6 +1198,7 @@ if ( (SR_INC_COMPONENTS & 0x10) != 0 ) {
 
 //Load the Output class
 if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
+    //-----------------------------------------------------------------
     class Output
     {
         /**
@@ -1228,6 +1229,12 @@ if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
         public function __construct()
         {
             $this->_zlib_oc = @ini_get('zlib.output_compression');
+
+            //check and auto append the charset header
+            //@Note: added at 2016-03-20
+            if ( defined('SR_CHARSET') ) {
+                $this->_header['Content-Type'] = 'text/html; charset=' . SR_CHARSET;
+            }
         }
         
         /**
@@ -1263,7 +1270,7 @@ if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
                 return;
             }
             
-            $this->_header[] = array($_header, $_replace);
+            $this->_header[$_header] = $_replace;
             return $this;
         }
         
@@ -1368,11 +1375,11 @@ if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
         {
             //define the output string
             if ( $_output == '' ) $_output = &$this->_final_output;
-            
+
             //Try to send the server heaer
             if ( count($this->_header) > 0 ) {
-                foreach ( $this->_header as $header ) {
-                    header("$header[0]: $header[1]");
+                foreach ( $this->_header as $hKey => $hVal ) {
+                    header("{$hKey}: {$hVal}");
                 }
             }
             

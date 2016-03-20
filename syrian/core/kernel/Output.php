@@ -193,7 +193,7 @@ class Output
 
         //Try to send the server heaer
         if ( count($this->_header) > 0 ) {
-            foreach ( $this->_header as $hKey $hVal ) {
+            foreach ( $this->_header as $hKey => $hVal ) {
                 header("{$hKey}: {$hVal}");
             }
         }
