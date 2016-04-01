@@ -88,7 +88,17 @@ class LocalExecutor
 
         //invoke the run entrance method of the service
         $servObj = $servInfo[1];
-        return $servObj->run($servInfo[0], $args);
+        //return $servObj->run($servInfo[0], $args);
+        $ret = $servObj->run($servInfo[0], $args);
+
+        //check and do the service resource clean
+        //@Note: cuz service worker is under cli mode
+        //so the connection resource need to cleaned
+        if ( defined('SR_SERVICE_WORKER') ) {
+            $servObj->gc(); //let gc do its work
+        }
+
+        return $ret;
     }
 }
 ?>

@@ -8,14 +8,14 @@
 
 class MemcachedCache implements ICache
 {
-    private $_ttl             = 0;
-    private    $_baseKey        = '';
-    private    $_fname          = '';
-    private $_mem           = NULL;
-    private $_key           = '';
-    private $_prefix        = ''; //prefix used inter the memcached
-    private $_hash          = Memcached::HASH_DEFAULT;
-    public static $_hash_opts     = array(
+    private $_ttl       = 0;
+    private $_baseKey   = '';
+    private $_fname     = '';
+    private $_mem       = NULL;
+    private $_key       = '';
+    private $_prefix    = ''; //prefix used inter the memcached
+    private $_hash      = Memcached::HASH_DEFAULT;
+    public static $_hash_opts = array(
         'default'   => Memcached::HASH_DEFAULT,
         'md5'       => Memcached::HASH_MD5,
         'crc'       => Memcached::HASH_CRC,
@@ -57,8 +57,7 @@ class MemcachedCache implements ICache
         // hash distribute strategy, 
         // default: Memcached::DISTRIBUTION_MODULA
         if (isset($conf['hash_strategy']) 
-            && $conf['hash_strategy'] == 'consistent') 
-        {
+            && $conf['hash_strategy'] == 'consistent') {
             $this->_mem->setOption(Memcached::OPT_DISTRIBUTION,
                      Memcached::DISTRIBUTION_CONSISTENT); 
             $this->_mem->setOPtion(Memcached::OPT_LIBKETAMA_COMPATIBLE, TRUE);
@@ -66,24 +65,20 @@ class MemcachedCache implements ICache
 
         if (isset($conf['hash']) 
             && $conf['hash'] != 'default' 
-            && array_keys(self::$_hash_opts, $conf['hash']))
-        {
+            && array_keys(self::$_hash_opts, $conf['hash'])) {
             $this->_hash = self::$_hash_opts[$conf['hash']];
             $this->_mem->setOption(Memcached::OPT_HASH, $this->_hash); 
         }
 
 
-        if (isset($conf['prefix']) && $conf['prefix'] != '')
-        {
+        if (isset($conf['prefix']) && $conf['prefix'] != '') {
             $this->_prefix = $conf['prefix'];
             $this->_mem->setOption(Memcached::OPT_PREFIX_KEY, $this->_prefix);
         }
 
-        if (isset($conf['ttl']) &&($ttl = intval($conf['ttl'])) > 0)
-        {
+        if (isset($conf['ttl']) &&($ttl = intval($conf['ttl'])) > 0) {
             $this->_ttl = $ttl;
         }
-
 
         $servers = $this->_mem->getServerList();
         if (empty($servers)){

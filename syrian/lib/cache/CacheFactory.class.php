@@ -33,7 +33,12 @@ interface ICache
 
 class CacheFactory
 {
-    private static $_classes = NULL;
+    /**
+     * all the loaded classed
+     *
+     * @access  private
+    */
+    private static $_classes = array();
     
     /**
      * Load and create the instance of a specifield cache class
@@ -43,15 +48,12 @@ class CacheFactory
      * @param   $_class class key
      * @param   $_args  arguments to initialize the instance
     */
-    public static function create( $_class, $_conf = NULL )
+    public static function create($_class, $_conf=NULL)
     {
-        if ( self::$_classes == NULL ) self::$_classes = array();
-        
         //Fetch the class
         $_class = ucfirst( $_class ) . 'Cache';
-        if ( ! isset( self::$_classes[$_class] ) )
-        {
-            require  dirname(__FILE__) .'/'.$_class.'.class.php';
+        if ( ! isset( self::$_classes[$_class] ) ) {
+            require  dirname(__FILE__) ."/{$_class}.class.php";
             self::$_classes[$_class] = true;
         }
         

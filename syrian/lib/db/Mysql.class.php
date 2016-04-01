@@ -49,7 +49,7 @@ class Mysql implements Idb
         }
 
         if ( $_link == FALSE ) {
-            exit("Error: cannot connected to the database server.\n");
+            throw new Exception("Unable to connect to the database server.\n");
         }
         
         $_charset = $conf['charset'];
@@ -126,8 +126,7 @@ class Mysql implements Idb
                 $this->_link = NULL;
                 $this->_link = self::connect($this->_hostCache[$_sidx], $this->_reconnectTimeout);
                 $this->clink = $this->_link;
-                break;
-            case 2:
+                break; case 2:
                 $this->rlink = NULL;
                 $this->rlink = self::connect($this->_hostCache[$_sidx], $this->_reconnectTimeout);
                 $this->clink = $this->rlink;
@@ -460,6 +459,34 @@ class Mysql implements Idb
     }
 
     /**
+     * release the mysql connection
+    */
+    public function release()
+    {
+        if ( $this->_link != NULL ) {
+            mysqli_close( $this->_link );
+            $this->_link = NULL;
+        }
+
+        if ( $this->rlink != NULL ) {
+            mysqli_close( $this->rlink );
+            $this->rlink = NULL;
+        }
+    }
+
+    public function getSerial()
+    {
+        $serial = NULL;
+        if ( isset($this->_host['serial']) ) {
+            $serial = $this->_host['serial'];
+        } else if ( isset($this->_host['db']) ) {
+            $serial = $this->_host['db'];
+        }
+
+        return $serial;
+    }
+
+    /**
      * set reconnect timeout in seconds
      *
      * @param   $timeout
@@ -471,11 +498,7 @@ class Mysql implements Idb
     
     public function __destruct()
     {
-        if ( $this->_link != NULL ) mysqli_close( $this->_link );
-        if ( $this->rlink != NULL ) mysqli_close( $this->rlink );
-
-        $this->_link = NULL;
-        $this->rlink = NULL;
+        $this->release();
     }
 }
 ?>

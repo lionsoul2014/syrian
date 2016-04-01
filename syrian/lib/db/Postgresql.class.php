@@ -17,5 +17,7 @@ class Postgresql implements Idb
     public function getAffectedRows() {}
     public function getLastError() {}
     public function getLastErrno() {}
+    public function release() {}
+    public function getSerial() {}
 }
 ?>

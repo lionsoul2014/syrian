@@ -6,8 +6,8 @@
  */
 interface Idb
 {
-    const WRITE_OPT    = 0;
-    const READ_OPT    = 1;
+    const WRITE_OPT = 0;
+    const READ_OPT  = 1;
 
     public function execute( $_sql, $opt, $_rows = false, $src = NULL );
     public function insert( $_table, &$_array, $onDuplicateKey=NULL, $affected_rows=false );
@@ -25,6 +25,8 @@ interface Idb
     public function getAffectedRows();
     public function getLastError();
     public function getLastErrno();
+    public function release();      //release the resource connection
+    public function getSerial();    //get the serial number
 }
 
  //------------------------------------------------------------------
@@ -41,11 +43,19 @@ interface Idb
 
 class DbFactory
 {
-    //class load cache pool
-    private static $_classes     = NULL;
+    /*
+     * class loaded cache pool
+     *
+     * @access private
+    */
+    private static $_classes = array();
 
-    //instance create cache pool
-    private static $POOL         = NULL;
+    /**
+     * instance object cache pool
+     * 
+     * @access  private
+    */
+    private static $POOL = array();
     
     /**
      * Load and create the instance of a specifield db class
@@ -56,11 +66,8 @@ class DbFactory
      * @param   $_args  arguments to initialize the instance
      * @param     $cache     wether to cache the db instance
     */
-    public static function create( $_class, &$host, $cache = true )
+    public static function create( $_class, &$host, $cache=true )
     {
-        if ( self::$_classes == NULL )          self::$_classes = array();
-        if ( $cache && self::$POOL == NULL ) self::$POOL      = array();
-
         /*
          * Idb instance cache pool, we will cache the instance, so
           *    use the cache instance instead when the aim server(port) 
@@ -69,24 +76,55 @@ class DbFactory
           * 
           * @added     2014-04-17
         */
-        $key         = $host['serial'];
-        if ( $cache && isset(self::$POOL[$key]) ) return self::$POOL[$key];
+        $key = $host['serial'];
+        if ( $cache && isset(self::$POOL[$key]) ) {
+            return self::$POOL[$key];
+        }
 
 
         //-------------------------------------------------------
         //yat, fetch the class
-        $_class = ucfirst( $_class );
-        if ( ! isset( self::$_classes[$_class] ) )
-        {
-            require dirname(__FILE__).'/'.$_class.'.class.php';
+        $_class = ucfirst($_class);
+        if ( ! isset(self::$_classes[$_class]) ) {
+            require dirname(__FILE__)."/{$_class}.class.php";
             self::$_classes[$_class] = true;
         }
         
         //create a new db instance cache it
-        $instance     = new $_class($host);
-        if ( $cache ) self::$POOL[$key]    = &$instance;
+        $instance = new $_class($host);
+        if ( $cache ) {
+            self::$POOL[$key] = $instance;
+        }
 
         return $instance;
+    }
+
+    /**
+     * release the specifiled cached Idb object directly
+     * @Note: this will cuz the resource reconnection.
+     *
+     * @param  $serial
+     * @return Mixed boolean or integer
+    */
+    public static function release($serial)
+    {
+        if ( ! isset(self::$POOL[$serial]) ) {
+            return false;
+        }
+
+        self::$POOL[$serial]->release();
+    }
+
+    /**
+     * release All the cached Idb object directly
+     *
+     * @return  boolean
+    */
+    public static function releaseAll()
+    {
+        foreach ( self::$POOL as $obj ) {
+            $obj->release();
+        }
     }
 }
 ?>

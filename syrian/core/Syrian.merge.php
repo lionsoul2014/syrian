@@ -129,9 +129,30 @@ if ( ! function_exists('_cli_initialize') ) {
     }
 }
 
-
 class Loader
 {
+    /**
+     * all the loaded class
+     *
+     * @access private
+    */
+    private static $_loadedClass = array();
+
+    /**
+     * all the loaded model object
+     *
+     * @access private
+    */
+    private static $_loadedModel = array();
+
+    /**
+     * all the loaded helper object
+     *
+     * @access private
+    */
+    private static $_loadedHelper = array();
+
+
     /**
      * make construct method private
     */   
@@ -150,12 +171,9 @@ class Loader
      */
     public static function import($_class, $_section=NULL, $_inc=true, $_exit=true)
     {
-        //All the loaded classes.
-        static $_loaded = array();
-        
         //$_class = ucfirst($_class);
         $_cls = ($_section == NULL) ? $_class : str_replace('.', '/', $_section).'/'.$_class;
-        if ( isset($_loaded[$_cls]) ) return;
+        if ( isset(self::$_loadedClass[$_cls]) ) return true;
         
         //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
         //Or check the APPPATH/lib 
@@ -165,13 +183,13 @@ class Loader
         foreach( array($_dir . '.class.php', $_dir . '.php') as $_file ) {
             if ( file_exists($_file) ) {
                 require $_file;
-                $_loaded[$_cls] = true;
+                self::$_loadedClass[$_cls] = true;
                 return true;
             }
         }
         
         if ( $_exit ) {
-            exit('Syrian:Loader#import: Unable to load class ' . $_class);
+            throw new Exception('Syrian:Loader#import: Unable to load class ' . $_class);
         }
 
         return false;
@@ -216,7 +234,7 @@ class Loader
         
         //throw new Exception('No such file or directory');
         if ( $_exit ) {
-            exit('Syrian:Loader#config: Unable to load config ' . $_config);
+            throw new Exception('Syrian:Loader#config: Unable to load config ' . $_config);
         }
 
         return false;
@@ -233,15 +251,12 @@ class Loader
     */
     public static function model($_model, $_section=NULL, $_exit=true)
     {
-        //loaded model
-        static $_loaded = array();
-        
         $_model = ucfirst($_model);
         
         //check the loaded of the class
         $_cls = ($_section == NULL) ? $_model : str_replace('.', '/', $_section).'/'.$_model;
-        if ( isset( $_loaded[$_cls] ) ) {
-            return $_loaded[$_cls];
+        if ( isset(self::$_loadedModel[$_cls] ) ) {
+            return self::$_loadedModel[$_cls];
         }
         
         //model base directory
@@ -260,14 +275,14 @@ class Loader
                 }
 
                 //mark loaded for the current class
-                $_loaded[$_cls] = $o;
+                self::$_loadedModel[$_cls] = $o;
 
                 return $o;
             }
         }
         
         if ( $_exit ) {
-            exit('Syrain:Loader#model: Unable to load model ' . $_model);
+            throw new Exception('Syrain:Loader#model: Unable to load model ' . $_model);
         }
 
         return false;
@@ -285,13 +300,10 @@ class Loader
      */
     public static function helper($_helper, $conf=NULL, $_section=NULL, $_inc=false, $_exit=true)
     {
-        //All the loaded helper.
-        static $_loaded = array();
-        
         //$_class = ucfirst($_class);
         $_cls = ($_section == NULL) ? $_helper : str_replace('.', '/', $_section).'/'.$_helper;
-        if ( isset($_loaded[$_cls]) ) {
-            return $_loaded[$_cls];
+        if ( isset(self::$_loadedHelper[$_cls]) ) {
+            return self::$_loadedHelper[$_cls];
         }
         
         //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
@@ -304,13 +316,13 @@ class Loader
                 require $_file;
                 $_class = $_helper.'Helper';
                 $obj    = new $_class($conf);
-                $_loaded[$_cls] = &$obj;
+                self::$_loadedHelper[$_cls] = &$obj;
                 return $obj;
             }
         }
         
         if ( $_exit ) {
-            exit('Syrian:Loader#helper: Unable to load helper ' . $_helper);
+            throw new Exception('Syrian:Loader#helper: Unable to load helper ' . $_helper);
         }
 
         return false;

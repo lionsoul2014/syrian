@@ -46,6 +46,23 @@ class Service
         return $this->{$handler}(new ServiceInputBean($args));
     }
 
+    /**
+     * gc method
+     * do the resource clean up for the current service
+     * will be invoked after each invoke of the service
+    */
+    public function gc()
+    {
+        /*
+         * check and release all the db connections resource
+        */
+        if ( class_exists('DbFactory') ) {
+            DbFactory::releaseAll();
+        }
+
+        //@TODO: check and release all the memcached connection resource
+    }
+
 }
 
 /**
