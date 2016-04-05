@@ -227,7 +227,6 @@ class Util
 
 			switch ($order) {
 				case SORT_ASC:
-					echo 1;
 					asort($sort_array);
 					break;
 				case SORT_DESC:
