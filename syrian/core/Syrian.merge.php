@@ -360,8 +360,6 @@ class Helper
 
 //Load the input class manage the input of the controller/
 if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
-    //--------------------------------------------------------------
-    //normal data type
     defined('OP_NULL')      or define('OP_NULL',        1 <<  0);
     defined('OP_LATIN')     or define('OP_LATIN',       1 <<  1);
     defined('OP_URL')       or define('OP_URL',         1 <<  2);
@@ -467,6 +465,22 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
             //normal string fetch
             return $_GET[$_key];
         }
+
+        /**
+         * fetch and item from $_GET data source
+         * if the mapping is not exists or not match the filter rules 
+         * the default value will be returned
+         *
+         * @param   $_key
+         * @param   $_model
+         * @param   $_must
+         * @return  Mixed
+        */
+        public function getMust($_key, $_model, $_must)
+        {
+            $v = $this->get($_key, $_model, $_must);
+            return $v===false ? $_must : $v;
+        }
         
         /**
          * Fetch an integer form $_GET global array
@@ -565,6 +579,22 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
             //normal string fetch
             return $_POST[$_key];
         }
+
+        /**
+         * fetch and item from $_POST data source
+         * if the mapping is not exists or not match the filter rules 
+         * the default value will be returned
+         *
+         * @param   $_key
+         * @param   $_model
+         * @param   $_must
+         * @return  Mixed
+        */
+        public function postMust($_key, $_model, $_must)
+        {
+            $v = $this->post($_key, $_model, $_must);
+            return $v===false ? $_must : $v;
+        }
         
         /**
          * Fetch an integer form $_POST global array
@@ -661,6 +691,22 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
             
             //normal string fetch
             return $_COOKIE[$_key];
+        }
+
+        /**
+         * fetch and item from $_COOKIE data source
+         * if the mapping is not exists or not match the filter rules 
+         * the default value will be returned
+         *
+         * @param   $_key
+         * @param   $_model
+         * @param   $_must
+         * @return  Mixed
+        */
+        public function cookieMust($_key, $_model, $_must)
+        {
+            $v = $this->cookie($_key, $_model, $_must);
+            return $v===false ? $_must : $v;
         }
         
         /**
@@ -786,6 +832,22 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
             //normal string fetch
             return $_REQUEST[$_key];
         }
+
+        /**
+         * fetch and item from $_REQUEST data source
+         * if the mapping is not exists or not match the filter rules 
+         * the default value will be returned
+         *
+         * @param   $_key
+         * @param   $_model
+         * @param   $_must
+         * @return  Mixed
+        */
+        public function requestMust($_key, $_model, $_must)
+        {
+            $v = $this->request($_key, $_model, $_must);
+            return $v===false ? $_must : $v;
+        }
         
         /**
          * Fetch an integer form $_REQUEST global array
@@ -799,7 +861,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
         {
             if ( ! isset( $_REQUEST[$_key] ) ) return $_default;
             
-            $v    = intval($_REQUEST[$_key]);
+            $v = intval($_REQUEST[$_key]);
             if ( $v < 0 && $allow_nagative == false ) {
                 return false;
             }

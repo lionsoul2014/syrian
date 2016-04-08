@@ -22,14 +22,14 @@ class HtmlView extends AView
      *
      * @access  private
     */
-    private $_symbol        = array();      
+    private $_symbol    = array();      
     
     /**
      * Template compile regex rules
      *
      * @access  private
     */
-    private $_rules         = array(
+    private $_rules     = array(
         '/<\?([^=])/'           => '<?php $1',
         //<?=
         '/<\?=/'                => '<?php echo ',
@@ -92,15 +92,14 @@ class HtmlView extends AView
     private function compile( $_tpl_file, $_cache_file )
     {
         //1.get the cotent of the template file
-        $_TPL = file_get_contents($_tpl_file);
-        if ( $_TPL === FALSE )
-            die('Error: Unable to get the content of the template file '.$_tpl_file);
+        $_TPL = @file_get_contents($_tpl_file);
+        if ( $_TPL === FALSE ) {
+            throw new Exception('Unable to get the content of the template file ' . $_tpl_file);
+        }
             
         //2. regex replace
         $_TPL = preg_replace( array_keys($this->_rules), $this->_rules, $_TPL);
-        
-        if ( ! file_exists( $_cache_file ) )
-        {
+        if ( ! file_exists( $_cache_file ) ) {
             $_path = dirname($_cache_file);
             $_names = array();
             do {
@@ -109,16 +108,16 @@ class HtmlView extends AView
                 $_path = dirname($_path);
             } while ( true );
             
-            for ( $i = count($_names) - 1; $i >= 0; $i-- )
-            {
+            for ( $i = count($_names) - 1; $i >= 0; $i-- ) {
                 $_path .= '/'.$_names[$i];
                 mkdir($_path, 0777);
             }
         }
         
         //3. put the replaced content into the cache file
-        if ( file_put_contents($_cache_file, $_TPL, LOCK_EX) != strlen($_TPL) )
-            die('Error: Unable to write the content to the cache file '.$_cache_file);
+        if ( @file_put_contents($_cache_file, $_TPL, LOCK_EX) != strlen($_TPL) ) {
+            throw new Exception('Unable to write the content to the cache file ' . $_cache_file);
+        }
     }
     
     /**
@@ -171,8 +170,9 @@ class HtmlView extends AView
     */
     public function load( $_array )
     {
-        if ( ! empty($_array) )
+        if ( ! empty($_array) ) {
             $this->_symbol = array_merge($this->_symbol, $_array);
+        }
             
         return $this;
     }
@@ -189,12 +189,9 @@ class HtmlView extends AView
         $_tpl_dir = $this->_tpl_dir;
         $_cache_dir = $this->_cache_dir;
         
-        if ( strpos($_inc_file, '../') !== FALSE )
-        {
+        if ( strpos($_inc_file, '../') !== FALSE ) {
             $_tarr = explode('/', $_inc_file);
-            
-            foreach ( $_tarr as $_val )
-            {
+            foreach ( $_tarr as $_val ) {
                 if ( $_val != '..' ) break;
                 $_tpl_dir = dirname($_tpl_dir);
                 $_cache_dir = dirname($_cache_dir);
@@ -207,8 +204,7 @@ class HtmlView extends AView
         
         //echo $_tpl_file,'<br />';
         //echo $_cache_file,'<br />';
-        if ( ! $this->isCached( $_cache_file ) )
-        {
+        if ( ! $this->isCached( $_cache_file ) ) {
             $this->compile( $_tpl_file, $_cache_file );
         }
         
@@ -223,14 +219,13 @@ class HtmlView extends AView
      * @param    $sanitize sanitize the content ?
      * @return  string the executed html text
     */
-    public function getContent( $_tpl_file = NULL, $sanitize = false )
+    public function getContent( $_tpl_file=NULL, $sanitize=false )
     {
         $_cache_file = $this->_cache_dir.$_tpl_file.'.php';
         $_tpl_file = $this->_tpl_dir.$_tpl_file;
         
         //check the cache file is valid or not
-        if ( ! $this->isCached( $_cache_file ) )
-        {
+        if ( ! $this->isCached( $_cache_file ) ) {
             $this->compile($_tpl_file, $_cache_file);
         }
         

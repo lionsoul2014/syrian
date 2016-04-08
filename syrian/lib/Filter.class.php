@@ -194,9 +194,12 @@ class Filter
     
     public static function get( &$_src, $_name, $_model, &$_errno )
     {
-        if ( ! isset($_src[$_name]) || $_src[$_name] == '' )
+        if ( ! isset($_src[$_name]) || $_src[$_name] == '' ) {
             $_value = NULL;
-        else $_value = &$_src[$_name];
+        } else {
+            $_value = &$_src[$_name];
+        }
+
         return self::check($_value, $_model, $_errno);
     }
     
@@ -208,11 +211,9 @@ class Filter
     public static function loadFromModel( &$_src, $_model, &$_errno )
     {
         $_data = array();
-        foreach ( $_model as $_name => $_value )
-        {
+        foreach ( $_model as $_name => $_value ) {
             $_ret = self::get($_src, $_name, $_value, $_errno);
-            if ( $_ret === FALSE )
-            {
+            if ( $_ret === FALSE ) {
                 $_errno = array($_name, $_errno);
                 return FALSE;
             }

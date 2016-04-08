@@ -529,53 +529,5 @@ class Util
         );
     }
 
-    /**
-     * Generate a DCE(Distribute Computing Environment) 
-     *  UUID(Universally Unique Identifier)
-     *
-     * @return  String
-    */
-    public static function generateUUIDV4()
-    {
-        return sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-        );
-    }
-
-    /**
-     * generate a universally unique identifier
-     * base on the prefix the and the seed.
-     *
-     * @param   $prefix
-     * @param   $seed
-     * @return  String
-    */
-    public static function generateUUIDV5($prefix, $seed)
-    {
-        // Calculate hash value
-        $hash = sha1($prefix . $seed);
-
-        return sprintf('%08s-%04s-%04x-%04x-%12s',
-            // 32 bits for "time_low"
-            substr($hash, 0, 8),
-            // 16 bits for "time_mid"
-            substr($hash, 8, 4),
-            // 16 bits for "time_hi_and_version",
-            // four most significant bits holds version number 5
-            (hexdec(substr($hash, 12, 4)) & 0x0fff) | 0x5000,
-            // 16 bits, 8 bits for "clk_seq_hi_res",
-            // 8 bits for "clk_seq_low",
-            // two most significant bits holds zero and one for variant DCE1.1
-            (hexdec(substr($hash, 16, 4)) & 0x3fff) | 0x8000,
-            // 48 bits for "node"
-            substr($hash, 20, 12)
-        );
-    }
-
 }
 ?>

@@ -21,8 +21,7 @@ class Utf8String
         $byts = 0;
 
         if  ( ($char & 0x80) == 0 ) return 1;
-        for ( ; ($char & 0x80) != 0; $char <<= 1 )
-        {
+        for ( ; ($char & 0x80) != 0; $char <<= 1 ) {
             $byts++;
         }
 
@@ -39,15 +38,14 @@ class Utf8String
     public static function filter($string, $mbytes)
     {
         if ( $string == NULL ) return NULL;
-        $ret    = "";
-        $length    = strlen($string);
+
+        $ret = "";
+        $len = strlen($string);
         
         //do the string filter
-        for ( $i = 0; $i < $length; )
-        {
-            $bytes    = self::getCharBytes($string[$i]);
-            if ( $bytes <= $mbytes )
-            {
+        for ( $i = 0; $i < $len; ) {
+            $bytes = self::getCharBytes($string[$i]);
+            if ( $bytes <= $mbytes ) {
                 $ret .= substr($string, $i, $bytes);
             }
 
