@@ -9,6 +9,120 @@
 
 class StringUtil
 {
+    /**
+     * json encoder: convert the array to json string
+     * and the original string will not be encoded like the json_encode do
+     *
+     * @param   $data
+     * @return  String
+    */
+    public static function array2Json($data)
+    {
+        if ( ! is_array($data) ) {
+            $type = gettype($val);
+            switch ( $type[0] ) {
+            case 'b':
+                return $data ? 'true' : 'false';
+            case 'i':
+            case 'd':
+            case 'N':
+                return $data;
+            case 's':
+                return '"'.self::addslash($data).'"';
+            default:
+                return NULL;
+            }
+        }
+
+        //define the associative attribute
+        $isAssoc = false;
+        foreach ( $data as $key => $val ) {
+            if ( is_string($key) ) {
+                $isAssoc = true;
+                break;
+            }
+        }
+
+        $buff = [];
+        foreach ( $data as $key => $val ) {
+            $type = gettype($val);
+            switch ( $type[0] ) {
+            case 'o':   //object
+            case 'r':   //resource
+                continue;
+                break;
+            case 'b':   //boolean
+                $val = $val ? 'true' : 'false';
+                break;
+            case 'i':   //integer
+            case 'd':   //double
+            case 'N':   //NULL
+                //leave it unchange
+                break;
+            case 's':
+                $val = '"'.self::addslash($val, '"').'"';
+                break;
+            case 'a':
+                $val = self::array2Json($val);
+                break;
+            }
+
+            //check and append the key
+            if ( $isAssoc ) {
+                $buff[] = "\"{$key}\":{$val}";
+            } else {
+                $buff[] = $val;
+            }
+        }
+
+        if ( $isAssoc ) {
+            $json = '{'.implode(',', $buff).'}';
+        } else {
+            $json = '['.implode(',', $buff).']';
+        }
+
+        return $json;
+    }
+
+    /**
+     * string slash function, slash the specifield sub-string
+     *
+     * @param   $str
+     * @return  String
+    */
+    public static function addslash($str, $tchar)
+    {
+        $sIdx = strpos($str, $tchar);
+        if ( $sIdx === false ) {
+            return $str;
+        }
+
+        $buff   = [];
+        $buff[] = substr($str, 0, $sIdx);
+        if ( $str[$sIdx-1] != '\\' ) {
+            $buff[] = '\\';
+        }
+        $buff[] = '"';
+        $sIdx++;
+
+        while (($eIdx = strpos($str, $tchar, $sIdx)) !== false) {
+            $buff[] = substr($str, $sIdx, $eIdx-$sIdx);
+            if ( $str[$eIdx-1] != '\\' ) {
+                $buff[] = '\\';
+            }
+            $buff[] = '"';
+
+            $sIdx = $eIdx + 1;
+        }
+
+        //check and append the end part
+        if ( $sIdx < strlen($str) ) {
+            $buff[] = substr($str, $sIdx);
+        }
+
+        return implode('', $buff);
+    }
+
 	/**
 	 * self define substr and make sure the substring will
 	 * be correct
