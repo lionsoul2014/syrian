@@ -44,7 +44,7 @@ class Helper
             return $this->{$cacher}($_argv);
         }
 
-        exit("Error: Unable to load cacher {$_argv[0]}\n");
+        exit("Error: Helper unable to load {$_argv[0]}\n");
     }
 }
 ?>
