@@ -10,7 +10,12 @@ interface IQueue
     public function set($key, $value);  // set() is an alias of put()
     public function get($key);
     public function delete($key);
-    public function loop();
+    public function first();
+    public function shift();
+    public function pop();
+    public function last();
+    public function loop($reverse = false);
+    public function getIterator();
     public function close();
 }
 

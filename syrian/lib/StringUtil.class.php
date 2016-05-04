@@ -19,7 +19,7 @@ class StringUtil
     public static function array2Json($data)
     {
         if ( ! is_array($data) ) {
-            $type = gettype($val);
+            $type = gettype($data);
             switch ( $type[0] ) {
             case 'b':
                 return $data ? 'true' : 'false';
