@@ -2,7 +2,7 @@
 /**
  * leveldb queue
  *
- * @author will<530911044@qq.com>
+ * @author will<pan.kai@icloud.com>
  */
 class LevelDbQueue implements IQueue
 {

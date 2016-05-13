@@ -2,7 +2,7 @@
 /**
  * Dynamic queue common interface
  *
- * @author will<530911044@qq.com>
+ * @author will<pan.kai@icloud.com>
  */
 interface IQueue
 {
