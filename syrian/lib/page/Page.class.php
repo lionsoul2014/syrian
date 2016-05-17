@@ -48,13 +48,13 @@ class Page
     */
     public function __construct( $_total, $_size, $_pageno )
     {
-        $this->_total   = $_total;
-        $this->_size    = $_size;
+        $this->_total   = intval($_total);
+        $this->_size    = intval($_size);
         $this->_pages   = ceil($_total / $_size);
-        
+
         $this->_pageno  = intval($_pageno);
-        if ( $this->_pageno == 0 ) $this->_pageno = 1;
         if ( $this->_pageno > $this->_pages ) $this->_pageno = $this->_pages;
+        if ( $this->_pageno == 0 ) $this->_pageno = 1;
     }
     
     /**
