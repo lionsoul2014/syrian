@@ -2,7 +2,7 @@
 /**
  * leveldb queue
  *
- * @author will<530911044@qq.com>
+ * @author will<pan.kai@icloud.com>
  */
 class LevelDbQueue implements IQueue
 {
@@ -18,26 +18,26 @@ class LevelDbQueue implements IQueue
 
     public function __construct(&$conf)
     {
-        if( ! isset($conf['path']) || empty($conf['path']) ) {
+        if ( ! isset($conf['path']) || empty($conf['path']) ) {
             throw new Exception('Leveldb Data path should not be empty');
         }
 
         $this->path = $conf['path'];
 
-        if( isset($conf['options']) && ! empty($conf['options']) ) {
+        if ( isset($conf['options']) && ! empty($conf['options']) ) {
             $this->options= $conf['options'];
         }
 
-        if( isset($conf['readoptions']) && ! empty($conf['readoptions']) ) {
+        if ( isset($conf['readoptions']) && ! empty($conf['readoptions']) ) {
             $this->readoptions = $conf['readoptions'];
         }
 
-        if( isset($conf['writeoptions']) && ! empty($conf['writeoptions']) ) {
+        if ( isset($conf['writeoptions']) && ! empty($conf['writeoptions']) ) {
             $this->writeoptions = $conf['writeoptions'];
         }
 
         $this->_leveldb = new LevelDB($this->path, $this->options, $this->readoptions, $this->writeoptions);
-        if( $this->_leveldb == false ) {
+        if ( $this->_leveldb == false ) {
             /**
              * if it's corrupted, you could use LevelDB::repair('/path/to/db') to repair it.
              * it will try to recover as much data as possible.
@@ -81,7 +81,7 @@ class LevelDbQueue implements IQueue
      */
     public function getBySnapshot($key, $snapshot)
     {
-        if( is_array($this->readoptions) ) {
+        if ( is_array($this->readoptions) ) {
             $this->readoptions["snapshot"] = $snapshot;
             return $this->_leveldb->get($key, $this->readoptions);
         }
@@ -100,7 +100,7 @@ class LevelDbQueue implements IQueue
      */
     public function getIterator()
     {
-        if( is_null(self::$_iterator) ) {
+        if ( is_null(self::$_iterator) ) {
             self::$_iterator = new LevelDBIterator($this->_leveldb);
         }
 
@@ -112,7 +112,7 @@ class LevelDbQueue implements IQueue
         $iterator = $this->getIterator();
         $iterator->rewind();
 
-        if( $iterator->valid() ) {
+        if ( $iterator->valid() ) {
             $value = $iterator->current();
 
             return $value;
@@ -131,7 +131,7 @@ class LevelDbQueue implements IQueue
         $iterator = $this->getIterator();
         $iterator->rewind();
 
-        if( $iterator->valid() ) {
+        if ( $iterator->valid() ) {
             $value = $iterator->current();
             $this->delete($iterator->key());
 
@@ -151,7 +151,7 @@ class LevelDbQueue implements IQueue
         $iterator = $this->getIterator();
         $iterator->last();
 
-        if( $iterator->valid() ) {
+        if ( $iterator->valid() ) {
             $value = $iterator->current();
             $this->delete($iterator->key());
 
@@ -166,7 +166,7 @@ class LevelDbQueue implements IQueue
         $iterator = $this->getIterator();
         $iterator->last();
 
-        if( $iterator->valid() ) {
+        if ( $iterator->valid() ) {
             $value = $iterator->current();
 
             return $value;
@@ -193,7 +193,7 @@ class LevelDbQueue implements IQueue
         $data = array();
 
         // loop in iterator style
-        if( $reverse === false ) {
+        if ( $reverse === false ) {
             $iterator->rewind();
             while( $iterator->valid() ) {
                 $data[$iterator->key()] = $iterator->current();
@@ -220,7 +220,7 @@ class LevelDbQueue implements IQueue
      */
     public function getAtomicBatch()
     {
-        if( is_null(self::$_batch) ) {
+        if ( is_null(self::$_batch) ) {
             self::$_batch = new LevelDBWriteBatch();
         }
 
@@ -270,7 +270,7 @@ class LevelDbQueue implements IQueue
      */
     public function destroy($force = false)
     {
-        if( $force === true ) {
+        if ( $force === true ) {
             $this->close();
             return LevelDB::destroy($this->path);
         }
