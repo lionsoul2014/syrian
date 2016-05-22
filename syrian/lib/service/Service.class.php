@@ -43,7 +43,11 @@ class Service
         }
 
         //invoke the handler
-        return $this->{$handler}(new ServiceInputBean($args));
+        $input = new ServiceInputBean($args);
+        $ret   = $this->{$handler}($input);
+        unset($input);
+
+        return $ret;
     }
 
     /**
@@ -116,6 +120,13 @@ class ServiceInputBean
         }
 
         return false;
+    }
+
+    public function __destruct()
+    {
+        if ( $this->args != NULL ) {
+            unset($this->args);
+        }
     }
 }
 

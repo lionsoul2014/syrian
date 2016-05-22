@@ -395,7 +395,7 @@ class Util
 		$info	= curl_getinfo($curl);
 		curl_close($curl);
 
-		if( intval($info['http_code']) == 200 ) {
+		if ( intval($info['http_code']) == 200 ) {
 			return $ret;
 		}
 

@@ -129,7 +129,7 @@ class NFileCache implements ICache
         }
         
         //set the cache content
-        return file_put_contents($_cache_file, $_content);
+        return file_put_contents($_cache_file, $_content, LOCK_EX);
     }
 
     //remove the cache

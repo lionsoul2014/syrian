@@ -48,6 +48,7 @@ class LocalExecutor
 
         $clsPath = implode('/', $pathArr);
         if ( isset(self::$POOL[$clsPath]) ) {
+            unset($path, $part, $method, $pathArr, $nameArr);
             return self::$POOL[$clsPath];
         }
 
@@ -56,18 +57,31 @@ class LocalExecutor
         $clsName = implode('',  $nameArr).'Service';
 
         if ( ! file_exists($clsFile) ) {
+            unset(
+                $path, $part, $method, $pathArr, 
+                $nameArr, $clsFile, $clsName
+            );
             return NULL;
         }
 
         require $clsFile;
 
         if ( ! class_exists($clsName) ) {
+            unset(
+                $path, $part, $method, $pathArr, 
+                $nameArr, $clsFile, $clsName
+            );
             return NULL;
         }
 
         $obj = new $clsName();
         $ret = array($method, $obj);
         self::$POOL[$clsPath] = $ret;
+
+        unset(
+            $path, $part, $method, $pathArr, 
+            $nameArr, $clsFile, $clsName
+        );
 
         return $ret;
     }
