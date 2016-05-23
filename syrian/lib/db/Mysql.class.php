@@ -126,7 +126,8 @@ class Mysql implements Idb
                 $this->_link = NULL;
                 $this->_link = self::connect($this->_hostCache[$_sidx], $this->_reconnectTimeout);
                 $this->clink = $this->_link;
-                break; case 2:
+                break; 
+            case 1:
                 $this->rlink = NULL;
                 $this->rlink = self::connect($this->_hostCache[$_sidx], $this->_reconnectTimeout);
                 $this->clink = $this->rlink;
