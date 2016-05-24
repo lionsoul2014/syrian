@@ -26,7 +26,7 @@ class GearmanExecutor
      *
      * @access  private
     */
-    private $local_ensure = true;
+    private $local_ensure = false;
 
     /**
      * create and initialize the gearman executor
@@ -137,6 +137,8 @@ class GearmanExecutor
         //    echo 'GEARMAN_WORK_FAIL';
         //    break;
         //}
+
+        return false;
     }
 }
 ?>
