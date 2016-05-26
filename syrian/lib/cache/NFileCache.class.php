@@ -104,7 +104,7 @@ class NFileCache implements ICache
         return file_get_contents($_cache_file);
     }
     
-    public function set( $_content, $_ttl = NULL )
+    public function set( $_content, $_ttl=NULL, $mode=NULL )
     {
         //get the cache file
         $_cache_file = $this->getCacheFile();
@@ -129,7 +129,12 @@ class NFileCache implements ICache
         }
         
         //set the cache content
-        return file_put_contents($_cache_file, $_content, LOCK_EX);
+        $ret = file_put_contents($_cache_file, $_content, LOCK_EX);
+        if ( $ret != false && $mode != NULL ) {
+            chmod($_cache_file, $mode);
+        }
+
+        return $ret;
     }
 
     //remove the cache

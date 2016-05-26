@@ -126,22 +126,21 @@ class MemcachedCache implements ICache
     }
 
 
-    public function set($_data, $_ttl = NULL) {
-        if ($this->_key == '' 
-            && empty($_data)) return false;
-
+    public function set($_data, $_ttl=NULL, $mode=NULL)
+    {
+        if ($this->_key == '' && empty($_data)) return false;
         return $this->setByKey($this->_key, $_data, $_ttl);
     }
 
-    public function setByKey($_key, $_data, $_ttl = NULL)
+    public function setByKey($_key, $_data, $_ttl=NULL)
     {
         if ( $_ttl === NULL || ($_ttl = intval($_ttl) ) < 0 ) 
             $_ttl = $this->_ttl;
         return $this->_mem->set($_key, $_data, $_ttl);
     }
 
-
-    public function remove(){
+    public function remove()
+    {
        return $this->removeByKey($this->_key); 
     }
 
