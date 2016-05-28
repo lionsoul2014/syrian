@@ -111,7 +111,7 @@ class NFileCache implements ICache
         
         $path = dirname($_cache_file);
         //check and make the $path dir
-            if ( ! file_exists( $path ) ) {
+        if ( ! file_exists( $path ) ) {
             $_dir = dirname( $path );
             $_names = array();
             do {
@@ -122,10 +122,10 @@ class NFileCache implements ICache
             
             for ( $i = count($_names) - 1; $i >= 0; $i-- ) {
                 $_dir = $_dir.'/'.$_names[$i];
-                mkdir($_dir, 0777);
+                mkdir($_dir, $mode ? $mode : 0777);
             }
 
-            mkdir($path, 0777);
+            mkdir($path, $mode ? $mode : 0777);
         }
         
         //set the cache content
@@ -135,6 +135,12 @@ class NFileCache implements ICache
         }
 
         return $ret;
+    }
+
+    public function exists()
+    {
+        $_cache_file = $this->getCacheFile();
+        return file_exists($_cache_file);
     }
 
     //remove the cache

@@ -139,6 +139,11 @@ class MemcachedCache implements ICache
         return $this->_mem->set($_key, $_data, $_ttl);
     }
 
+    public function exists()
+    {
+        return $this->get() != false;
+    }
+
     public function remove()
     {
        return $this->removeByKey($this->_key); 

@@ -16,7 +16,7 @@ class Util
 	 *
 	 * @param 	$filename
 	 */	
-	public static function makePath( $filename, $mode=0750 ) 
+	public static function makePath( $filename, $mode=0755 ) 
 	{
 		$dirArray = array();
 		$baseDir = '';
@@ -39,7 +39,7 @@ class Util
 			$baseDir = $baseDir . '/' .$dirArray[$i];
 			@mkdir( $baseDir );
 			if ( $mode != NULL ) {
-				@chmod($baseDir);
+				@chmod($baseDir, $mode);
 			}
 		}
 	}
