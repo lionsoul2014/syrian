@@ -85,6 +85,41 @@ class StringUtil
     }
 
     /**
+     * filter unprintable characters
+     *
+     * @param $string
+     * @param array $reserve
+     * @param null $replace
+     * @return string
+     */
+    public static function filterUnprintableChars($string, $reserve = array(), $replace = NULL)
+    {
+        $ret = '';
+        $length = strlen($string);
+
+        for ( $i = 0; $i < $length; $i++ ) {
+            $code = ord($string[$i]);
+
+            if ( ($code & 0x80) == 0
+                && $code < 32 ) {
+                if ( ! (isset($reserve[$string[$i]])
+                    && $reserve[$string[$i]]) ) {
+                    continue;
+                }
+
+                if ( ! is_null($replace) ) {
+                    $ret .= $replace;
+                    continue;
+                }
+            }
+
+            $ret .= $string[$i];
+        }
+
+        return $ret;
+    }
+
+    /**
      * string slash function, slash the specifield sub-string
      *
      * @param   $str
