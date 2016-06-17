@@ -87,36 +87,81 @@ class StringUtil
     /**
      * filter unprintable characters
      *
-     * @param $string
-     * @param array $reserve
-     * @param null $replace
-     * @return string
+     * @param $string         string
+     * @param string $encode  utf-8, gbk, gb2312...
+     * @param array $reserve  unprintable characters reserved, value: array(9, 10, 13...)
+     * @return bool|string
      */
-    public static function filterUnprintableChars($string, $reserve = array(), $replace = NULL)
+    public static function filterUnprintableChars($string, $encode = 'UTF-8', $reserve = array())
     {
-        $ret = '';
+        if ( $string == NULL ) return false;
+
+        $buffer = array();
         $length = strlen($string);
 
-        for ( $i = 0; $i < $length; $i++ ) {
-            $code = ord($string[$i]);
+        switch( strtoupper($encode) ) {
+            case 'GBK':
+            case 'GB2312':
+                for ( $i = 0; $i < $length; ) {
+                    $code = ord($string[$i]);
 
-            if ( ($code & 0x80) == 0
-                && $code < 32 ) {
-                if ( ! (isset($reserve[$string[$i]])
-                    && $reserve[$string[$i]]) ) {
-                    continue;
+                    if ( $code <= 127 ) {
+                        if ( $code < 32
+                            && ! in_array($code, $reserve) ) {
+                            $i++;
+                            continue;
+                        }
+
+                        array_push($buffer, $string[$i]);
+
+                        $bytes = 1;
+                    }
+                    else {
+                        //gbk, gb2312, skip two bytes
+                        array_push($buffer, $string[$i]);
+                        array_push($buffer, $string[$i+1]);
+
+                        $bytes = 2;
+                    }
+
+                    $i += $bytes;
                 }
+                break;
+            case 'UTF-8':
+                for ( $i = 0; $i < $length; ) {
+                    $code  = ord($string[$i]);
 
-                if ( ! is_null($replace) ) {
-                    $ret .= $replace;
-                    continue;
+                    if ( ($code & 0x80) == 0 ) {
+                        if ( $code < 32
+                            && ! in_array($code, $reserve) ) {
+                            $i++;
+                            continue;
+                        }
+
+                        array_push($buffer, $string[$i]);
+
+                        $bytes = 1;
+                    }
+                    else {
+                        $bytes = 0;
+
+                        //utf-8, skip multiple bytes, no more than 4
+                        for ( ; ($code & 0x80) != 0; $code <<= 1 ) {
+                            $bytes++;
+                        }
+
+                        array_push($buffer, substr($string, $i, $bytes));
+                    }
+
+                    $i += $bytes;
                 }
-            }
-
-            $ret .= $string[$i];
+                break;
+            default:
+                return false;
+                break;
         }
 
-        return $ret;
+        return implode('', $buffer);
     }
 
     /**
