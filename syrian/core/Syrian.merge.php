@@ -152,7 +152,7 @@ if ( ! function_exists('import') ) {
         $_dir  .= $path;
         $found  = false;
 
-        foreach ( array($_dir . '.class.php', $_dir . '.php') as $_file ) {
+        foreach ( array("{$_dir}.class.php", "{$_dir}.php") as $_file ) {
             if ( file_exists($_file) ) {
                 require $_file;
                 $_loadedClass[$path] = true;
@@ -202,7 +202,7 @@ if ( ! function_exists('config') ) {
             $found = false;
 
             //search the config file and include it
-            foreach ( array($_dir . '.conf.php', $_dir . '.php' ) as $_file ) {
+            foreach (array("{$_dir}.conf.php", "{$_dir}.php") as $_file ) {
                 if ( file_exists($_file) ) {
                     $found = true;
                     $_loadedConf[$path] = include $_file;
@@ -254,7 +254,9 @@ if ( ! function_exists('model') ) {
         }
 
         if ( ($sIdx = strrpos($model_path, '.')) !== false ) {
-            $path  = str_replace('.', '/', substr($model_path, 0, $sIdx));
+            //@Note: the 3rd arguments set to $sIdx+1
+            //so the path will always end with '/'
+            $path  = str_replace('.', '/', substr($model_path, 0, $sIdx + 1));
             $model = substr($model_path, $sIdx + 1);
         } else {
             $path  = NULL;
@@ -262,8 +264,8 @@ if ( ! function_exists('model') ) {
         }
         
         //model base directory
-        $_dir = SR_MODELPATH . $model_path;
-        foreach ( array( $_dir . '.model.php', $_dir . '.php' ) as $_file ) {
+        $_dir = SR_MODELPATH . "{$path}{$model}";
+        foreach ( array("{$_dir}.model.php", "{$_dir}.php") as $_file ) {
             if ( file_exists( $_file ) ) {
                 if ( ! isset($_loadedModel[$model_path]) ) {
                     include $_file;
@@ -307,7 +309,8 @@ if ( ! function_exists('helper') ) {
         }
 
         if ( ($sIdx = strrpos($helper_path, '.')) !== false ) {
-            $path   = str_replace('.', '/', substr($helper_path, 0, $sIdx));
+            //@Note: see #model
+            $path   = str_replace('.', '/', substr($helper_path, 0, $sIdx + 1));
             $helper = substr($helper_path, $sIdx + 1);
         } else {
             $path   = NULL;
@@ -317,9 +320,9 @@ if ( ! function_exists('helper') ) {
         //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
         //Or check the APPPATH/lib 
         $_dir  = (($_inc) ? BASEPATH . '/helper/' : SR_HELPERPATH);
-        $_dir .= $helper_path;
+        $_dir .= "{$path}{$helper}";
         
-        foreach( array($_dir . '.helper.php', $_dir . '.php') as $_file ) {
+        foreach( array("{$_dir}.helper.php", "{$_dir}.php") as $_file ) {
             if ( file_exists($_file) ) {
                 if ( ! isset($_loadedHelper[$helper_path]) ) {
                     require $_file;
