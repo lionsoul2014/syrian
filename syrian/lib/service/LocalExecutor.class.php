@@ -48,8 +48,8 @@ class LocalExecutor
 
         $clsPath = implode('/', $pathArr);
         if ( isset(self::$POOL[$clsPath]) ) {
-            unset($path, $part, $method, $pathArr, $nameArr);
-            return self::$POOL[$clsPath];
+            unset($path, $part, $pathArr, $nameArr);
+            return array($method, self::$POOL[$clsPath]);
         }
 
         //define the class file
@@ -76,13 +76,14 @@ class LocalExecutor
 
         $obj = new $clsName();
         $ret = array($method, $obj);
-        self::$POOL[$clsPath] = $ret;
+        self::$POOL[$clsPath] = $obj;
 
         unset(
             $path, $part, $method, $pathArr, 
             $nameArr, $clsFile, $clsName
         );
 
+        var_dump($ret);
         return $ret;
     }
 
@@ -114,5 +115,6 @@ class LocalExecutor
 
         return $ret;
     }
+
 }
 ?>
