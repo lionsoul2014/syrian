@@ -83,7 +83,6 @@ class LocalExecutor
             $nameArr, $clsFile, $clsName
         );
 
-        var_dump($ret);
         return $ret;
     }
 
