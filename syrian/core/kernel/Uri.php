@@ -72,21 +72,21 @@ abstract class Uri
         }
          
         //normalized the url and make sure it start with /
-        if ( $this->url[0] != '/' )     $this->url  = '/' . $this->url;
-        if ( $this->self[0] != '/' )    $this->self = '/' . $this->self;
+        if ( $this->url[0] != '/' )     $this->url  = "/{$this->url}";
+        if ( $this->self[0] != '/' )    $this->self = "/{$this->self}";
         
         /*
          * Analysis and initialize the base
         */
-        $self   = $_SERVER['PHP_SELF'];
-        if ( $self[0] != '/' ) $self = '/' . $self;
+        $self = $_SERVER['PHP_SELF'];
+        if ( $self[0] != '/' ) $self = "/{$self}";
 
         if ( ($pos = stripos($self, '.php')) !== FALSE ) {
             while ( $self[$pos] != '/' ) $pos--;
              //get the base part, include the '/' mark at $i
             if ( $pos > 0 ) $this->_base = substr($self, 0, $pos + 1);
         }
-        
+
         $this->_rewrite = $_rewrite;
         $this->_style   = $_style;
     }
@@ -131,9 +131,13 @@ abstract class Uri
         /*
          * mark the final end position
          *  And clear the last '/' punctuation if it is
+         *
+         * @Note: fixed at 2016/06/27
+         * demo: /script/pc/download/
+         * we consider the page to be NULL
         */
         if ( $_epos == FALSE ) $_epos = $_len;
-        if ( $_url[$_len - 1] == '/' ) $_epos--;
+        //if ( $_url[$_len - 1] == '/' ) $_epos--;
         $this->_request = substr($_url, $_spos, $_epos - $_spos);
         if ( $this->_request == '' ) return false;
         
@@ -142,7 +146,7 @@ abstract class Uri
          *      also, initialize the _parts globals variable here
         */
         $_ret = explode('/', $this->_request);
-        $this->_parts   = &$_ret;
+        $this->_parts = &$_ret;
         
         return true;
     }
@@ -158,7 +162,7 @@ abstract class Uri
     public function redirect( $_url, $_args = NULL )
     {
         $_url = $this->makeStyleUrl($_url, $_args);
-        header('Location: ' . $_url);
+        header("Location: {$_url}");
         exit();
     }
     
@@ -173,8 +177,9 @@ abstract class Uri
     protected function makeStyleArgs( &$_args )
     {
         //dir style arguments, demo: /nid/tid/pageno
-        if ( $this->_style == URI_DIR_STYLE )
+        if ( $this->_style == URI_DIR_STYLE ) {
             return ('/'.implode('/', $_args));
+        }
         
         if ( is_string($_args) ) return ('?' . $_args);
         
