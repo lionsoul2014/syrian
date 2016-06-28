@@ -1,7 +1,15 @@
-/skeleton/cache/
+/skeleton/storage/cache/
+/skeleton/storage/tmp
+/skeleton/www/cache/
+/skeleton/www/uploadfiles/
 *.vim
 *.viminfo
 /session/*
 *~
 *.swp
 *.idea
+
+!/skeleton/www/uploadfiles/index.html
+!/skeleton/www/cache/index.html
+!/skeleton/storage/cache/index.html
+!/skeleton/storage/tmp/index.html
