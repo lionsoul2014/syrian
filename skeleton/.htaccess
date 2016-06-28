@@ -1,7 +1,0 @@
-#url rewrite rule
-#RewriteEngine On
-#RewriteBase /
-#RewriteRule ^(\w+/?)+(\.(html|htm|do))?(\?[^\?]+)?$ index.php [L]
-
-#Nginx url rewrite
-rewrite ^[\w/]+(\?[^\?]+)?$ /index.php 	break;

@@ -4,6 +4,7 @@
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
+
 class ErrorController extends Controller
 {
     public function __construct()
@@ -16,12 +17,9 @@ class ErrorController extends Controller
         $_method = 'err_' . $this->uri->page;
         
         //invoke the specifiled method
-        if ( method_exists($this, $_method) )
-        {
+        if ( method_exists($this, $_method) ) {
             $this->{$_method}();
-        }
-        else
-        {
+        } else {
             $this->error();
         }
     }

@@ -7,7 +7,8 @@
 
 //-----------------------------------------------------
 
-Loader::import('Util');
+import('Util');
+import('core.Controller');
 
 defined('CLI_PROC_EXIT')    or define('CLI_PROC_EXIT',   -1);
 defined('CLI_PROC_RUNNING') or define('CLI_PROC_RUNNING', 1);

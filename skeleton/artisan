@@ -1,0 +1,483 @@
+#!/usr/bin/env php
+<?php
+/**
+ * syrian artisan is a tool for create Model,Service,Controller 
+ * and dump or import database or table 
+ *
+ * @author koma<komazhang@foxmail.com>
+ * @date   2016/04/27
+ * 
+ */
+
+//----------------------- Consts define line
+define('APPPATH',					dirname(__FILE__).'/');
+define('ARTISAN_MODELPATH',			APPPATH.'resource/model/');
+define('ARTISAN_SERVICEPATH',		APPPATH.'resource/service/');
+define('ARTISAN_CONTROLLERPATH',	APPPATH.'app/');
+define('ARTISAN_TPLPATH',			APPPATH.'resource/design/artisan_tpl/');
+define('VERSION',					'1.1');
+
+//----------------------- options define line
+$shortOptions  = '';
+$shortOptions .= 'h';
+$shortOptions .= 'v';
+
+$longOptions = array(
+	'create:'   => 'Use to create Model,Service,Controller. Optional value is model,service,controller.',
+	'export:'   => 'Use to export database or table into sql file.',
+	'import:'   => 'Use to import database or table from sql file.',
+	'copy:'     => 'Use to copy table.',
+
+	'tpl-dir:'	=> 'Depends on the value of option create, use to specify the compontent tpl file directory that you want to create.',
+	'name-tpl:'	=> 'Specify the created file name tpl. Default value is {name}.{create}.php.',
+	'path:'	    => 'When the create option is specified, this is use to specify the path that the compontent in.'
+					.'Otherwise this is use to specify the path of the sql file in.',
+	'section:'  => 'Use to specify the compontent section path.',
+	'name:'     => 'Depends on the value of option create, use to specify the name of the compontent. Default value is Default.',
+	'multi:'    => 'Specify a range like start,end to create multi model or controller or service',
+
+	'prefix:'   => 'Specify the {prefix} value that you can use in the tpl where you want.'
+					.' Usually this is used when create is dump or import to specify the table\'s or database\'s prefix.',
+	'suffix:'   => 'Specify the {suffix} value that you can use in the tpl where you want.',
+	'db:'       => 'Specify the {db} value that you can user int the tpl where you want.',
+	'table:'	=> 'Specify the {table} value that you can user int the tpl where you want. Default value is {name}.',
+	'pk:'	    => 'Specify the {pk} value that you can user int the tpl where you want. Default value is Id.',
+	'model:'    => 'Specify the {model} value that you can user int the tpl where you want. '
+					.'Optional value is sharding, elasticSearch, C_Model. Default value is C_Model.',
+
+	'user:'	    => 'Use to specify the user name when do the dump or import action. Default value is root.',
+	'password:' => 'Use to specify the password when do the dump or import action.',
+	'host:'     => 'Use to specify the host when do the dump or import action. Default value is 127.0.0.1.',
+	
+	'author:'   => 'Specify the compontent file create author info.',
+	'email:'    => 'Specify the compontent file create author email info.',
+	'desc:'     => 'Specify the compontent file description info.',
+	'date:'     => 'Specify the compontent file create date info.',
+
+	'help'      => 'Show the help info. Shortcut -h.',
+	'version'   => 'Show the version info. Shortcut -v.'
+);
+
+$opts = getopt($shortOptions, array_keys($longOptions));
+
+if ( empty($opts) ) printHelpInfo();
+
+if ( isset($opts['create']) ) {
+	doCreate();
+} else if ( isset($opts['export']) ) {
+	doExport();
+} else if ( isset($opts['import']) ) {
+	doImport();
+} else if ( isset($opts['copy']) ) {
+	doCopy();
+} else if ( isset($opts['help']) || isset($opts['h']) ) {
+	printHelpInfo();
+} else if ( isset($opts['version']) || isset($opts['v']) ) {
+	printVersionInfo();
+}else {
+	printHelpInfo();
+}
+
+//----------------------- functions line ------------
+function doCreate()
+{
+	global $opts;
+
+	$type    = $opts['create'];
+	$tplDir  = getTplPath();
+	$nameTpl = isset($opts['name-tpl']) ? $opts['name-tpl' ] : '{name}.{create}.php';
+	$multi   = isset($opts['multi']   ) ? $opts['multi']     : '';
+	$name    = isset($opts['name']    ) ? $opts['name']      : 'Default';
+	$table   = isset($opts['table']   ) ? $opts['table']     : $name;
+	$model   = isset($opts['model']   ) ? $opts['model']     : 'C_Model';
+	$start   = 0;
+	$end     = 0;
+	$doTableCopy = isset($opts['copy']) ? true : false;
+
+	if ( $multi != '' ) {
+		list($start, $end) = explode(',', $multi);
+	}
+
+	$srcTpl  = $tplDir;
+	if ( $type == 'model' ) {
+		$path    = isset($opts['path']) ? $opts['path'] : ARTISAN_MODELPATH;
+		$srcTpl .= 'model.php';
+	} else if ( $type == 'service' ) {
+		$path    = isset($opts['path']) ? $opts['path'] : ARTISAN_SERVICEPATH;
+		$srcTpl .= 'service.php';
+	} else if ( $type == 'controller' ) {
+		$path    = isset($opts['path']) ? $opts['path'] : ARTISAN_CONTROLLERPATH;
+		$srcTpl .= 'controller.php';
+	} else {
+		printHelpInfo();
+	}
+	
+	$path = str_replace('\\', '/', $path);
+	if ( $path{strlen($path)-1} != '/' ) {
+		$path .= '/';
+	}
+	if ( isset($opts['section']) ) {
+		$opts['section'] = str_replace('.', '/', $opts['section']);
+		$path .= "{$opts['section']}/";
+	}
+
+	$_name 		= $name;
+	$commonOpts = getCommonOptVals();
+	$dbOpts     = getDbOptVals(); 
+	$_table 	= $table;
+_doCreate:
+	if ( $multi != '' ) {
+		$_name  = $start < 10 ? "{$name}0{$start}"  : "{$name}{$start}";
+		$_table = $start < 10 ? "{$table}_0{$start}" : "{$table}_{$start}";
+	}
+
+	$createOpts = array(
+		'name'   => $_name,
+		'table'  => $_table,
+		'model'  => $model
+	);
+	$artisan = array_merge($dbOpts, $commonOpts, $createOpts);
+	
+	$replaceSearch = array(
+		'{name}'   => $_name,
+		'{create}' => $type
+	);
+	$replaceKeys = array_keys($replaceSearch);
+	$distTpl     = str_replace($replaceKeys, $replaceSearch, $nameTpl);
+	$distTpl     = $path.$distTpl;
+
+	//start to render tpl
+	ob_start();
+	require($srcTpl);
+	$distContent = ob_get_contents();
+	ob_end_clean();
+
+	$replaceSearch = array(
+		'{this}' => '$this'
+	);
+	$replaceKeys = array_keys($replaceSearch);
+	$distContent = str_replace($replaceKeys, $replaceSearch, $distContent);
+	
+	if ( !file_exists($path)    ) createPath($path); 
+	if ( !is_writable($path)    ) printException("Permission denied.[$distTpl]");
+	if ( file_exists($distTpl)  ) printException("File exists.[$distTpl]"); 
+
+	if ( file_put_contents($distTpl, $distContent) ) {
+		if ( $multi != '' && $start != $end ) {
+			$start++;
+			printSuccessInfo("Create Successed.[{$distTpl}]", false);
+			goto _doCreate;
+		} else {
+			printSuccessInfo("Create Successed.[{$distTpl}]", false);
+
+			if ( $doTableCopy ) {
+				doCopy();
+			} else {
+				exit();							
+			}
+		}
+	}
+	
+
+	printException('Unknow Error');
+}
+
+function doExport()
+{
+	global $opts;
+	
+	$dbOpts = getDbOptVals(); 
+	$path   = isset($opts['path']) ? $opts['path'] : dirname(__FILE__);
+	$export = $opts['export'];
+
+	$path = str_ireplace('\\', '/', $path);
+	if ( $path{strlen($path)-1} != '/' ) {
+		$path .= '/';
+	}
+
+	$pos    = strpos($export, ':');
+	$db     = substr($export, 0, $pos);
+	$db == '' && $db = $dbOpts['db'];
+	$table  = substr($export, $pos > 0 ? $pos+1 : 0);
+	$host   = $dbOpts['host'];
+	$user   = $dbOpts['user'];
+	$passwd = $dbOpts['password'];
+
+	if ( !file_exists($path) ) createPath($path); 
+	if ( !is_writable($path) ) printException('Permission denied');
+	if ( $db    == ''        ) printException('No database selected.');
+	if ( $table == ''        ) printException('No table selected.');
+	
+	$mysqli = @new mysqli($host, $user, $passwd, $db);
+	if ( $mysqli->connect_errno ) printException('Connect database failed: '.$mysqli->connect_error);
+	$mysqli->query('SET NAMES utf8');	
+	
+	$tables = array();
+	if ( $table == '*' ) {
+		$result = $mysqli->query('SHOW TABLES');
+		if ( $result ) {
+			while ( $row = $result->fetch_row() ) {
+				$tables[] = $row[0];
+			}
+		}
+	} else {
+		$tables = explode(',', $table);
+	}
+	if ( empty($tables) ) printException('No table selected.');
+
+	$sqlFile = $path.( count($tables) > 1 ? $db : $tables[0] ).'.sql';
+	$fhandle = fopen($sqlFile, 'wb') or printException('File open failed.');
+
+	writeLine($fhandle, '-- Syrian SQL Dump');
+	writeLine($fhandle, '-- version: '.VERSION);
+	writeLine($fhandle, '-- http://git.oschina.net/lionsoul/syrian');
+	writeLine($fhandle, '--');
+	writeLine($fhandle, '-- Host: '.$host);
+	writeLine($fhandle, '-- Generation Time: '.date('Y/m/d H:i:s', time() ) );
+	writeLine($fhandle, '');
+	writeLine($fhandle, 'SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";');
+	writeLine($fhandle, 'SET time_zone = "+00:00";');
+	writeLine($fhandle, '');
+	writeLine($fhandle, '');
+	writeLine($fhandle, '/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;');
+	writeLine($fhandle, '/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;');
+	writeLine($fhandle, '/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;');
+	writeLine($fhandle, '/*!40101 SET NAMES utf8 */;');
+	writeLine($fhandle, '');
+	writeLine($fhandle, '--');
+	writeLine($fhandle, '-- Database: `'.$db.'`');
+	writeLine($fhandle, '--');
+	writeLine($fhandle, '');
+	writeLine($fhandle, '-- --------------------------------------------------------');
+	writeLine($fhandle, '');
+
+	foreach ( $tables as $t ) {
+		$result = $mysqli->query('SHOW CREATE TABLE '.$t);
+		if ( $result ) {
+			while ( $row = $result->fetch_assoc() ) {
+				writeLine($fhandle, '--');
+				writeLine($fhandle, '-- Table structure for table `'.$row['Table'].'`');
+				writeLine($fhandle, '--');
+				writeLine($fhandle, '');
+				writeLine($fhandle, str_replace('CREATE TABLE', 'CREATE TABLE IF NOT EXISTS', $row['Create Table']).';');
+				writeLine($fhandle, '');
+			}
+		}
+		unset($result);
+	}
+	
+	writeLine($fhandle, '');
+	writeLine($fhandle, '/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;');
+	writeLine($fhandle, '/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;');
+	writeLine($fhandle, '/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;');
+	writeLine($fhandle, '');
+
+	fclose($fhandle);
+	$mysqli->close();
+
+	printSuccessInfo("Export Successed.[$sqlFile]");
+}
+
+function doImport()
+{
+	global $opts;
+
+	$dbOpts = getDbOptVals(); 
+	$import = $opts['import'];
+
+	$db     = $dbOpts['db'];
+	$host   = $dbOpts['host'];
+	$user   = $dbOpts['user'];
+	$passwd = $dbOpts['password'];
+
+	if ( !file_exists($import) ) printException('Import SQL file['.$import.'] not exists.'); 
+
+	$mysqli = @new mysqli($host, $user, $passwd, $db);
+	if ( $mysqli->connect_errno ) printException('Connect database failed: '.$mysqli->connect_error);
+	$mysqli->query('SET NAMES utf8');	
+
+	$fhandle = fopen($import, 'rb');
+	$command = '';
+	while ( ($line = fgets($fhandle)) !== false ) {
+		$line = trim($line);
+		if ( $line == '' || strpos($line, '--') === 0 ) continue;
+		
+		$command .= $line;
+		if ( $line{strlen($line)-1} == ';' ) {
+			if ( $mysqli->query($command) === false ) {
+				printException('Import failed.['.$mysqli->error.']');
+			}
+			$command = '';
+		}
+	}
+
+	$mysqli->close();
+	fclose($fhandle);
+
+	printSuccessInfo('Import Successed');
+}
+
+function doCopy()
+{
+	global $opts;
+
+	$dbOpts   = getDbOptVals();
+	$multi    = isset($opts['multi']) ? $opts['multi'] : '';
+	$newtable = strtolower($opts['copy']);
+	$db       = $dbOpts['db'];
+	$host     = $dbOpts['host'];
+	$user     = $dbOpts['user'];
+	$passwd   = $dbOpts['password'];
+	$oldtable = strtolower($dbOpts['table']);
+	$start    = 0;
+	$end      = 0;
+
+	if ( $multi != '' ) {
+		list($start, $end) = explode(',', $multi);
+	}
+
+	$mysqli = @new mysqli($host, $user, $passwd, $db);
+	if ( $mysqli->connect_errno ) printException('Connect database failed: '.$mysqli->connect_error);
+	$mysqli->query('SET NAMES utf8');
+
+	$_newtable = $newtable;
+	_doCopy:
+	if ( $multi != '' ) {
+		$_newtable = $start < 10 ? "{$newtable}_0{$start}"  : "{$newtable}_{$start}";
+	}
+
+	$command = "CREATE TABLE {$_newtable} LIKE {$oldtable}";
+	if ( $mysqli->query($command) === false ) {
+		printException('Copy table failed.['.$mysqli->error.']');
+	} else {
+		if ( $multi != '' && $start != $end ) {
+			$start++;
+			printSuccessInfo('Copy table ['.$_newtable.'] Successed', false);
+			goto _doCopy;
+		}
+	}
+
+	$mysqli->close();
+	printSuccessInfo('Copy table ['.$_newtable.'] Successed');
+}
+
+function writeLine($fp, $str)
+{
+	$str = "{$str}\n";	
+	if ( ($len = @fwrite($fp, $str)) === false ) {
+		printException('Write failed.');
+	} 
+}
+
+function getTplPath()
+{
+	global $opts;
+
+	$dir = isset($opts['tpl-dir'] ) ? $opts['tpl-dir' ] : ARTISAN_TPLPATH;
+
+	if ( $dir{strlen($dir)-1} != '/' ) {
+		$dir .= '/';
+	}
+
+	return $dir;
+}
+
+function getDbOptVals()
+{
+	global $opts;
+
+	return array(
+		'host'	   => isset($opts['host']	 ) ? $opts['host']     : '127.0.0.1',
+		'db'       => isset($opts['db']	     ) ? $opts['db']       : '',
+		'user'	   => isset($opts['user']	 ) ? $opts['user']     : 'root',
+		'password' => isset($opts['password']) ? $opts['password'] : '',
+		'table'    => isset($opts['table']   ) ? $opts['table']    : '',
+		'pk'	   => isset($opts['pk']      ) ? $opts['pk']       : 'Id'
+	);
+}
+
+function getCommonOptVals()
+{
+	global $opts;
+
+	return array(
+		'desc'   => isset($opts['desc']  ) ? $opts['desc']   : 'Default description, create by Syrian artisan.',
+		'author' => isset($opts['author']) ? $opts['author'] : 'SyrianArtisan',
+		'email'  => isset($opts['email'] ) ? $opts['email']  : 'SyrianArtisan@syrian.com',
+		'date'   => isset($opts['date']  ) ? $opts['date']   : date('Y/m/d H:i:s'),
+		'prefix' => isset($opts['prefix']) ? $opts['prefix'] : ''
+	);
+}
+
+function createPath($path)
+{
+	if ( trim($path) == '' ) return False;
+
+	$path = trim($path);
+	$len  = strlen($path);
+	if ( $path{$len-1} == '/' ) $path = substr($path, 0, $len-1);
+
+	if ( file_exists($path) ) return true;
+
+	$dirArray = array();
+	while (  !file_exists($path) ) {
+		if ( $path == '.' || $path == '..' || $path == '/' ) break;
+		$dirArray[] = basename($path);
+		$path		= dirname($path);
+	}
+
+	$len = count($dirArray);
+	for ( $i = $len-1; $i >= 0; $i-- ) {
+		if ( is_writable($path) ) {
+			$path .= "/{$dirArray[$i]}";
+			mkdir($path);
+		} else {
+			return False;
+		}
+	}
+
+	return true;
+}
+
+function printSuccessInfo($msg, $exit = true)
+{
+	echo "\033[32mSuccess: {$msg}\033[0m\n";
+	$exit && exit(0);
+}
+
+function printException($msg, $exit = true)
+{
+	echo "\033[31mException: {$msg}\033[0m\n";	
+	$exit && exit(0);
+}
+
+function printHelpInfo()
+{
+	global $longOptions;
+	
+	printVersionInfo();
+
+	printLine('Usage: ');
+	printLine("\t./artisan [--create=compontent | --export=[database:]table(*) | --import=sql] [options]");
+	printLine();
+	printLine('Options: ');
+	foreach ( $longOptions as $optname => $desc ) {
+		if ( ($st = strpos($optname, ':')) > 0 ) $optname = substr($optname, 0, $st);
+		printLine(sprintf("%10s:", '--'.$optname));	
+		printLine("\t{$desc}");	
+		printLine();
+	}
+	
+	exit(0);
+}
+
+function printVersionInfo()
+{
+	printLine('Welcome to use Syrian artisan.');
+	printLine("version: ".VERSION."\n");
+}
+
+function printLine($msg='')
+{
+	echo "{$msg}\n";
+}

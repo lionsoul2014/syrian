@@ -14,6 +14,11 @@
 
 interface IModel
 {
+    const ADD_OPT       = 0;
+    const DELETE_OPT    = 1;
+    const QUERY_OPT     = 2;
+    const UPDATE_OPT    = 3;
+
     /**
      * get the last active C_Model object
      *
@@ -24,8 +29,8 @@ interface IModel
     /**
      * execute the specifield query command
      *
-     * @param   $_cmd
-     * @param   $opt
+     * @param   $_query
+     * @param   $opt code
      * @param   $_row return the affected rows?
      * @return  Mixed
     */
@@ -87,14 +92,14 @@ interface IModel
      * @return  Mixed false or row_id
      * @fragment support
     */
-    public function add(&$data, $onDuplicateKey=NULL);
+    public function add($data, $onDuplicateKey=NULL);
 
     /**
      * batch add with no fragments support
      *
      * @param   $data
     */
-    public function batchAdd(&$data, $onDuplicateKey=NULL);
+    public function batchAdd($data, $onDuplicateKey=NULL);
 
     /**
      * Conditioan update
@@ -104,10 +109,10 @@ interface IModel
      * @param   $affected_rows
      * @return  Mixed
     */
-    public function update(&$data, $_where, $affected_rows=true);
+    public function update($data, $_where, $affected_rows=true);
 
     //update by primary key
-    public function updateById(&$data, $id, $affected_rows=true);
+    public function updateById($data, $id, $affected_rows=true);
 
     /**
      * Set the value of the specifield field of the speicifled reocords
@@ -157,9 +162,10 @@ interface IModel
      * Delete the specifield records
      *
      * @param   $_where
+     * @param   $frag_recur
      * @fragments suport
     */
-    public function delete($_where);
+    public function delete($_where, $frag_recur=true);
 
     //delete by primary key
     //@frament suports

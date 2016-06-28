@@ -7,7 +7,7 @@
  * @author  chenxin<chenxin619315@gmail.com>
 */
 
-Loader::import('IModel', 'core', true);
+import('core.IModel');
 
 //--------------------------------------------
 
@@ -37,7 +37,8 @@ class RouterShardingModel implements IModel
      *
      * We suggest you do this
     */
-    protected   $guidKey    = NULL;
+    protected   $guidKey     = NULL;
+    protected   $primary_key = NULL;
 
     /**
      * control attributes
@@ -47,6 +48,11 @@ class RouterShardingModel implements IModel
     protected   $_srw       = NULL;
     protected   $isFragment = NULL;
     protected   $isView     = NULL;
+
+    /**
+     * all the active models
+    */
+    protected   $activeModels = array();
 
     /**
      * last active C_Model object
@@ -61,9 +67,20 @@ class RouterShardingModel implements IModel
          *
          * $this->shardings
          * $this->guidKey
+         * $this->primary_key
          * $this->router
         */
 
+    }
+
+    /**
+     * return the primary key of the sql table
+     *
+     * @return  Mixed string or NULL
+    */
+    public function getPrimaryKey()
+    {
+        return isset($this->primary_key) ? $this->primary_key : $this->guidKey;
     }
 
 
@@ -78,14 +95,46 @@ class RouterShardingModel implements IModel
     }
 
     /**
+     * parse the query limit
+     *
+     * @param   $_limit
+     * @return  Array
+    */
+    protected function parseLimit($_limit)
+    {
+        $from = 0;
+        $size = 0;
+        if ( is_long($_limit) ) {
+            $size = $_limit;
+        } else if ( is_string($_limit) ) {
+            $parts = explode(',', $_limit);
+            if ( count($parts) == 1 ) {
+                $size = intval($parts[0]);
+            } else {
+                $from = intval($parts[0]);
+                $size = intval($parts[1]);
+            }
+        } else if ( is_array($_limit) ) {
+            if ( count($_limit) == 1 ) {
+                $size = $_limit[0];
+            } else {
+                $from = $_limit[0];
+                $size = $_limit[1];
+            }
+        }
+
+        return array($from, $size);
+    }
+
+    /**
      * execute the specifield query string
      *
-     * @param   String $_sql
+     * @param   String $_query
      * @param   $opt
      * @param   $_row return the affected rows?
      * @return  Mixed
     */
-    public function execute( $_sql, $opt=Idb::WRITE_OPT, $_row=false )
+    public function execute( $_query, $opt=Idb::WRITE_OPT, $_row=false )
     {
         return false;
     }
@@ -132,6 +181,7 @@ class RouterShardingModel implements IModel
         $_group = NULL)
     {
         $shardingModels = $this->__getQueryShardingModels($_where);
+        $shardingLen    = count($shardingModels);
 
         /*
          * if there is only one sharding model returned
@@ -140,7 +190,7 @@ class RouterShardingModel implements IModel
          * 
          * or dispatch and merge work got be done
         */
-        if ( count($shardingModels) == 1 ) {
+        if ( $shardingLen == 1 ) {
             $pModel = $shardingModels[0]['model'];
             return $pModel->getList($_fields, $shardingModels[0]['where'], $_order, $_limit, $_group);
         }
@@ -158,17 +208,53 @@ class RouterShardingModel implements IModel
             foreach ( $_order as $key => $val ) {
                 if (isset($fieldsMap[$key])) {
                     continue;
-                }
-
+                } 
                 $_fields[] = $key;  //append the sorting keys
                 $fieldsMap[$key]    = true;
                 $keysToRemove[$key] = $key;
             }
         }
 
+
+        /*
+         * limitation parse for 
+         * 1, result number check and slice
+         * 2, sharding limitation ensurance 
+         * cuz the sub-query limitation is not just a same limitation map-reduce model
+         *
+         * @added at 2016-03-21
+        */
+        $offset = 0;
+        $size   = 0;
+        $start  = 0;
+        if ( $_limit != NULL ) {
+            //$lArr = explode(',', $_limit);
+            //if ( count($lArr) == 1 ) {
+            //    $size = intval($lArr[0]);
+            //} else {
+            //    $offset = intval($lArr[0]);
+            //    $size   = intval($lArr[1]);
+            //}
+            $lArr   = $this->parseLimit($_limit);
+            $offset = $lArr[0];
+            $size   = $lArr[1];
+
+            //@Note: redefine items:
+            //1, sharding offset
+            //2, the limitation value use for slice
+            //3, size of the query limitation
+            $start  = $offset % ($shardingLen * $size);
+            $pageno = max(1, ceil(($offset/$size + 1) / $shardingLen));
+            $offset = ($pageno - 1) * $size;
+            $bsize  = $size * $shardingLen;
+            $_limit = "{$offset},{$bsize}";
+        }
+
         /*
          * lets do the query dispatch, merge the sub result
          * Liked the map-reduce way ... 
+         *
+         * Dynamic limitation added at 2016-03-21
         */
         $ret = array();
         foreach ( $shardingModels as $sharding ) {
@@ -200,7 +286,7 @@ class RouterShardingModel implements IModel
                 $param[]  = $sort_typ;
             }
 
-            $param[] = $ret;
+            $param[] = &$ret;
             call_user_func_array('array_multisort', $param);
 
             //check and do all the sorting key dimension remove
@@ -215,15 +301,12 @@ class RouterShardingModel implements IModel
         }
 
         /*
-         * check and do the query limit
+         * do the query limit
          * Oh, this may sounds crazy if a vector query without a limit!!!
+         * So, default the size to 15 at 2016-03-21
         */
-        if ( $_limit != NULL ) {
-            $lArr = explode(',', $_limit);
-            $dLen = intval(count($lArr) == 1 ? $lArr[0] : $lArr[1]);
-            if ( $dLen < count($ret) ) {
-                $ret = array_slice($ret, 0, $dLen);
-            }
+        if ( $_limit != NULL && $size < count($ret) ) {
+            $ret = array_slice($ret, $start, $size);
         }
 
         return empty($ret) ? false : $ret;
@@ -315,7 +398,7 @@ class RouterShardingModel implements IModel
      * @return  Mixed false or row_id
      * @fragment support
     */
-    public function add(&$data, $onDuplicateKey=NULL)
+    public function add($data, $onDuplicateKey=NULL)
     {
         /*
          * According to the design, we got to generate a unique global id 
@@ -327,7 +410,7 @@ class RouterShardingModel implements IModel
          * or all the xxById interface will not work properly
         */
         if ( $this->guidKey != NULL ) {
-            $data[$this->guidKey] = self::genUUID($data, $this->router);
+            $data[$this->guidKey] = $this->genUUID($data, $this->router);
         }
 
         /*
@@ -354,7 +437,7 @@ class RouterShardingModel implements IModel
      * @param   $onDuplicateKey
      * @return  Integer affected rows
     */
-    public function batchAdd(&$data, $onDuplicateKey=NULL)
+    public function batchAdd($data, $onDuplicateKey=NULL)
     {
         /*
          * group the data
@@ -392,7 +475,7 @@ class RouterShardingModel implements IModel
      * @return  Mixed
      * @see     #getList(...)
     */
-    public function update(&$data, $_where, $affected_rows=true)
+    public function update($data, $_where, $affected_rows=true)
     {
         $shardingModels = $this->__getQueryShardingModels($_where);
 
@@ -423,7 +506,7 @@ class RouterShardingModel implements IModel
      * 
      * @see #getById($_filed, $id)
     */
-    public function updateById(&$data, $id, $affected_rows=true)
+    public function updateById($data, $id, $affected_rows=true)
     {
         /*
          * check and parse the sharding model from the
@@ -550,20 +633,21 @@ class RouterShardingModel implements IModel
      * Delete the specifield records
      *
      * @param   $_where
+     * @param   $frag_recur
      * @fragments suport
     */
-    public function delete($_where)
+    public function delete($_where, $frag_recur=true)
     {
         $shardingModels = $this->__getQueryShardingModels($_where);
         if ( count($shardingModels) == 1 ) {
             $pModel = $shardingModels[0]['model'];
-            return $pModel->delete($shardingModels[0]['where']);
+            return $pModel->delete($shardingModels[0]['where'], $frag_recur);
         }
 
         $ret = false;
         foreach ( $shardingModels as $sharding ) {
             $pModel = $sharding['model'];
-            $ret    = $pModel->delete($sharding['where']) || $ret;
+            $ret    = $pModel->delete($sharding['where'], $frag_recur) || $ret;
         }
 
         return $ret;
@@ -694,6 +778,7 @@ class RouterShardingModel implements IModel
         $mObj  = Loader::model($mconf[0], $mconf[1]);
         $this->resetModelAttr($mObj);
         $this->lastAcitveModel = $mObj;
+        $this->activeModels["{$mconf[1]}.{$mconf[0]}"] = $mObj;
 
         return $mObj;
     }
@@ -796,6 +881,7 @@ class RouterShardingModel implements IModel
             $mObj = Loader::model($conf[0], $conf[1]);
             $this->resetModelAttr($mObj);
             $this->lastAcitveModel = $mObj;
+            $this->activeModels["{$conf[1]}.{$conf[0]}"] = $mObj;
             $models[] = array(
                 'model' => $mObj,
                 'where' => $where
@@ -809,6 +895,7 @@ class RouterShardingModel implements IModel
                 $mObj  = Loader::model($conf[0], $conf[1]);
                 $this->resetModelAttr($mObj);
                 $this->lastAcitveModel = $mObj;
+                $this->activeModels["{$conf[1]}.{$conf[0]}"] = $mObj;
 
                 /*
                  * @Note: here we got to rewrite the query condition
@@ -843,6 +930,7 @@ class RouterShardingModel implements IModel
             $mObj = Loader::model($mconf[0], $mconf[1]);
             $this->resetModelAttr($mObj);
             $this->lastAcitveModel = $mObj;
+            $this->activeModels["{$mconf[1]}.{$mconf[0]}"] = $mObj;
             $models[] = array(
                 'model' => $mObj,
                 'where' => $where
@@ -902,7 +990,7 @@ class RouterShardingModel implements IModel
         foreach ($data as $val) {
             // Check and append the global unique identifier.
             if ( $this->guidKey != NULL && $genUid == true ) {
-                $val[$this->guidKey] = self::genUUID($val, $this->router);
+                $val[$this->guidKey] = $this->genUUID($val, $this->router);
             }
 
             if ( ! isset($val[$this->router]) ) {
@@ -934,15 +1022,20 @@ class RouterShardingModel implements IModel
     */
     private function getShardingModelFromId($id, $willQuery=true)
     {
-        if ( strlen($id) != 32 ) {
-            return false;
-        }
-
-        $mask = hexdec(substr($id, 28, 4));
-        if ( ($mask & 0x01) == 1 ) {
-            $routerVal = hexdec(substr($id, 20, 8));
-        } else {
+        /*
+         * so, better the length of the primary key should not be 32
+        */
+        if ( strlen($id) == 32 ) {
+            $mask = hexdec(substr($id, 28, 4));
+            if ( ($mask & 0x01) == 1 ) {
+                $routerVal = hexdec(substr($id, 20, 8));
+            } else {
+                $routerVal = self::__hash($id);
+            }
+        } else if ($this->primary_key != NULL) {
             $routerVal = self::__hash($id);
+        } else {
+            return false;
         }
 
         $sIdx  = $routerVal % count($this->shardings);
@@ -957,6 +1050,58 @@ class RouterShardingModel implements IModel
 
         return $mObj;
     }
+
+    /**
+     * generate a universal unique identifier
+     *
+     * @param   $data
+     * @param   $router
+     * @return  String
+    */
+    protected function genUUID($data, $router)
+    {
+        /*
+         * 1, create a guid
+         * check and append the node name to 
+         *  guarantee the basic server unique
+        */
+        $prefix = NULL;
+        if ( defined('SR_NODE_NAME') ) {
+            $prefix = substr(md5(SR_NODE_NAME), 0, 4);
+        } else {
+            $prefix = sprintf("%04x", mt_rand(0, 0xffff));
+        }
+
+        $tArr = explode(' ', microtime());
+        $tsec = $tArr[1];
+        $msec = $tArr[0];
+        if ( ($sIdx = strpos($msec, '.')) !== false ) {
+            $msec = substr($msec, $sIdx + 1);
+        }
+
+        /*
+         * 2, check and merge the router info insite
+         * This is the key point
+        */
+        $embed = 0x00;
+        $routerVal = NULL;
+        if ( isset($data[$router]) == false ) {
+            $routerVal = mt_rand(0, 0x7FFFFF);
+        } else {
+            $embed = 0x01;
+            $routerVal = self::__hash($data[$router]);
+        }
+
+        return sprintf(
+            "%08x%08x%0s%08x%04x", 
+            $tsec, 
+            $msec,
+            $prefix, 
+            $routerVal,
+            mt_rand(0, 0xffff) | $embed
+        );
+    }
+
 
     //------------------static tools function----------------------
 
@@ -1007,57 +1152,6 @@ class RouterShardingModel implements IModel
         return (
             ($str[$sIdx] == '\'' && $str[$eIdx] == '\'') 
             || ($str[$sIdx] == '"' && $str[$eIdx] == '"')
-        );
-    }
-
-    /**
-     * generate a universal unique identifier
-     *
-     * @param   $data
-     * @param   $router
-     * @return  String
-    */
-    private static function genUUID($data, $router)
-    {
-        /*
-         * 1, create a guid
-         * check and append the node name to 
-         *  guarantee the basic server unique
-        */
-        $prefix = NULL;
-        if ( defined('SR_NODE_NAME') ) {
-            $prefix = substr(md5(SR_NODE_NAME), 0, 4);
-        } else {
-            $prefix = sprintf("%04x", mt_rand(0, 0xffff));
-        }
-
-        $tArr = explode(' ', microtime());
-        $tsec = $tArr[1];
-        $msec = $tArr[0];
-        if ( ($sIdx = strpos($msec, '.')) !== false ) {
-            $msec = substr($msec, $sIdx + 1);
-        }
-
-        /*
-         * 2, check and merge the router info insite
-         * This is the key point
-        */
-        $embed = 0x00;
-        $routerVal = NULL;
-        if ( isset($data[$router]) == false ) {
-            $routerVal = mt_rand(0, 0x7FFFFF);
-        } else {
-            $embed = 0x01;
-            $routerVal = self::__hash($data[$router]);
-        }
-
-        return sprintf(
-            "%08x%08x%0s%08x%04x", 
-            $tsec, 
-            $msec,
-            $prefix, 
-            $routerVal,
-            mt_rand(0, 0xffff) | $embed
         );
     }
 
