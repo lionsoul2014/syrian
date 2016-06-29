@@ -37,7 +37,7 @@ class ArticleController extends Controller
         $this->view->assign('data', $this->model->getSoftList($pageno));
         
         //get the executed html content
-        $ret = $this->view->getContent('article/list.html');
+        $ret = $this->view->getContent('article/list.html', true);
         //$this->output->compress(9);
         $this->output->display($ret);
     }
@@ -45,7 +45,7 @@ class ArticleController extends Controller
     public function about()
     {
         //get the executed html content
-        $ret = $this->view->getContent('article/about.html');
+        $ret = $this->view->getContent('article/about.html', true);
         
         //$this->output->compress(9);        //set the compress level
         $this->output->display($ret);

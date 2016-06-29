@@ -402,6 +402,43 @@ class Util
 		return false;
 	}
 
+    /**
+     * is the current request device a mobile ?
+     *
+     * @param   $src default to NULL
+     * @return  bool
+    */
+    public static function isMobile($src=NULL)
+    {
+        $src = ($src == NULL) ? $_SERVER : $src;
+        if ( isset($src['HTTP_X_WAP_PROFILE']) ) {
+            return true;
+        }
+
+        if ( isset($src['HTTP_VIA']) 
+            && strpos($src['HTTP_VIA'], 'wap') !== false ) {
+            return true;
+        }
+
+        //via the http request user agent
+        $uAgent = isset($src['HTTP_USER_AGENT']) ? $src['HTTP_USER_AGENT'] : NULL;
+        if ( $uAgent == NULL ) {
+            return false;
+        }
+
+        $uAgent   = strtolower($uAgent);
+        $mobileOS = array(
+            'phone', 'mobile', 'tablet', 'android', 'iphone', 'blackberry', 'symbian', 'nokia', 'palmos', 'j2me'
+        );
+        foreach ( $mobileOS as $os ) {
+            if ( strpos($uAgent, $os) !== false ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 	/**
 	 * get the access device code
 	 * format: p|m+[a,i,w,l,m,x]
