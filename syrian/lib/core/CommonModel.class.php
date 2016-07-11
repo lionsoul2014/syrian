@@ -1399,7 +1399,7 @@ class CommonModel implements IModel
 
 
     //-------------Static tool function------------------
-
+    
     /**
      * Quick interface to create the db instance
      *  It is a Object of class lib/db/Idb

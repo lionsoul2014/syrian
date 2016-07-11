@@ -177,12 +177,12 @@ class ElasticSearchModel implements IModel
      * @Note: here we mean to make the elasticsearch works like a traditional
      *  SQL database, so we design it to use the elasticsearch filter always.
      *
-     * 1, array(field => '=val')
-     * 2, array(field => '>=|<=val')            //range query
-     * 3, array(field => '!=val')
-     * 4, array(field => 'in(v1,v2,...)')       //in search
-     * 5, array(field => 'not in(v1,v2,...)')   //in search
-     * 6, array(field => 'like %value%')        //like match
+     * 01, array(field => '=val')
+     * 02, array(field => '>=|<=val')            //range query
+     * 03, array(field => '!=val')
+     * 04, array(field => 'in(v1,v2,...)')       //in search
+     * 05, array(field => 'not in(v1,v2,...)')   //in search
+     * 06, array(field => 'like %value%')        //like match
      *
      * @param   $_where
      * @return  array(Elasticsearch DSL)
@@ -209,7 +209,6 @@ class ElasticSearchModel implements IModel
                 throw new Exception("Invalid query syntax for field '{$field}'");
             }
 
-            $togo = true;
             switch ( $field[0] ) {
             case '&':
                 $branch = 'must';
@@ -224,7 +223,6 @@ class ElasticSearchModel implements IModel
                     throw new Exception("Invalid query syntax for field '{$field}'");
                 }
 
-                $togo   = false;
                 $field  = strtoupper(trim(substr($field, 1)));
                 if ( $field == 'OR' ) {
                     if ( $query_or == NULL ) $query_or = array();
@@ -394,7 +392,9 @@ class ElasticSearchModel implements IModel
             }
         }
 
+        //-------------------------------------------------------------
         //pre-process the parsed query result
+
         //regroup the query:
         //check if there is or query and merge all of them into the should query
         if ( ! empty($query['should']) ) {
@@ -482,21 +482,51 @@ class ElasticSearchModel implements IModel
      * @param   $_where
      * @param   $_order
      * @param   $_limit
+     * @param   $_query
      * @return  String query DSL
     */
-    protected function getQueryDSL($_where, $_order, $_limit)
+    protected function getQueryDSL($_filter, $_order, $_limit, $_query=NULL)
     {
         /*
-         * query condition parse
+         * filter condition parse
          * default to the sql compatible style syntax parser
-         * and default to the match_all elasticsearch query for empty where
+         * and default to the match_all elasticsearch query for empty filter
+         *  and if there is no complex fulltext query defined
         */
-        if ( $_where != NULL ) {
-            $filter = $this->parseSQLCompatibleQuery($_where);
-        } else {
+        $filter = NULL;
+        if ( $_filter != NULL ) {
+            $filter = $this->parseSQLCompatibleQuery($_filter);
+        }
+
+        /*
+         * query check and define
+        */
+        $query = NULL;
+        if ( $_query == NULL ) {
             $filter = array(
                 'match_all' => array()
             );
+        } else if ( isset($_query['field']) && isset($_query['query']) ) {
+            $qdata = isset($_query['option']) ? $_query['option'] : array();
+            $qdata['query'] = $_query['query'];
+            switch ( $_query['type'] ) {
+            case 'match':
+                $query = array(
+                    'match' => array($_query['field'] => $qdata)
+                );
+                break;
+            case 'multi_match':
+                $qdata['fields'] = $_query['field'];
+                $query = array('multi_match' => $qdata);
+                break;
+            case 'query_string':
+                $field_name = is_array($_query['field']) ? 'fields' : 'default_field';
+                $qdata[$field_name] = $_query['field'];
+                $query = array('query_string' => $qdata);
+                break;
+            }
+        } else {
+            throw new Exception("Missing key 'field' or 'query' for query define");
         }
 
         /*
@@ -544,27 +574,63 @@ class ElasticSearchModel implements IModel
          * default to use the constant_score filter
          * and this will make the elasticsearch works like the traditional database
         */
-        $query = array(
-            'query' => array(
-                'constant_score' => array(
-                    'filter' => $filter
-                )
-            )
+        $boolQuery = array();
+        if ( $query  != NULL ) $boolQuery['must']   = $query;
+        if ( $filter != NULL ) $boolQuery['filter'] = $filter;
+        $queryDSL = array(
+            'query' => array('bool' => $boolQuery)
         );
 
+        //check and define the query sort
         if ( $sort != NULL ) {
-            $query['sort'] = $sort;
+            $queryDSL['sort'] = $sort;
         }
 
-        if ( $from >= 0 ) {
-            $query['from'] = $from;
+        //check and define the from, size attributes
+        if ( $from >= 0 ) $queryDSL['from'] = $from;
+        if ( $size >  0 ) $queryDSL['size'] = $size;
+
+        //check and define the highlight options
+        //rewrite the user define and auto set the fields
+        if ( isset($_query['highlight']) ) {
+            $highlight = array(
+                'tag_schema' => 'styled',
+                'pre_tags'   => array('<b class="es-jcseg-highlight">'),
+                'post_tags'  => array('</b>'),
+                'order'      => 'score',
+                'number_of_fragments' => 1,
+                'fragment_size' => 86,
+                'no_match_size' => 86,
+                'type'   => 'fvh',
+                'fields' => NULL
+            );
+
+            foreach ( $_query['highlight'] as $key => $val ) {
+                $highlight[$key] = $val;
+            }
+
+            //check and pre-process the highlight fields
+            if ( $highlight['fields'] == NULL ) {
+                $fields = array();
+                if ( is_string($_query['field']) ) {
+                    $fields[$_query['field']] = array(
+                        'boost' => 1
+                    );
+                } else {
+                    foreach ( $_query['field'] as $field_name ) {
+                        $field_name = preg_replace('/\^\d+/', '', $field_name);
+                        $fields[$field_name] = array(
+                            'boost' => 1
+                        );
+                    }
+                }
+                $highlight['fields'] = $fields;
+            }
+
+            $queryDSL['highlight'] = $highlight;
         }
 
-        if ( $size > 0 ) {
-            $query['size'] = $size;
-        }
-
-        return self::array2Json($query);
+        return self::array2Json($queryDSL);
     }
 
     /**
@@ -896,6 +962,109 @@ class ElasticSearchModel implements IModel
     public function fastList($_fields, $_where=NULL, $_order=NULL, $_limit=NULL, $_group=NULL)
     {
         return $this->getList($_fields, $_where, $_order, $_limit, $_group);
+    }
+
+    /**
+     * match query interface
+     * do the elasticsearch complex score query like:
+     * 1, match query query
+     * 2, multi_match query
+     * 3, query_string query
+     *
+     * @param   $_fields
+     * @param   $_filter SQL compatible query filter
+     * @param   $_query fulltext query
+     * @param   $_order
+     * @param   $_limit
+     * @param   $_highlight
+     * @return  Mixed(Array or false)
+    */
+    public function match($_fields, $_filter, $_query, $_order=NULL, $_limit=NULL)
+    {
+        $_src = $this->getQueryFieldArgs($_fields);
+        $_DSL = $this->getQueryDSL($_filter, $_order, $_limit, $_query);
+        $json = $this->_request('POST', $_DSL, "{$this->index}/{$this->type}/_search", $_src, true);
+        if ( $json == false ) {
+            return false;
+        }
+
+        /*
+         * api return:
+         * {
+         *  "took": 3,
+         *  "timed_out": false,
+         *  "_shards": {
+         *      "total": 5,
+         *      "successful": 5,
+         *      "failed": 0
+         *  },
+         *  "hits": {
+         *      "total": 7,
+         *      "max_score": null,
+         *      "hits": [{
+         *          "_index": "stream",
+         *          "_type": "main",
+         *          "_id": "141097",
+         *          "_score": null,
+         *          "_source": {
+         *              "pubtime": 1461895200,
+         *              "cate_id": 35,
+         *              "user_id": 251360,
+         *              "ack_code": "GJ7PZTIV"
+         *          },
+         *          "highlight": {
+         *                field1: []
+         *                field2: []
+         *           },
+         *          "sort": [
+         *              141097
+         *          ]
+         *      }]
+         *  }
+         * }
+         */
+
+        if ( ! isset($json['hits']) ) {
+            return false;
+        }
+
+        if ( empty($json['hits']['hits']) ) {
+            return false;
+        }
+
+        //----------------------------------------------------
+        //pre-process the returning data
+
+        $ret = array();
+        if ( $_fields == false ) {
+            $ret['took']  = $json['took'];
+            $ret['total'] = $json['hits']['total'];
+            $ret['data']  = array();
+            foreach ( $json['hits']['hits'] as $hit ) {
+                $ret['data'][] = array(
+                    '_index' => $hit['_index'],
+                    '_type'  => $hit['_type'],
+                    '_id'    => $hit['_id'],
+                    '_score' => $hit['_score']
+                );
+            }
+
+            return $ret;
+        }
+
+        $ret['took']  = $json['took'];
+        $ret['total'] = $json['hits']['total'];
+        $ret['max_score'] = $json['hits']['max_score'];
+        $ret['hits']  = $json['hits']['hits'];
+        //foreach ( $json['hits']['hits'] as $hit ) {
+        //    //$data[] = array(
+        //    //    '_source'   => $hit['_source'],
+        //    //    'highlight' => $hit['highlight']
+        //    //);
+        //    $ret['hits'][] = $hit;
+        //}
+
+        return $ret;
     }
 
     /**
@@ -1834,8 +2003,7 @@ EOF;
             mt_rand(0, 0xffff)
         );
     }
-
-
+    
     /**
      * initialize the current model from the specifiled mapping
      * configuration that defined in conf/db/hosts.conf.php
