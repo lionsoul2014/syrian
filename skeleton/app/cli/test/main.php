@@ -7,7 +7,7 @@
 
  //------------------------------------------------
 
-class TestController extends CliController
+class TestController extends Cli_Controller
 {
     public function __construct()
     {

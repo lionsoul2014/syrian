@@ -12,7 +12,7 @@
 
 //------------------------------------
 
-class PmController extends CliController
+class PmController extends Cli_Controller
 {
 
     private $debug;

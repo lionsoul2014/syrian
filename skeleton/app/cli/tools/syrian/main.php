@@ -7,7 +7,7 @@
 
 //------------------------------------
 
-class SyrianController extends CliController
+class SyrianController extends Cli_Controller
 {
 
     private $debug  = false;

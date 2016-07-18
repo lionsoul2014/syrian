@@ -7,7 +7,7 @@
 
 //------------------------------------
 
-class ShardingController extends CliController
+class ShardingController extends Cli_Controller
 {
     private $debug  = false;
 

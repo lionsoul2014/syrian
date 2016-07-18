@@ -14,7 +14,7 @@ defined('CLI_PROC_EXIT')    or define('CLI_PROC_EXIT',   -1);
 defined('CLI_PROC_RUNNING') or define('CLI_PROC_RUNNING', 1);
 defined('CLI_PROC_PAUSE')   or define('CLI_PROC_PAUSE',   2);
 
-class CliController extends Controller
+class Cli_Controller extends Controller
 {
     /**
      * avalable action mapping

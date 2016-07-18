@@ -1,5 +1,5 @@
 <?php
-class ArticleModel extends CommonModel
+class ArticleModel extends C_Model
 {
     public function __construct()
     {

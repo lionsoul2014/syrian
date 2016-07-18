@@ -9,7 +9,7 @@
 
 defined('SR_SERVICE_WORKER') or define('SR_SERVICE_WORKER', true);
 
-class GearmanController extends CliController
+class GearmanController extends Cli_Controller
 {
     private $debug  = false;
     private $maxmem = NULL;

@@ -47,7 +47,7 @@ if ( $_CTRL == NULL ) {
 
 
 //-----------------------------------------------------------------
-import('core.CommonModel');         //Load the common Model
+import('core.C_Model');             //Load the common Model
 date_default_timezone_set('PRC');   //set the default time zone
 
 ////run the project

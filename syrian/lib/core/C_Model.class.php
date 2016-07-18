@@ -17,7 +17,7 @@ defined('MODEL_BADD_OPT_CODE')  or define('MODEL_BADD_OPT_CODE', 3);
 defined('MODEL_OPT_ALL_MASK')   or define('MODEL_OPT_ALL_MASK',  0x0F);
 defined('MODEL_OPT_NOADD_MASK') or define('MODEL_OPT_NOADD_MASK',0x0E);
 
-class CommonModel implements IModel
+class C_Model implements IModel
 {
     /**
      * the global read server selector factor
