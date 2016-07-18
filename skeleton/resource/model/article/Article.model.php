@@ -1,4 +1,7 @@
 <?php
+
+import('model.C_Model');
+
 class ArticleModel extends C_Model
 {
     public function __construct()

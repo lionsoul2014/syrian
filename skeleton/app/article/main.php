@@ -7,7 +7,7 @@
 
  //------------------------------------------------------
  
-class ArticleController extends Controller
+class ArticleController extends C_Controller
 {    
     public function __construc( )
     {
@@ -20,8 +20,6 @@ class ArticleController extends Controller
     {
         parent::run();
         
-        $this->view->assoc('site', $this->appconf);
-
         //Load article model
         $this->model = model('article.Article');
         

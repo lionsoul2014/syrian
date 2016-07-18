@@ -65,13 +65,16 @@ class STDUri extends Uri
             return NULL;
         }
 
+        //load the common controller
+        import('core.Controller', false);
+
         switch ( $this->_parts[0] ) {
         case 'cli':
-            import('core.CliController');
+            import('core.Cli_Controller', false);
             break;
         #add more case here
         default:
-            import('core.Controller');
+            import('core.C_Controller', false);
             break;
         }
 

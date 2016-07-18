@@ -33,7 +33,7 @@ define('SR_URI_REWRITE',    true);
  * Intiailze the system and fetch the controller of the
  *  current request and then invoke its#run method to handler the request
 */
-import('STDUri', false);
+import('core.STDUri', false);
 $URI = new STDUri(SR_URI_REWRITE, SR_LINK_STYLE);
 $URI->parseUrl();
 $_CTRL = $URI->getController('article');
@@ -46,8 +46,6 @@ if ( $_CTRL == NULL ) {
 }
 
 
-//-----------------------------------------------------------------
-import('core.C_Model');             //Load the common Model
 date_default_timezone_set('PRC');   //set the default time zone
 
 ////run the project
