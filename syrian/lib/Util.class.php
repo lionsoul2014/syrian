@@ -337,8 +337,8 @@ class Util
             }
         }
 
-		$ret	= curl_exec($curl);
-		$info	= curl_getinfo($curl);
+		$ret  = curl_exec($curl);
+		$info = curl_getinfo($curl);
 		curl_close($curl);
 
 		if( intval( $info["http_code"] ) == 200 ) {
@@ -357,7 +357,7 @@ class Util
 	 */
 	public static function httpPost( $url, $param, $_header=NULL, $setting=NULL )
 	{
-		$curl	= curl_init();
+		$curl = curl_init();
 		if( stripos( $url, 'https://') !== FALSE ) {
 			curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
 			curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
@@ -391,8 +391,8 @@ class Util
             }
         }
 
-		$ret	= curl_exec($curl);
-		$info	= curl_getinfo($curl);
+		$ret  = curl_exec($curl);
+		$info = curl_getinfo($curl);
 		curl_close($curl);
 
 		if ( intval($info['http_code']) == 200 ) {
@@ -437,6 +437,52 @@ class Util
         }
 
         return false;
+    }
+
+    /**
+     * check if the current device is Android
+     * 
+     * @param   $uAgent
+     * @param   $sign
+     * @return  boolean
+    */
+    protected function isAndroid($uAgent=NULL, $sign=NULL)
+    {
+        if ( $uAgent == NULL ) {
+            $uAgent = $this->input->server('HTTP_USER_AGENT');
+        }
+
+        if ( $sign == NULL ) {
+            return strpos($uAgent, $sign) !== false;
+        }
+
+        return (
+            strpos($uAgent, 'Android') !== false 
+            && strpos($uAgent, $sign) !== false
+        );
+    }
+
+    /**
+     * check if the current device is ios
+     * 
+     * @param   $uAgent
+     * @param   $sign
+     * @return  boolean
+    */
+    protected function isIOS($uAgent=NULL, $sign=NULL)
+    {
+        if ( $uAgent == NULL ) {
+            $uAgent = $this->input->server('HTTP_USER_AGENT');
+        }
+
+        $isIOS = (strpos($uAgent, 'iOS') !== false || strpos($uAgent, 'iPhone') !== false);
+        if ( $sign == NULL ) {
+            return $isIOS;
+        }
+
+        return (
+            $isIOS && strpos($uAgent, $sign) !== false
+        );
     }
 
 	/**

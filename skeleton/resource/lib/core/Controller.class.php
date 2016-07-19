@@ -8,18 +8,23 @@
  */
 
  //-----------------------------------------------------------------
+
+//standart error no define
+defined('STATUS_OK')            or define('STATUS_OK',           0);    //everything is fine
+defined('STATUS_INVALID_ARGS')  or define('STATUS_INVALID_ARGS', 1);    //invalid arguments
+defined('STATUS_NO_SESSION')    or define('STATUS_NO_SESSION',   2);    //no session
+defined('STATUS_EMPTY_SETS')    or define('STATUS_EMPTY_SETS',   3);    //query empty sets
+defined('STATUS_FAILED')        or define('STATUS_FAILED',       4);    //operation failed
+defined('STATUS_DUPLICATE')     or define('STATUS_DUPLICATE',    5);    //operation duplicate
+defined('STATUS_ACCESS_DENY')   or define('STATUS_ACCESS_DENY',  6);    //privileges deny
  
 class Controller
 {
-    public      $uri    = NULL;        //request uri
-    public      $input  = NULL;        //request input
-    public      $output = NULL;        //request output
-    public      $_G     = NULL;        //global resource
+    public  $uri    = NULL;        //request uri
+    public  $input  = NULL;        //request input
+    public  $output = NULL;        //request output
+    public  $_G     = NULL;        //global resource
 
-    protected   $jsonView   = NULL;
-    protected   $dataType   = NULL;
-    protected   $view       = NULL;
-    
     /**
      * Construct method to create new instance of the controller
      *
@@ -29,18 +34,20 @@ class Controller
     */
     public function __construct()
     {
-        $this->_G = new stdClass();
-        $this->_G->flush_mode = false;
-        $this->_G->ignore_mode = false;
-        $this->appconf = config('app');
+        _G(array(
+            'flush_mode'  => false,
+            'ignore_mode' => false
+        ));
+
+        $this->conf = config('app');
     }
     
     /**
      * the entrance of the current controller
      * default to invoke the uri->page.logic.php to handler
-     *     the request, you may need to rewrite this method to self define
+     *  the request, you may need to rewrite this method to self define
      *
-     * @access    public
+     * @access  public
     */
     public function run()
     {
@@ -49,49 +56,75 @@ class Controller
         //@Assoc the algorithm assocatied with the cache flush
         //    define in the helper/CacheFlusher#Refresh
         $flushMode = $this->input->getInt('__flush_mode__', 0);
-        if ( $flushMode == 1 ) {
-            $flushKey = $this->input->get('__flush_key__');
-            if ( strcmp($flushKey, $this->sysconf->flush_key) == 0 ) {
-                $this->_G->flush_mode = true;
-            }
+        if ( $flushMode == 1 
+            && strcmp($this->conf->flush_key, $this->input->get('__flush_key__')) == 0 ) {
+            _G('flush_mode', true);
         }
 
         //@Added at 2015-07-21
         // for cache flush need to ignore the balance redirecting...
         $ignoreMode = $this->input->getInt('__ignore_mode__', 0);
         if ( $ignoreMode == 1 ) {
-            $this->_G->ignore_mode = true;
-        }
-
-        //get the response dataType and register the view
-        $this->dataType = $this->input->get('dataType');
-        if ( $this->dataType != 'json' ) {
-            $this->view = $this->getView('html', 0);
+            _G('ignore_mode', true);
         }
     }
 
     /**
-     * internal method to get the common view
+     * Quick method to response the current request
      *
-     * @param   $_key
-     * @return  Bool
-    */
-    protected function getView( $type = 'html', $_timer = 0 )
+     * @param   $errno
+     * @param   $data
+     * @param   $exit whether to exit the process after the output
+     * @param   $ext extension value
+     */
+    protected function response( $errno, $data, $exit=false, $ext=NULL )
     {
-        import('view.ViewFactory');
-        
-        $conf = NULL;
-        if ( strtolower($type) == 'html' ) {
-            $conf = array(
-                'cache_time'    => $_timer,
-                'tpl_dir'       => SR_VIEWPATH,
-                'cache_dir'     => SR_CACHEPATH.'tpl/'.$this->uri->module.'/'
-            );
+        $json = array(
+            'errno'  => $errno,
+            'data'   => $data
+        );
+
+        if ( $ext != NULL ) {
+            $json['ext'] = $ext;
         }
-        
-        //return the html view
-        return ViewFactory::create($type, $conf);
+
+        $CC = json_encode($json);
+        $this->output->setHeader('Content-Type', 'application/json')->display($CC);
+
+        if ( $exit ) {
+            exit();
+        }
+
+        return $CC;
     }
 
+    /**
+     * define output
+     *
+     * @param   $errno
+     * @param   $data
+     * @param   $ext
+     * @return  the json encoded core data
+     */
+    protected function defineEcho( $errno, $data, $ext=NULL )
+    {
+        if ( is_array($data) ) {
+            $data = json_encode($data);
+        }
+
+        if ( $ext == NULL ) $ext = 'false';
+        else if ( is_array($ext) ) $ext = json_encode($ext);
+
+        $CC = <<<EOF
+        {
+            "errno": $errno,
+            "data": $data,
+            "ext": $ext
+        }
+EOF;
+        $this->output->setHeader('Content-Type', 'application/json')->display($CC);
+        return $data;
+    }
+    
 }
 ?>

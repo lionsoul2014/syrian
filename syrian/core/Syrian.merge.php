@@ -10,10 +10,12 @@
  //--------------------------------------------------------------
  
 //Syrian Version Number
-define('SR_VERSION', '1.2.2');
+define('SR_VERSION', '1.2.4');
 
 //sapi mode define
-defined('SR_CLI_MODE') or define('SR_CLI_MODE', strncmp(php_sapi_name(), 'cli', 3)=='cli');
+defined('SR_CLI_MODE')      or define('SR_CLI_MODE', strncmp(php_sapi_name(), 'cli', 3)=='cli');
+defined('SR_FLUSH_MODE')    or define('SR_FLUSH_MODE',  'flush_mode');
+defined('SR_IGNORE_MODE')   or define('SR_IGNORE_MODE', 'ignore_mode');
 
 //check and define the including components
 //0x01: Function
@@ -38,12 +40,21 @@ if ( ! function_exists('_G') ) {
     function _G($key, $val=NULL)
     {
         static $_GRE = array();
+        
+        if ( is_array($key) ) {
+            foreach ( $key as $k => $v ) {
+                $_GRE[$k] = $v;
+            }
+
+            return true;
+        }
 
         if ( $val == NULL ) {
             return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
         }
 
         $_GRE["{$key}"] = &$val;
+
         return true;
     }
 }
@@ -337,6 +348,49 @@ if ( ! function_exists('helper') ) {
         }
         
         throw new Exception("helper#Unable to load helper with path {$helper_path}");
+    }
+}
+
+/**
+ * abort the current request by the specified http error code
+ *
+ * @param   $http_code
+*/
+if ( ! function_exists('abort') ) {
+    function abort($http_code)
+    {
+        http_response_code($http_code);
+        exit();
+    }
+}
+
+/**
+ * search the specified template and return the executed dynamic content
+ *
+ * @param   $tpl_file
+ * @param   $variables
+ * @param   $sanitize
+ * @param   $timer  view compile cache time in seconds
+ * @return  string
+*/
+if ( ! function_exists('view') ) {
+    function view($tpl, $vars, $sanitize=false, $timer=0)
+    {
+        $viewObj = _G('__view_fnt__');
+        if ( $viewObj == NULL ) {
+            import('view.ViewFactory');
+            $conf = array(
+                'cache_time' => $timer,
+                'tpl_dir'    => SR_VIEWPATH,
+                'cache_dir'  => SR_CACHEPATH.'tpl/'
+            );
+
+            $viewObj = ViewFactory::create('html', $conf);
+            _G('__view_fnt__', $viewObj);
+        }
+
+        //load all the variables to the current view
+        return $viewObj->load($vars)->getContent($tpl, $sanitize);
     }
 }
 

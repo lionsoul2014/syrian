@@ -32,19 +32,17 @@ class ArticleController extends C_Controller
     {
         $pageno = $this->input->getInt('pageno', 1);
         
-        $this->view->assign('data', $this->model->getSoftList($pageno));
-        
-        //get the executed html content
-        $ret = $this->view->getContent('article/list.html', true);
+        $ret = view('article/list.html', array(
+            'pageno' => $pageno,
+            'data'   => $this->model->getSoftList($pageno)
+        ), true);
         //$this->output->compress(9);
         $this->output->display($ret);
     }
     
     public function about()
     {
-        //get the executed html content
-        $ret = $this->view->getContent('article/about.html', true);
-        
+        $ret = view('article/about.html', null, true);
         //$this->output->compress(9);        //set the compress level
         $this->output->display($ret);
     }
