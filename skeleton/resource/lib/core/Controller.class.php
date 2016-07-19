@@ -35,8 +35,8 @@ class Controller
     public function __construct()
     {
         _G(array(
-            'flush_mode'  => false,
-            'ignore_mode' => false
+            SR_FLUSH_MODE  => false,
+            SR_IGNORE_MODE => false
         ));
 
         $this->conf = config('app');
@@ -58,14 +58,14 @@ class Controller
         $flushMode = $this->input->getInt('__flush_mode__', 0);
         if ( $flushMode == 1 
             && strcmp($this->conf->flush_key, $this->input->get('__flush_key__')) == 0 ) {
-            _G('flush_mode', true);
+            _G(SR_FLUSH_MODE, true);
         }
 
         //@Added at 2015-07-21
         // for cache flush need to ignore the balance redirecting...
         $ignoreMode = $this->input->getInt('__ignore_mode__', 0);
         if ( $ignoreMode == 1 ) {
-            _G('ignore_mode', true);
+            _G(SR_IGNORE_MODE, true);
         }
     }
 
