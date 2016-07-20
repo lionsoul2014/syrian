@@ -2,7 +2,7 @@
 /**
  * Syrian Model Super Class
  *
- * @author    chenxin <chenxin619315@gmail.com>
+ * @author  chenxin <chenxin619315@gmail.com>
  * @link    http://www.lionsoul.org/syrian
  */
 

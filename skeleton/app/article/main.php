@@ -9,38 +9,38 @@
  
 class ArticleController extends C_Controller
 {    
-    public function __construc( )
+    public function _before($input, $output)
     {
-        parent::__construct();
-
-        $this->vc_time = -1;
-    }
-    
-    public function run($input, $output)
-    {
-        parent::run($input, $output);
-        
-        //Load article model
         $this->model = model('article.Article');
-        
-        //invoke a method to handler the request
-        if ( strncmp($this->uri->page, 'lionsoul', 8) == 0 ) return $this->about($input, $output);
-        else return $this->index($input, $output);
     }
     
     public function index($input, $output)
     {
         $pageno = $input->getInt('pageno', 1);
 
-        return html_view('article/list.html', array(
-            'pageno' => $pageno,
-            'data'   => $this->model->getSoftList($pageno)
-        ), true);
+        return view(
+            'article/list.html', 
+            array(
+                'pageno' => $pageno,
+                'data'   => $this->model->getSoftList($pageno)
+            ), true
+        );
     }
     
     public function about($input, $output)
     {
-        return html_view('article/about.html', null, true);
+        return view('article/about.html', null, true);
+    }
+
+    public function json($input, $output)
+    {
+        $data = array(
+            'head_img'  => 'http://git.oschina.net/uploads/87/5187_lionsoul.jpg',
+            'nickname'  => 'lionsoul',
+            'signature' => '平凡 | 执着'
+        );
+
+        return json_view(STATUS_OK, $data);
     }
     
 }

@@ -21,14 +21,14 @@ class Output
      *
      * @access  private
     */
-    private     $_header = array();
+    private $_header = array();
     
     /**
      * output content - http data section
      *
      * @access  private
     */
-    private     $_final_output = '';
+    private $_final_output = '';
     
     /**
      * use zlib to compress the transfer content
@@ -37,8 +37,8 @@ class Output
      *
      * @access  private
     */
-    private     $_zlib_oc = false;
-    private     $_gzip_oc = -1;
+    private $_zlib_oc = false;
+    private $_gzip_oc = -1;
     
     
     public function __construct()
@@ -50,6 +50,8 @@ class Output
         if ( defined('SR_CHARSET') ) {
             $this->_header['Content-Type'] = 'text/html; charset=' . SR_CHARSET;
         }
+        
+        $this->setHeader('X-Powered-By', defined(SR_POWERBY) ? SR_POWERBY : 'Syrian/2.0');
     }
     
     /**

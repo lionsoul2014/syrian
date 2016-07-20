@@ -6,7 +6,7 @@
  * 1. Quick lanch the input source
  * 2. Data type check and convertor
  *
- * @author    chenxin <chenxin619315@gmail.com>
+ * @author  chenxin <chenxin619315@gmail.com>
  * @link    http://www.lionsoul.org/syrian
  */
 

@@ -10,7 +10,7 @@
  //--------------------------------------------------------------
  
 //Syrian Version Number
-define('SR_VERSION', '1.2.4');
+define('SR_VERSION', '2.0');
 
 //sapi mode define
 defined('SR_CLI_MODE')      or define('SR_CLI_MODE', strncmp(php_sapi_name(), 'cli', 3)=='cli');
@@ -34,110 +34,136 @@ defined('SR_INC_COMPONENTS') or define('SR_INC_COMPONENTS', 0xFF);
 //Load the common resource loader
 
 /**
- * global run time resource
+ * global run time resource store or fetch
+ *
+ * @param   $key
+ * @param   $val
+ * @return  Mixed
 */
-if ( ! function_exists('_G') ) {
-    function _G($key, $val=NULL)
-    {
-        static $_GRE = array();
-        
-        if ( is_array($key) ) {
-            foreach ( $key as $k => $v ) {
-                $_GRE[$k] = $v;
-            }
-
-            return true;
+function _G($key, $val=NULL)
+{
+    static $_GRE = array();
+    
+    if ( is_array($key) ) {
+        foreach ( $key as $k => $v ) {
+            $_GRE[$k] = $v;
         }
-
-        if ( $val == NULL ) {
-            return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
-        }
-
-        $_GRE["{$key}"] = &$val;
 
         return true;
     }
+
+    if ( $val == NULL ) {
+        return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
+    }
+
+    $_GRE["{$key}"] = &$val;
+
+    return true;
+}
+
+/**
+ * and this one is for kernel use only
+ *
+ * @see #_G
+*/
+function E($key, $val=NULL)
+{
+    static $_GRE = array();
+    
+    if ( is_array($key) ) {
+        foreach ( $key as $k => $v ) {
+            $_GRE[$k] = $v;
+        }
+
+        return true;
+    }
+
+    if ( $val == NULL ) {
+        return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
+    }
+
+    $_GRE["{$key}"] = &$val;
+
+    return true;
 }
 
 /**
  * cli supper global initialize function
 */
-if ( ! function_exists('_cli_initialize') ) {
-    function _cli_initialize()
-    {
-        $argv   = &$_SERVER['argv'];
-        //1. parse and define the SCRIPT_FILENAME
-        $script_name = array_shift($argv);
-        $_SERVER['SCRIPT_FILENAME'] = $script_name;
-        $_SERVER['REQUEST_URI']     = NULL;
-        $_SERVER['QUERY_STRING']    = NULL;
+function _cli_initialize()
+{
+    $argv = &$_SERVER['argv'];
+    //1. parse and define the SCRIPT_FILENAME
+    $script_name = array_shift($argv);
+    $_SERVER['SCRIPT_FILENAME'] = $script_name;
+    $_SERVER['REQUEST_URI']     = NULL;
+    $_SERVER['QUERY_STRING']    = NULL;
 
-        if ( count($argv) < 1 ) return;
+    if ( count($argv) < 1 ) return;
 
-        //2. parse and define the REQUEST_URI and QUERY_STRING
-        //  and make sure the REQUEST_URI start with /
-        if ( strlen($argv[0]) > 0 && strncmp($argv[0], '-', 1) != 0 ) {
-            $request_uri = array_shift($argv);
-            if ( $request_uri[0] != '/' ) {
-                $request_uri = "/{$request_uri}";
-            }
-
-            $_SERVER['REQUEST_URI'] = $request_uri;
-            if ( ($queryPos = strpos($request_uri, '?')) !== false ) {
-                $query_string = substr($request_uri, $queryPos + 1);
-                $_SERVER['QUERY_STRING'] = $query_string;
-
-                $sIdx       = 0;
-                $query_len  = strlen($query_string);
-                for ( $i = 0; $i < $query_len; $i++ ) {
-                    //get argument name
-                    $eIdx   = strpos($query_string, '=', $sIdx);
-                    if ( $eIdx === false ) break;
-                    $args_name = substr($query_string, $sIdx, $eIdx - $sIdx);
-
-                    /**
-                     * both '&' and ':' could be as the arguments
-                     * separate mark At 2016-01-22
-                    */
-                    $sIdx   = $eIdx + 1;
-                    $eIdx   = strpos($query_string, ':', $sIdx);
-                    if ( $eIdx === false ) {
-                        $eIdx = strpos($query_string, '&', $sIdx);
-                    }
-
-                    if ( $eIdx === false ) {
-                        if ( $sIdx >= $query_len ) break;
-                        $args_val = substr($query_string, $sIdx);
-                    } else {
-                        //get the argument value
-                        $args_val = substr($query_string, $sIdx, $eIdx - $sIdx);
-                        $sIdx     = $eIdx + 1;
-                    }
-
-                    //load them to the $_GET and $_POST global
-                    $_GET[$args_name]   = $args_val;
-                    $_POST[$args_name]  = $args_val;
-                }
-            }
+    //2. parse and define the REQUEST_URI and QUERY_STRING
+    //  and make sure the REQUEST_URI start with /
+    if ( strlen($argv[0]) > 0 && strncmp($argv[0], '-', 1) != 0 ) {
+        $request_uri = array_shift($argv);
+        if ( $request_uri[0] != '/' ) {
+            $request_uri = "/{$request_uri}";
         }
 
-        //additional _SERVER arguments parse
-        $args_num    = count($argv);
-        if ( $args_num > 0 ) {
-            for ( $i = 0; $i < $args_num; $i++ ) {
-                $args_name = $argv[$i];
-                if ( strlen($args_name) > 1 && $args_name[0] != '-' ) {
-                    continue;
+        $_SERVER['REQUEST_URI'] = $request_uri;
+        if ( ($queryPos = strpos($request_uri, '?')) !== false ) {
+            $query_string = substr($request_uri, $queryPos + 1);
+            $_SERVER['QUERY_STRING'] = $query_string;
+
+            $sIdx       = 0;
+            $query_len  = strlen($query_string);
+            for ( $i = 0; $i < $query_len; $i++ ) {
+                //get argument name
+                $eIdx = strpos($query_string, '=', $sIdx);
+                if ( $eIdx === false ) break;
+                $args_name = substr($query_string, $sIdx, $eIdx - $sIdx);
+
+                /**
+                 * both '&' and ':' could be as the arguments
+                 * separate mark At 2016-01-22
+                */
+                $sIdx = $eIdx + 1;
+                $eIdx = strpos($query_string, ':', $sIdx);
+                if ( $eIdx === false ) {
+                    $eIdx = strpos($query_string, '&', $sIdx);
                 }
 
-                if ( $i < $args_num ) {
-                    $args_name = str_replace('-', '_', substr($args_name, 1));
-                    $_SERVER[strtoupper($args_name)] = $argv[++$i];
+                if ( $eIdx === false ) {
+                    if ( $sIdx >= $query_len ) break;
+                    $args_val = substr($query_string, $sIdx);
+                } else {
+                    //get the argument value
+                    $args_val = substr($query_string, $sIdx, $eIdx - $sIdx);
+                    $sIdx     = $eIdx + 1;
                 }
+
+                //load them to the $_GET and $_POST global
+                $_GET[$args_name]  = $args_val;
+                $_POST[$args_name] = $args_val;
             }
         }
-
     }
+
+    //additional _SERVER arguments parse
+    $args_num = count($argv);
+    if ( $args_num > 0 ) {
+        for ( $i = 0; $i < $args_num; $i++ ) {
+            $args_name = $argv[$i];
+            if ( strlen($args_name) > 1 && $args_name[0] != '-' ) {
+                continue;
+            }
+
+            if ( $i < $args_num ) {
+                $args_name = str_replace('-', '_', substr($args_name, 1));
+                $_SERVER[strtoupper($args_name)] = $argv[++$i];
+            }
+        }
+    }
+
 }
 
 /**
@@ -146,39 +172,37 @@ if ( ! function_exists('_cli_initialize') ) {
  * @param   $cls_path class path like db.dbFactory
  * @param   $_inc If $_inc is True check the syrian/lib or check under SR_LIBPATH
 */
-if ( ! function_exists('import') ) {
-    function import($cls_path, $_inc=true)
-    {
-        static $_loadedClass = array();
+function import($cls_path, $_inc=true)
+{
+    static $_loadedClass = array();
 
-        $path = str_replace('.', '/', $cls_path);
-        if ( isset($_loadedClass[$path]) ) {
-            unset($path);
-            return true;
-        }
-        
-        //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
-        //Or check the SR_LIBPATH
-        $_dir   = (($_inc) ? BASEPATH . 'lib/' : SR_LIBPATH);
-        $_dir  .= $path;
-        $found  = false;
-
-        foreach ( array("{$_dir}.class.php", "{$_dir}.php") as $_file ) {
-            if ( file_exists($_file) ) {
-                require $_file;
-                $_loadedClass[$path] = true;
-                $found = true;
-                break;
-            }
-        }
-
-        unset($path, $_dir);
-        if ( $found == true ) {
-            return true;
-        }
-        
-        throw new Exception("import#Unable to load class with path {$cls_path}");
+    $path = str_replace('.', '/', $cls_path);
+    if ( isset($_loadedClass[$path]) ) {
+        unset($path);
+        return true;
     }
+    
+    //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
+    //Or check the SR_LIBPATH
+    $_dir   = (($_inc) ? BASEPATH . 'lib/' : SR_LIBPATH);
+    $_dir  .= $path;
+    $found  = false;
+
+    foreach ( array("{$_dir}.class.php", "{$_dir}.php") as $_file ) {
+        if ( file_exists($_file) ) {
+            require $_file;
+            $_loadedClass[$path] = true;
+            $found = true;
+            break;
+        }
+    }
+
+    unset($path, $_dir);
+    if ( $found == true ) {
+        return true;
+    }
+    
+    throw new Exception("import#Unable to load class with path {$cls_path}");
 }
 
 /**
@@ -188,63 +212,63 @@ if ( ! function_exists('import') ) {
  * @param   $config_path
  * @param   $_inc @see #import
  * @param   $cache cache the file incldue ?
- * @usage
+ *
+ * @usage: 
  * $conf = config('db.hosts');
  * $mysql = config('db.hosts#mysql');
 */
-if ( ! function_exists('config') ) {
-    function config($config_path, $_inc=false, $cache=true)
-    {
-        static $_loadedConf = array();
+function config($config_path, $_inc=false, $cache=true)
+{
+    static $_loadedConf = array();
 
-        if ( ($sIdx = strpos($config_path, '#')) !== false ) {
-            $path = str_replace('.', '/', substr($config_path, 0, $sIdx));
-            $keys = explode('.', substr($config_path, $sIdx + 1));
-        } else {
-            $path = str_replace('.', '/', $config_path);
-            $keys = NULL;
-        }
-
-        //check and load the configure
-        $found = true;
-        if ( ! isset($_loadedConf[$path]) || $cache == false ) {
-            $_dir  = (($_inc) ? BASEPATH . '/config/' : SR_CONFPATH);
-            $_dir .= $path;
-            $found = false;
-
-            //search the config file and include it
-            foreach (array("{$_dir}.conf.php", "{$_dir}.php") as $_file ) {
-                if ( file_exists($_file) ) {
-                    $found = true;
-                    $_loadedConf[$path] = include $_file;
-                    break;
-                }
-            }
-            
-            unset($_dir);
-        }
-
-        if ( $found == false ) {
-            unset($path, $keys);
-            throw new Exception("config#Unable to load configure with path {$config_path}");
-        }
-
-        if ( $keys == NULL ) {
-            return $_loadedConf[$path];
-        }
-
-        $vals = $_loadedConf[$path];
-        foreach ( $keys as $key ) {
-            if ( ! isset($vals[$key]) ) {
-                throw new Exception("config#Invalid key {$key}");
-            }
-
-            $vals = $vals[$key];
-        }
-
-        unset($path, $keys);
-        return $vals;
+    if ( ($sIdx = strpos($config_path, '#')) !== false ) {
+        $path = str_replace('.', '/', substr($config_path, 0, $sIdx));
+        $keys = explode('.', substr($config_path, $sIdx + 1));
+    } else {
+        $path = str_replace('.', '/', $config_path);
+        $keys = NULL;
     }
+
+    //check and load the configure
+    $found = true;
+    if ( ! isset($_loadedConf[$path]) || $cache == false ) {
+        $_dir  = (($_inc) ? BASEPATH . '/config/' : SR_CONFPATH);
+        $_dir .= $path;
+        $found = false;
+
+        //search the config file and include it
+        foreach (array("{$_dir}.conf.php", "{$_dir}.php") as $_file ) {
+            if ( file_exists($_file) ) {
+                $found = true;
+                $_loadedConf[$path] = include $_file;
+                unset($_dir);
+                break;
+            }
+        }
+        
+        unset($_dir);
+    }
+
+    if ( $found == false ) {
+        unset($path, $keys);
+        throw new Exception("config#Unable to load configure with path {$config_path}");
+    }
+
+    if ( $keys == NULL ) {
+        return $_loadedConf[$path];
+    }
+
+    $vals = $_loadedConf[$path];
+    foreach ( $keys as $key ) {
+        if ( ! isset($vals[$key]) ) {
+            throw new Exception("config#Invalid key {$key}");
+        }
+
+        $vals = $vals[$key];
+    }
+
+    unset($path, $keys);
+    return $vals;
 }
 
 /**
@@ -254,101 +278,123 @@ if ( ! function_exists('config') ) {
  * @param   $cache check the cache first ?
  * @return  Object the object of the loaded model 
 */
-if ( ! function_exists('model') ) {
-    function model($model_path, $cache=true)
-    {
-        static $_loadedModel = array();
+function model($model_path, $cache=true)
+{
+    static $_loadedModel = array();
 
-        if ( $cache == true 
-            && isset($_loadedModel[$model_path]) ) {
-            return $_loadedModel[$model_path];
-        }
-
-        if ( ($sIdx = strrpos($model_path, '.')) !== false ) {
-            //@Note: the 3rd arguments set to $sIdx+1
-            //so the path will always end with '/'
-            $path  = str_replace('.', '/', substr($model_path, 0, $sIdx + 1));
-            $model = substr($model_path, $sIdx + 1);
-        } else {
-            $path  = NULL;
-            $model = $model_path;
-        }
-        
-        //model base directory
-        $_dir = SR_MODELPATH . "{$path}{$model}";
-        foreach ( array("{$_dir}.model.php", "{$_dir}.php") as $_file ) {
-            if ( file_exists( $_file ) ) {
-                if ( ! isset($_loadedModel[$model_path]) ) {
-                    include $_file;
-                }
-
-                $class = "{$model}Model";
-                if ( class_exists($class) )  {
-                    $obj = new $class();
-                } else {
-                    $obj = new $model();
-                }
-
-                //mark loaded for the current model
-                $_loadedModel[$model_path] = $obj;
-                unset($path, $model, $_dir, $class);
-                return $obj;
-            }
-        }
-        
-        throw new Exception("model#Unable to load model with path {$model}");
+    if ( $cache == true 
+        && isset($_loadedModel[$model_path]) ) {
+        return $_loadedModel[$model_path];
     }
+
+    if ( ($sIdx = strrpos($model_path, '.')) !== false ) {
+        //@Note: the 3rd arguments set to $sIdx+1
+        //so the path will always end with '/'
+        $path  = str_replace('.', '/', substr($model_path, 0, $sIdx + 1));
+        $model = substr($model_path, $sIdx + 1);
+    } else {
+        $path  = NULL;
+        $model = $model_path;
+    }
+    
+    //model base directory
+    $_dir = SR_MODELPATH . "{$path}{$model}";
+    foreach ( array("{$_dir}.model.php", "{$_dir}.php") as $_file ) {
+        if ( file_exists( $_file ) ) {
+            if ( ! isset($_loadedModel[$model_path]) ) {
+                include $_file;
+            }
+
+            $class = "{$model}Model";
+            if ( class_exists($class) )  {
+                $obj = new $class();
+            } else {
+                $obj = new $model();
+            }
+
+            //mark loaded for the current model
+            $_loadedModel[$model_path] = $obj;
+            unset($path, $model, $_dir, $class);
+            return $obj;
+        }
+    }
+    
+    throw new Exception("model#Unable to load model with path {$model}");
 }
 
 /**
  * load and create then return the specified helper
  *
  * @param   $helper_path
- * @param   $conf
+ * @param   $args
  * @param   $_inc @see #import
  * @param   $cache cache the instance ?
  * @return  Object
+ *
+ * Usage: 
+ * helper('ServiceExecutor#StreamAccess', array('a', 'b'));
 */
-if ( ! function_exists('helper') ) {
-    function helper($helper_path, $conf=NULL, $_inc=false, $cache=true)
-    {
-        static $_loadedHelper = array();
+function helper($helper_path, $args=NULL, $_inc=false, $cache=true)
+{
+    static $_loadedHelper = array();
 
-        if ( $cache == true 
-            && isset($_loadedHelper[$helper_path]) ) {
-            return $_loadedHelper[$helper_path];
-        }
+    if ( ($sIdx = strpos($helper_path, '#')) !== false ) {
+        $package = str_replace('.', '/', substr($helper_path, 0, $sIdx));
+        $method  = substr($helper_path, $sIdx + 1);
+    } else {
+        $package = str_replace('.', '/', $helper_path);
+        $method  = NULL;
+    }
 
-        if ( ($sIdx = strrpos($helper_path, '.')) !== false ) {
+    $found = true;
+    if ( ! isset($_loadedHelper[$package]) || $cache == false ) {
+        if ( ($sIdx = strrpos($package, '/')) !== false ) {
             //@Note: see #model
-            $path   = str_replace('.', '/', substr($helper_path, 0, $sIdx + 1));
-            $helper = substr($helper_path, $sIdx + 1);
+            $path   = str_replace('.', '/', substr($package, 0, $sIdx + 1));
+            $helper = substr($package, $sIdx + 1);
         } else {
             $path   = NULL;
-            $helper = $helper_path;
+            $helper = $package;
         }
-        
+
         //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
         //Or check the APPPATH/lib 
         $_dir  = (($_inc) ? BASEPATH . '/helper/' : SR_HELPERPATH);
         $_dir .= "{$path}{$helper}";
+        $found = false;
         
-        foreach( array("{$_dir}.helper.php", "{$_dir}.php") as $_file ) {
+        foreach ( array("{$_dir}.helper.php", "{$_dir}.php") as $_file ) {
             if ( file_exists($_file) ) {
-                if ( ! isset($_loadedHelper[$helper_path]) ) {
+                if ( ! isset($_loadedHelper[$package]) ) {
                     require $_file;
                 }
 
+                $found = true;
                 $class = "{$helper}Helper";
-                $obj   = new $class($conf);
-                $_loadedHelper[$helper_path] = $obj;
+                $obj   = new $class(NULL);
+                $_loadedHelper[$package] = $obj;
                 unset($path, $helper, $_dir, $class);
-                return $obj;
+                break;
             }
         }
-        
+    }
+
+    if ( $found == false ) {
+        unset($package, $method);
         throw new Exception("helper#Unable to load helper with path {$helper_path}");
     }
+
+    if ( $method == NULL ) {
+        return $_loadedHelper[$package];
+    }
+
+    $helperObj = $_loadedHelper[$package];
+    if ( ! method_exists($helperObj, $method) ) {
+        unset($helperObj, $package, $method);
+        throw new Exception("helper#Undefined method {$method} for helper {$helper_path}");
+    }
+
+    return $helperObj->{$method}(is_array($args) ? $args : array($args));
 }
 
 /**
@@ -356,16 +402,14 @@ if ( ! function_exists('helper') ) {
  *
  * @param   $http_code
 */
-if ( ! function_exists('abort') ) {
-    function abort($http_code)
-    {
-        http_response_code($http_code);
-        exit();
-    }
+function abort($http_code)
+{
+    http_response_code($http_code);
+    exit();
 }
 
 /**
- * search the specified template and return the executed dynamic content
+ * search the specified html template and return the executed dynamic content
  *
  * @param   $tpl_file
  * @param   $variables
@@ -373,25 +417,27 @@ if ( ! function_exists('abort') ) {
  * @param   $timer  view compile cache time in seconds
  * @return  string
 */
-if ( ! function_exists('view') ) {
-    function view($tpl, $vars, $sanitize=false, $timer=0)
-    {
-        $viewObj = _G('__view_fnt__');
-        if ( $viewObj == NULL ) {
-            import('view.ViewFactory');
-            $conf = array(
-                'cache_time' => $timer,
-                'tpl_dir'    => SR_VIEWPATH,
-                'cache_dir'  => SR_CACHEPATH.'tpl/'
-            );
+function view($tpl, $vars, $sanitize=false, $timer=0)
+{
+    $viewObj = E('view_obj');
+    if ( $viewObj == NULL ) {
+        import('view.ViewFactory');
+        $conf = array(
+            'cache_time' => 0,
+            'tpl_dir'    => SR_VIEWPATH,
+            'cache_dir'  => SR_CACHEPATH.'tpl/'
+        );
 
-            $viewObj = ViewFactory::create('html', $conf);
-            _G('__view_fnt__', $viewObj);
-        }
-
-        //load all the variables to the current view
-        return $viewObj->load($vars)->getContent($tpl, $sanitize);
+        $viewObj = ViewFactory::create('html', $conf);
+        E('view_obj', $viewObj);
     }
+
+    //check and set the tpl cache timer
+    if ( $timer > 0 ) {
+        $viewObj->setCacheTime($timer);
+    }
+
+    return $viewObj->load($vars)->getContent($tpl, $sanitize);
 }
 
 class Loader
@@ -599,7 +645,7 @@ class Helper
     /**
      * Construct method to create new instance of the Helper
      *
-     * @param    $conf
+     * @param   $conf
     */
     public function __construct($conf)
     {
@@ -615,16 +661,18 @@ class Helper
         $_argv = func_get_args();
         $_args = func_num_args();
         if ( $_args > 0 && method_exists($this, $_argv[0]) ) {
-            $cacher    = array_shift($_argv);
-            return $this->{$cacher}($_argv);
+            $method = array_shift($_argv);
+            return $this->{$method}($_argv);
         }
 
-        exit("Error: Unable to load cacher {$_argv[0]}\n");
+        exit("Error: Helper unable to load {$_argv[0]}\n");
     }
 }
 
 //Load the input class manage the input of the controller/
 if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
+    //--------------------------------------------------------------
+    //normal data type
     defined('OP_NULL')      or define('OP_NULL',        1 <<  0);
     defined('OP_LATIN')     or define('OP_LATIN',       1 <<  1);
     defined('OP_URL')       or define('OP_URL',         1 <<  2);
@@ -1542,7 +1590,6 @@ if ( (SR_INC_COMPONENTS & 0x10) != 0 ) {
 
 //Load the Output class
 if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
-    //-----------------------------------------------------------------
     class Output
     {
         /**
@@ -1550,14 +1597,14 @@ if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
          *
          * @access  private
         */
-        private     $_header = array();
+        private $_header = array();
         
         /**
          * output content - http data section
          *
          * @access  private
         */
-        private     $_final_output = '';
+        private $_final_output = '';
         
         /**
          * use zlib to compress the transfer content
@@ -1566,8 +1613,8 @@ if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
          *
          * @access  private
         */
-        private     $_zlib_oc = false;
-        private     $_gzip_oc = -1;
+        private $_zlib_oc = false;
+        private $_gzip_oc = -1;
         
         
         public function __construct()
@@ -1579,6 +1626,8 @@ if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
             if ( defined('SR_CHARSET') ) {
                 $this->_header['Content-Type'] = 'text/html; charset=' . SR_CHARSET;
             }
+            
+            $this->setHeader('X-Powered-By', defined(SR_POWERBY) ? SR_POWERBY : 'Syrian/2.0');
         }
         
         /**
@@ -1726,6 +1775,8 @@ if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
                     header("{$hKey}: {$hVal}");
                 }
             }
+
+            header("X-Powered-By: Syrian/2.0");
             
             //Try to send the server response content
             // if $this->_gzip_oc is enabled then compress the output
@@ -1759,40 +1810,81 @@ class Model
 if ( (SR_INC_COMPONENTS & 0x80) != 0 ) {
     class Controller
     {
-        public       $uri    = NULL;        //request uri
-        public       $input  = NULL;        //request input
-        public       $output = NULL;        //request output
-        public        $_G    = NULL;        //global resource
-        
         /**
-         * Construct method to create new instance of the controller
-         *
-         * @param    $uri
-         * @param    $input
-         * @param    $output
+         * Construct method to create and initialize the controller
         */
         public function __construct()
         {
-            $this->_G = new stdClass();
+            _G(array(
+                SR_FLUSH_MODE  => false,
+                SR_IGNORE_MODE => false
+            ));
+
+            $this->conf = config('app');
         }
         
         /**
          * the entrance of the current controller
          * default to invoke the uri->page.logic.php to handler
-         *     the request, you may need to rewrite this method to self define
+         *  the request, you may need to rewrite this method to self define
          *
-         * @access    public
+         * @param   $uri could be a string or URI parser object
+         * @param   $input
+         * @param   $output
+         * @access  public
         */
-        public function run()
+        public function run($uri, $input, $output)
         {
-            //user logic file to handler the request
-            $_logicScript = $this->uri->page . '.logic.php';
-            if ( file_exists($_logicScript) ) {
-                include $_logicScript;
-            } else {
-                $this->uri->redirect('/error/404');
+            //@Added at 2015-05-29
+            //define the flush mode global sign
+            //@Assoc the algorithm assocatied with the cache flush
+            // define in the helper/CacheFlusher#Refresh
+            $flushMode = $input->getInt('__flush_mode__', 0);
+            if ( $flushMode == 1 
+                && strcmp($this->conf->flush_key, $input->get('__flush_key__')) == 0 ) {
+                _G(SR_FLUSH_MODE, true);
             }
+
+            //@Added at 2015-07-21
+            // for cache flush need to ignore the balance redirecting...
+            $ignoreMode = $input->getInt('__ignore_mode__', 0);
+            if ( $ignoreMode == 1 ) {
+                _G(SR_IGNORE_MODE, true);
+            }
+
+            $ret = NULL;
+
+            /*
+             * check and invoke the before method
+             * basically you could do some initialize work here
+            */
+            if ( method_exists($this, '_before') ) {
+                $this->_before($input, $output);
+            }
+
+            /*
+             * invoke the main function to handler the current request
+            */
+            $method = is_object($uri) ? $uri->page : $uri;
+            if ( strlen($method) < 1 ) $method = 'index';
+            if ( method_exists($this, $method) ) {
+                $ret = $this->{$method}($input, $output);
+            } else {
+                //throw new Exception("Undefined handler \"{$method}\" for " . __class__);
+                abort(404);
+            }
+
+            /*
+             * check and invoke the after method here
+             * basically you could do some destroy work here
+            */
+            if ( method_exists($this, '_after') ) {
+                $this->_after($input, $output);
+            }
+
+            return $ret;
         }
+
     }
 }
 

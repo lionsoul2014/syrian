@@ -6,7 +6,7 @@
 */
 
  //-----------------------------------------------------
- 
+
 class C_Controller extends Controller
 {
     public function __construct()

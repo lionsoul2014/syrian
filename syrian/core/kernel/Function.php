@@ -392,9 +392,9 @@ function abort($http_code)
  * @param   $timer  view compile cache time in seconds
  * @return  string
 */
-function html_view($tpl, $vars, $sanitize=false, $timer=0)
+function view($tpl, $vars, $sanitize=false, $timer=0)
 {
-    $viewObj = E('html_view');
+    $viewObj = E('view_obj');
     if ( $viewObj == NULL ) {
         import('view.ViewFactory');
         $conf = array(
@@ -404,7 +404,7 @@ function html_view($tpl, $vars, $sanitize=false, $timer=0)
         );
 
         $viewObj = ViewFactory::create('html', $conf);
-        E('html_view', $viewObj);
+        E('view_obj', $viewObj);
     }
 
     //check and set the tpl cache timer
@@ -415,22 +415,4 @@ function html_view($tpl, $vars, $sanitize=false, $timer=0)
     return $viewObj->load($vars)->getContent($tpl, $sanitize);
 }
 
-defined('SR_CONTENT_TYPE') or define('SR_CONTENT_TYPE', 'content_type');
-
-/**
- * set the output content type
- *
- * @param   $type
- * @return  Mixed (NULL or the type you set or boolean)
-*/
-function header_content_type($type=NULL)
-{
-    if ( $type == NULL ) {
-        return E(SR_CONTENT_TYPE);
-    }
-
-    E(SR_CONTENT_TYPE, $type);
-    return true;
-}
- 
 ?>

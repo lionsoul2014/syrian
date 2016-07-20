@@ -19,9 +19,10 @@ define('SR_UPLOADDIR',      'uploadfiles');
 define('SR_UPLOADPATH',     APPPATH.'www/'.SR_UPLOADDIR.'/');
 define('SR_NODE_NAME',      'node1');                       //define the node name
 define('SR_CHARSET',        'utf-8');   //default charset
+define('SR_POWERBY',        'Syrian/2.0');
 
 //require the framework entrance file
-define('SR_INC_COMPONENTS', 0x7F);
+define('SR_INC_COMPONENTS', 0xFF);
 //require(BASEPATH . 'core/Syrian.merge.min.php');
 require(BASEPATH . 'core/Syrian.php');
 
@@ -61,7 +62,11 @@ E('output', $output);
 import('core.Function', false);
 
 //get the executed result and display it
-$ctrl->uri = $URI;
-$ret = $ctrl->run($input, $output);
-$output->display(is_array($ret) ? json_encode($ret) : $ret);
+try {
+    $ctrl->uri = $URI;
+    $ret = $ctrl->run($URI, $input, $output);
+    $output->display(is_array($ret) ? json_encode($ret) : $ret);
+} catch ( Exception $e ) {
+    //You may need to do the error log here
+}
 ?>
