@@ -27,20 +27,21 @@ defined('STATUS_ACCESS_DENY')   or define('STATUS_ACCESS_DENY',  6);    //privil
  * @param   $ext    extension data
  * @return  string (json encoded)
 */
-if ( ! function_exists('json_view') ) {
-    function json_view($errno, $data, $ext=NULL)
-    {
-        $json = array(
-            'errno'  => $errno,
-            'data'   => $data
-        );
+function json_view($errno, $data, $ext=NULL)
+{
+    //set the output content type
+    E('output')->setHeader('Content-Type', 'application/json');
 
-        if ( $ext != NULL ) {
-            $json['ext'] = $ext;
-        }
+    $json = array(
+        'errno'  => $errno,
+        'data'   => $data
+    );
 
-        return json_encode($json);
+    if ( $ext != NULL ) {
+        $json['ext'] = $ext;
     }
+
+    return json_encode($json);
 }
 
 /**
@@ -53,25 +54,27 @@ if ( ! function_exists('json_view') ) {
  * @param   $ext    extension data
  * @return  string (data json encoded string)
 */
-if ( ! function_exists('json_define_view') ) {
-    function json_define_view($errno, $data, $ext=NULL)
-    {
-        if ( is_array($data) ) {
-            $data = json_encode($data);
-        }
+function json_define_view($errno, $data, $ext=NULL)
+{
+    //set the output content type
+    E('output')->setHeader('Content-Type', 'application/json');
 
-        if ( $ext == NULL ) $ext = 'false';
-        else if ( is_array($ext) ) $ext = json_encode($ext);
-
-        $CC = <<<EOF
-        {
-            "errno": $errno,
-            "data": $data,
-            "ext": $ext
-        }
-EOF;
-        return $data;
+    if ( is_array($data) ) {
+        $data = json_encode($data);
     }
+
+    if ( $ext == NULL ) $ext = 'false';
+    else if ( is_array($ext) ) $ext = json_encode($ext);
+
+    $CC = <<<EOF
+    {
+        "errno": $errno,
+        "data": $data,
+        "ext": $ext
+    }
+EOF;
+
+    return $data;
 }
 
 ?>

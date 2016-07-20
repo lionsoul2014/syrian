@@ -12,8 +12,6 @@
 class Controller
 {
     public  $uri    = NULL;        //request uri
-    public  $input  = NULL;        //request input
-    public  $output = NULL;        //request output
 
     /**
      * Construct method to create new instance of the controller
@@ -37,23 +35,25 @@ class Controller
      * default to invoke the uri->page.logic.php to handler
      *  the request, you may need to rewrite this method to self define
      *
+     * @param   $input
+     * @param   $output
      * @access  public
     */
-    public function run()
+    public function run($input, $output)
     {
         //@Added at 2015-05-29
         //define the flush mode global sign
         //@Assoc the algorithm assocatied with the cache flush
         // define in the helper/CacheFlusher#Refresh
-        $flushMode = $this->input->getInt('__flush_mode__', 0);
+        $flushMode = $input->getInt('__flush_mode__', 0);
         if ( $flushMode == 1 
-            && strcmp($this->conf->flush_key, $this->input->get('__flush_key__')) == 0 ) {
+            && strcmp($this->conf->flush_key, $input->get('__flush_key__')) == 0 ) {
             _G(SR_FLUSH_MODE, true);
         }
 
         //@Added at 2015-07-21
         // for cache flush need to ignore the balance redirecting...
-        $ignoreMode = $this->input->getInt('__ignore_mode__', 0);
+        $ignoreMode = $input->getInt('__ignore_mode__', 0);
         if ( $ignoreMode == 1 ) {
             _G(SR_IGNORE_MODE, true);
         }

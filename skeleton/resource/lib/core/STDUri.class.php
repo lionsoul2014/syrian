@@ -87,9 +87,9 @@ class STDUri extends Uri
         }
         
         $_CTRL          = new $_class();
-        $_CTRL->uri     = $this;
-        $_CTRL->input   = new Input();
-        $_CTRL->output  = new Output();
+        //$_CTRL->uri     = $this;
+        //$_CTRL->input   = new Input();
+        //$_CTRL->output  = new Output();
         
         //clear the temp variable
         $_ctrl_file     = NULL;

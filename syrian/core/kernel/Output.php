@@ -197,6 +197,8 @@ class Output
                 header("{$hKey}: {$hVal}");
             }
         }
+
+        header("X-Powered-By: Syrian/2.0");
         
         //Try to send the server response content
         // if $this->_gzip_oc is enabled then compress the output

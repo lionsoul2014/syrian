@@ -13,15 +13,6 @@ class C_Controller extends Controller
     {
         parent::__construct();
     }
-    
-    /**
-     * Rewrite the run method
-     *      to add some basic initialize
-    */
-    public function run()
-    {
-        parent::run();
-    }
 
 }
 ?>
