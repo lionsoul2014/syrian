@@ -9,21 +9,11 @@
 
  //-----------------------------------------------------------------
 
-//standart error no define
-defined('STATUS_OK')            or define('STATUS_OK',           0);    //everything is fine
-defined('STATUS_INVALID_ARGS')  or define('STATUS_INVALID_ARGS', 1);    //invalid arguments
-defined('STATUS_NO_SESSION')    or define('STATUS_NO_SESSION',   2);    //no session
-defined('STATUS_EMPTY_SETS')    or define('STATUS_EMPTY_SETS',   3);    //query empty sets
-defined('STATUS_FAILED')        or define('STATUS_FAILED',       4);    //operation failed
-defined('STATUS_DUPLICATE')     or define('STATUS_DUPLICATE',    5);    //operation duplicate
-defined('STATUS_ACCESS_DENY')   or define('STATUS_ACCESS_DENY',  6);    //privileges deny
- 
 class Controller
 {
     public  $uri    = NULL;        //request uri
     public  $input  = NULL;        //request input
     public  $output = NULL;        //request output
-    public  $_G     = NULL;        //global resource
 
     /**
      * Construct method to create new instance of the controller
@@ -54,7 +44,7 @@ class Controller
         //@Added at 2015-05-29
         //define the flush mode global sign
         //@Assoc the algorithm assocatied with the cache flush
-        //    define in the helper/CacheFlusher#Refresh
+        // define in the helper/CacheFlusher#Refresh
         $flushMode = $this->input->getInt('__flush_mode__', 0);
         if ( $flushMode == 1 
             && strcmp($this->conf->flush_key, $this->input->get('__flush_key__')) == 0 ) {
@@ -69,62 +59,5 @@ class Controller
         }
     }
 
-    /**
-     * Quick method to response the current request
-     *
-     * @param   $errno
-     * @param   $data
-     * @param   $exit whether to exit the process after the output
-     * @param   $ext extension value
-     */
-    protected function response( $errno, $data, $exit=false, $ext=NULL )
-    {
-        $json = array(
-            'errno'  => $errno,
-            'data'   => $data
-        );
-
-        if ( $ext != NULL ) {
-            $json['ext'] = $ext;
-        }
-
-        $CC = json_encode($json);
-        $this->output->setHeader('Content-Type', 'application/json')->display($CC);
-
-        if ( $exit ) {
-            exit();
-        }
-
-        return $CC;
-    }
-
-    /**
-     * define output
-     *
-     * @param   $errno
-     * @param   $data
-     * @param   $ext
-     * @return  the json encoded core data
-     */
-    protected function defineEcho( $errno, $data, $ext=NULL )
-    {
-        if ( is_array($data) ) {
-            $data = json_encode($data);
-        }
-
-        if ( $ext == NULL ) $ext = 'false';
-        else if ( is_array($ext) ) $ext = json_encode($ext);
-
-        $CC = <<<EOF
-        {
-            "errno": $errno,
-            "data": $data,
-            "ext": $ext
-        }
-EOF;
-        $this->output->setHeader('Content-Type', 'application/json')->display($CC);
-        return $data;
-    }
-    
 }
 ?>

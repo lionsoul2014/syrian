@@ -12,9 +12,9 @@
 
 class HtmlView extends AView
 {
-    public  $_tpl_dir       = NULL;         //template directory. end with '/'
-    public  $_cache_dir     = NULL;         //cache directory, end with '/'
-    public  $_cache_time    = 0;            //template compile cache time in second
+    private $_tpl_dir    = NULL;         //template directory. end with '/'
+    private $_cache_dir  = NULL;         //cache directory, end with '/'
+    private $_cache_time = 0;            //template compile cache time in second
     
     /**
      * Template symtab hold all the mapping
@@ -22,14 +22,14 @@ class HtmlView extends AView
      *
      * @access  private
     */
-    private $_symbol    = array();      
+    private $_symbol = array();      
     
     /**
      * Template compile regex rules
      *
      * @access  private
     */
-    private $_rules     = array(
+    private $_rules = array(
         '/<\?([^=])/'           => '<?php $1',
         //<?=
         '/<\?=/'                => '<?php echo ',
@@ -210,19 +210,31 @@ class HtmlView extends AView
         
         return $_cache_file;
     }
+
+    /**
+     * set the default cache time
+     *
+     * @param   $timer
+     * @return  $this
+    */
+    public function setCacheTime($timer)
+    {
+        $this->_cache_time = $timer;
+        return $this;
+    }
     
     /**
      * return the executed html content
      *      $this->display will be invoke to finish the job
      *
      * @param   $_tpl_file
-     * @param    $sanitize sanitize the content ?
+     * @param   $sanitize sanitize the content ?
      * @return  string the executed html text
     */
     public function getContent( $_tpl_file=NULL, $sanitize=false )
     {
         $_cache_file = $this->_cache_dir.$_tpl_file.'.php';
-        $_tpl_file = $this->_tpl_dir.$_tpl_file;
+        $_tpl_file   = $this->_tpl_dir.$_tpl_file;
         
         //check the cache file is valid or not
         if ( ! $this->isCached( $_cache_file ) ) {
@@ -238,5 +250,6 @@ class HtmlView extends AView
         //return the executed html string
         return $sanitize ? $this->sanitize($ret) : $ret;
     }
+
 }
 ?>

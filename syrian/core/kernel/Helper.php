@@ -13,7 +13,7 @@
  * //return ready to fly(well initialized) object
  * return $obj;
  *
- * @author    chenxin <chenxin619315@gmail.com>
+ * @author  chenxin <chenxin619315@gmail.com>
  * @link    http://www.lionsoul.org/syrian
  */
 
@@ -24,7 +24,7 @@ class Helper
     /**
      * Construct method to create new instance of the Helper
      *
-     * @param    $conf
+     * @param   $conf
     */
     public function __construct($conf)
     {
@@ -40,8 +40,8 @@ class Helper
         $_argv = func_get_args();
         $_args = func_num_args();
         if ( $_args > 0 && method_exists($this, $_argv[0]) ) {
-            $cacher    = array_shift($_argv);
-            return $this->{$cacher}($_argv);
+            $method = array_shift($_argv);
+            return $this->{$method}($_argv);
         }
 
         exit("Error: Helper unable to load {$_argv[0]}\n");

@@ -22,13 +22,15 @@ define('SR_CHARSET',        'utf-8');   //default charset
 
 //require the framework entrance file
 define('SR_INC_COMPONENTS', 0x7F);
-require(BASEPATH . 'core/Syrian.merge.min.php');
+//require(BASEPATH . 'core/Syrian.merge.min.php');
+require(BASEPATH . 'core/Syrian.php');
 
 //system link style constants 1 for STD style, 0 for DIR style
 define('SR_LINK_STYLE',     URI_STD_STYLE);
 define('SR_URI_REWRITE',    true);
 
 //-----------------------------------------------------------------
+
 /*
  * Intiailze the system and fetch the controller of the
  *  current request and then invoke its#run method to handler the request
