@@ -18,9 +18,9 @@ class ShardingController extends Cli_Controller
         parent::__construct();
     } 
 
-    public function __before($input, $output)
+    public function __before($input, $output, $uri)
     {
-        parent::__before($input, $output);
+        parent::__before($input, $output, $uri);
 
         $this->debug = $input->getBoolean('debug', false);
     }
@@ -31,7 +31,7 @@ class ShardingController extends Cli_Controller
      *
      * @date: 2016-02-26
     */
-    public function _convert($input, $output)
+    public function _convert($input)
     {
         $originalModelPath = $input->get('originalModel');
         $shardingModelPath = $input->get('shardingModel');

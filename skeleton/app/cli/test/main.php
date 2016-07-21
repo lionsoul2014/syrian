@@ -16,14 +16,8 @@ class TestController extends Cli_Controller
         parent::__construct();
     }
 
-    public function __before($input, $output)
+    public function _base($input)
     {
-        parent::__before($input, $output);
-    }
-    
-    public function _base($input, $output)
-    {
-        //echo "Yat, the cpu has got me\n";
         $counter = 1;
         while ( true ) {
             echo "long running task is going to being execute for the {$counter} time ... \n";

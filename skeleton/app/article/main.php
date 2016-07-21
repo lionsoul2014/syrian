@@ -11,12 +11,12 @@ import('core.C_Controller', false);
  
 class ArticleController extends C_Controller
 {    
-    public function __before($input, $output)
+    public function __before($input, $output, $uri)
     {
         $this->model = model('article.Article');
     }
     
-    public function _index($input, $output)
+    public function _index($input)
     {
         $pageno = $input->getInt('pageno', 1);
 
@@ -29,12 +29,12 @@ class ArticleController extends C_Controller
         );
     }
     
-    public function _about($input, $output)
+    public function _about($input)
     {
         return view('article/about.html', null, true);
     }
 
-    public function _json($input, $output)
+    public function _json($input)
     {
         return array(
             'head_img'  => 'http://git.oschina.net/uploads/87/5187_lionsoul.jpg',
@@ -43,7 +43,7 @@ class ArticleController extends C_Controller
         );
     }
 
-    public function _profile()
+    public function _profile($input)
     {
         $data = array(
             'head_img'  => 'http://git.oschina.net/uploads/87/5187_lionsoul.jpg',

@@ -31,9 +31,9 @@ class GearmanController extends Cli_Controller
         parent::__construct();
     } 
 
-    public function __before($input, $output)
+    public function __before($input, $output, $uri)
     {
-        parent::__before($input, $output);
+        parent::__before($input, $output, $uri);
 
         $this->debug  = $input->getBoolean('debug', false);
         $this->maxmem = $input->getInt('maxmem', 0);
@@ -45,7 +45,7 @@ class GearmanController extends Cli_Controller
     /**
      * gearman service executor worker
     */
-    protected function _worker($input, $output)
+    protected function _worker($input)
     {
         $sharding = $input->get('sharding');
         if ( $sharding == false ) {

@@ -34,11 +34,11 @@ class Controller
      *  need to rewrite the run method(self-define the router) invoke this to
      * do the initialize work
      *
-     * @param   $uri
      * @param   $input
      * @param   $output
+     * @param   $uri
     */
-    protected function __init($uri, $input, $output)
+    protected function __init($input, $output, $uri)
     {
         //@Added at 2015-05-29
         //define the flush mode global sign
@@ -63,14 +63,14 @@ class Controller
      * default to invoke the uri->page.logic.php to handler
      *  the request, you may need to rewrite this method to self define
      *
-     * @param   $uri (standart parse_uri result)
      * @param   $input
      * @param   $output
+     * @param   $uri (standart parse_uri result)
      * @access  public
     */
-    public function run($uri, $input, $output)
+    public function run($input, $output, $uri)
     {
-        $this->__init($uri, $input, $output);
+        $this->__init($input, $output, $uri);
 
         $ret = NULL;
 
@@ -79,7 +79,7 @@ class Controller
          * basically you could do some initialize work here
         */
         if ( method_exists($this, '__before') ) {
-            $this->__before($input, $output);
+            $this->__before($input, $output, $uri);
         }
 
         /*
@@ -87,7 +87,7 @@ class Controller
         */
         $method = "{$this->method_prefix}{$uri->page}";
         if ( method_exists($this, $method) ) {
-            $ret = $this->{$method}($input, $output);
+            $ret = $this->{$method}($input, $output, $uri);
         } else {
             throw new Exception("Undefined handler \"{$method}\" for " . __class__);
         }
@@ -97,7 +97,7 @@ class Controller
          * basically you could do some destroy work here
         */
         if ( method_exists($this, '__after') ) {
-            $this->__after($input, $output);
+            $this->__after($input, $output, $uri);
         }
 
         return $ret;

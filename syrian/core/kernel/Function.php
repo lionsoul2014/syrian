@@ -544,7 +544,7 @@ function controller($uri, $input, $output, &$ctrl=NULL)
     }
 
     $ctrl = new $_class();
-    $ret  = $ctrl->run($uri, $input, $output);
+    $ret  = $ctrl->run($input, $output, $uri);
 
     //let gc do its work
     unset($_ctrl_file, $_class);

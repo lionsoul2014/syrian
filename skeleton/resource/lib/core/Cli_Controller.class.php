@@ -72,7 +72,7 @@ class Cli_Controller extends Controller
         parent::__construct();
     }
 
-    public function __before($input, $output)
+    public function __before($input, $output, $uri)
     {
         //cli limitation
         if ( SR_CLI_MODE == false ) {
@@ -93,25 +93,24 @@ class Cli_Controller extends Controller
             exit("Error: Unknow action {$this->action}\n");
         }
 
-        //$ruri = $uri->path;
-        //$sIdx = strpos($ruri, '/', 2);
-        //if ( $sIdx === false ) {
-        //    exit("Error: Internal error.\n");
-        //}
+        $ruri = $uri->path;
+        $sIdx = strpos($ruri, '/', 2);
+        if ( $sIdx === false ) {
+            exit("Error: Internal error.\n");
+        }
 
         //define the pid file
         $this->pidPath = substr($ruri, $sIdx+1)."/{$this->instance}.pid";
         $this->pidFile = SR_TMPPATH . "proc/{$this->pidPath}";
         Util::makePath(dirname($this->pidFile));
 
-
         /*
          * action dispatch logic:
          * intercept the stop and restart action
          * for both of them got to stop the program first
-         */
+        */
         $continue = false;
-        switch ($this->action) {
+        switch ( $this->action ) {
         case 'stat':
             $this->printInstanceProcInfo();
             break;
@@ -197,7 +196,6 @@ EOF;
 
         //set the ticks as sginal callback mechanism
         declare(ticks=1);
-
         
         //do whatever you want now ...
     }
@@ -239,27 +237,8 @@ EOF;
      *
      * @return  boolean
     */
-    private function registerSignalHandler()
+    protected function registerSignalHandler()
     {
-        //$signals = array(
-        //    SIGHUP,     //hangup 
-        //    SIGINT,     //Interrupt from keyboard
-        //    SIGQUIT,    //Quit from keyboard
-        //    SIGTERM,    //Termination signal
-        //    //SIGKILL     //Kill signal (Affected nothing)
-        //    SIGUSR1,    //user define signal 1
-        //    SIGUSR2     //user define signal 2,
-
-        //    //SIGSTOP,    //process pause
-        //    //SIGCONT     //process resume
-        //);
-
-        //foreach ( $signals as $signo ) {
-        //    if ( pcntl_signal($signo, 
-        //        array($this, 'signal_handler')) == false ) {
-        //        return false;
-        //    }
-        //}
         foreach ( $this->signal_mapping as $signo => $sighdl ) {
             $sigHandler = ($sighdl == NULL) ? array($this, 'signal_handler') : $sighdl;
             if ( pcntl_signal($signo, $sigHandler) == false ) {
@@ -354,8 +333,8 @@ EOF;
             'start_time'    => time()
         );
 
-        $str  = json_encode($data);
-        $ret  = file_put_contents($this->pidFile, $str);
+        $str = json_encode($data);
+        $ret = file_put_contents($this->pidFile, $str);
         return ($ret == strlen($str));
     }
 
