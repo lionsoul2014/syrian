@@ -5,6 +5,8 @@
  * @author  chenxin <chenxin619315@gmail.com>
 */
 
+import('core.Cli_Controller', false);
+
 //------------------------------------
 
 class ShardingController extends Cli_Controller
@@ -16,19 +18,11 @@ class ShardingController extends Cli_Controller
         parent::__construct();
     } 
 
-    /**
-     * controller entrace method you could use the default one
-     *      by just invoke parent::run() or write you own implementation
-     *
-     * @see Controller#run()
-    */
-    public function run()
+    public function __before($uri, $input, $output)
     {
-        parent::run();
+        parent::__before($uri, $input, $output);
 
-        $this->debug = $this->input->getBoolean('debug', false);
-
-        if ( strncmp($this->uri->page, 'convert', 7) == 0 ) $this->_convert();
+        $this->debug = $input->getBoolean('debug', false);
     }
 
     /**
@@ -37,10 +31,10 @@ class ShardingController extends Cli_Controller
      *
      * @date: 2016-02-26
     */
-    public function _convert()
+    public function _convert($input, $output)
     {
-        $originalModelPath = $this->input->get('originalModel');
-        $shardingModelPath = $this->input->get('shardingModel');
+        $originalModelPath = $input->get('originalModel');
+        $shardingModelPath = $input->get('shardingModel');
         if ( $originalModelPath == false 
             || $shardingModelPath == false ) {
             exit("missing originalModel or shardingModel\n");
@@ -53,12 +47,12 @@ class ShardingController extends Cli_Controller
         if ( $this->debug ) $shardingModel->setDebug(true);
 
         $primary_key = $originalModel->getPrimaryKey();
-        $startPos    = $this->input->getInt('startPos', 0);
-        $trafficNum  = $this->input->getInt('trafficNum', 300);
-        $removeOld   = $this->input->getBoolean('removeOld', false);
-        $interval    = $this->input->getInt('interval', 0);
-        $intelMode   = $this->input->getBoolean('intelMode', false);
-        $ondup       = $this->input->get('ondup');
+        $startPos    = $input->getInt('startPos', 0);
+        $trafficNum  = $input->getInt('trafficNum', 300);
+        $removeOld   = $input->getBoolean('removeOld', false);
+        $interval    = $input->getInt('interval', 0);
+        $intelMode   = $input->getBoolean('intelMode', false);
+        $ondup       = $input->get('ondup');
 
         $Id = $startPos;
         for ( ; ; ) {

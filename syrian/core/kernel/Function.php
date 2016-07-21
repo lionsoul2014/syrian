@@ -392,7 +392,7 @@ function abort($http_code)
  * @param   $timer  view compile cache time in seconds
  * @return  string
 */
-function view($tpl, $vars, $sanitize=false, $timer=0)
+function view($tpl, $vars=null, $sanitize=false, $timer=0)
 {
     $viewObj = E('view_obj');
     if ( $viewObj == NULL ) {
@@ -408,11 +408,148 @@ function view($tpl, $vars, $sanitize=false, $timer=0)
     }
 
     //check and set the tpl cache timer
-    if ( $timer > 0 ) {
-        $viewObj->setCacheTime($timer);
+    if ( $timer > 0 )    $viewObj->setCacheTime($timer);
+    if ( $vars != null ) $viewObj->load($vars);
+
+    return $viewObj->getContent($tpl, $sanitize);
+}
+
+/**
+ * parse the specified request url and return the parsed info
+ *
+ * @param   $uri (the relative request uri only with the path part)
+ * @param   $separator and default to '/' it could be '.' or '-'
+ * @return  Mixed (Object or NULL)
+ * {
+ *  uri    : "",        //the original uri string
+ *  path   : "",        //the original path
+ *  parts  : array(),   //splited parts
+ *  package: "",        //package part of the controller
+ *  module : "",        //module name
+ *  page   : "",        //page name
+ * }
+*/
+function parse_uri($uri, $separator='/', $default=NULL)
+{
+    /*
+     * move the arguments to get the path
+     * and make sure it start with the '/'
+    */
+    if ( ($argsIdx = strpos($uri, '?')) !== false ) {
+        $path = substr($uri, 0, $argsIdx);
+    } else {
+        $path = $uri;
     }
 
-    return $viewObj->load($vars)->getContent($tpl, $sanitize);
+    if ( strlen($path) < 1 ) return NULL;
+    if ( $path[0] == '/'   ) $path = substr($path, 1);
+
+    //-----------------------------------------------
+
+    $uriBean = new StdClass();
+    $uriBean->uri     = $uri;
+    $uriBean->path    = $path;
+    $uriBean->parts   = NULL;
+    $uriBean->package = NULL;
+    $uriBean->module  = NULL;
+    $uriBean->page    = NULL;
+
+    if ( strlen($path) >= 1 ) {
+        $parts  = explode($separator, $path);
+        $length = count($parts);
+        $uriBean->parts = $parts;
+        switch ( $length ) {
+        case 1:
+            $uriBean->module  = $parts[0];
+            break;
+        case 2:
+            $uriBean->module  = $parts[0];
+            $uriBean->page    = $parts[1];
+            break;
+        case 3:
+            $uriBean->page    = $parts[$length-1];
+            $uriBean->module  = $parts[$length-2];
+            $uriBean->package = $parts[$length-3];
+            break;
+        default:
+            $uriBean->page    = array_pop($parts);
+            $uriBean->module  = array_pop($parts);
+            $uriBean->package = implode('/', $parts);
+        }
+
+        unset($parts, $length);
+    }
+
+    if ( $uriBean->module == NULL ) {
+        if ( is_string($default) ) {
+            $uriBean->module = $default;
+        } else if ( is_array($default) 
+            && isset($default[0]) ) {
+            $uriBean->module = $default[0];
+        }
+    }
+
+    if ( $uriBean->page == NULL ) {
+        if ( is_array($default) 
+            && isset($default[1]) ) {
+            $uriBean->page = $default[1];
+        }
+    }
+
+    unset($path);
+
+    return $uriBean;
+}
+
+/**
+ * search and invoke the specified controller through the 
+ * specified request uri by passing the request input and output object
+ * it will finally return the executed result
+ *
+ * @param   $uri (a uri parsed object return by parse_uri or a standart http request uri)
+ * @param   $input
+ * @param   $output
+ * @return  Object uri bean with only attributes
+ * @see     #parse_uri
+*/
+function controller($uri, $input, $output, &$ctrl=NULL)
+{
+    /*
+     * check and parse the uri if it is a request uri string
+     * make this function directly runnable from a standart request uri
+    */
+    if ( is_string($uri) ) $uri = parse_uri($uri);
+
+    /*
+     * get and check the existence of the controller main file
+    */
+    $_ctrl_file = SR_CTRLPATH;
+    if ( $uri->package != NULL ) $_ctrl_file .= "{$uri->package}/";
+    $_ctrl_file .= "{$uri->module}/main.php";
+
+    if ( ! file_exists($_ctrl_file) ) {
+        throw new Exception("Unable to locate the controller with request uri {$uri->uri}");
+    }
+
+    require $_ctrl_file;
+    
+    /*
+     * search and check the existence of the controller class
+     * then create the controller instance
+     * and invoke its run method to process the current request
+    */
+    $_class = ucfirst($uri->module) . 'Controller';
+    if ( ! class_exists($_class) ) {
+        throw new Exception("Undefined class {$_class} with request uri {$uri->uri}");
+    }
+
+    $ctrl = new $_class();
+    $ret  = $ctrl->run($uri, $input, $output);
+
+    //let gc do its work
+    unset($_ctrl_file, $_class);
+
+    return $ret;
 }
 
 ?>

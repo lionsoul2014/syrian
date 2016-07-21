@@ -6,10 +6,12 @@
 */
 
  //------------------------------------------------------
+
+import('core.C_Controller', false);
  
 class ArticleController extends C_Controller
 {    
-    public function _before($input, $output)
+    public function __before($input, $output)
     {
         $this->model = model('article.Article');
     }

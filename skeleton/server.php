@@ -21,39 +21,17 @@ define('SR_NODE_NAME',      'node1');                       //define the node na
 define('SR_CHARSET',        'utf-8');   //default charset
 define('SR_POWERBY',        'Syrian/2.0');
 
-//require the framework entrance file
+/*
+ * require the framework kernel file
+ * set the SR_INC_COMPONENTS to controll the parts to load
+*/
 define('SR_INC_COMPONENTS', 0xFF);
 //require(BASEPATH . 'core/Syrian.merge.min.php');
 require(BASEPATH . 'core/Syrian.php');
 
-//system link style constants 1 for STD style, 0 for DIR style
-define('SR_LINK_STYLE',     URI_STD_STYLE);
-define('SR_URI_REWRITE',    true);
-
 //-----------------------------------------------------------------
 
-import('core.STDUri',   false);
 import('core.Function', false);
-
-
-/*
- * Intiailze the system and fetch the controller of the
- *  current request and then invoke its#run method to handler the request
-*/
-
-$uri  = new STDUri(SR_URI_REWRITE, SR_LINK_STYLE);
-$uri->parseUrl();
-$ctrl = $uri->getController('article');
-if ( $ctrl == NULL ) {
-    if ( SR_CLI_MODE ) {
-        throw new Exception("Unable to locate the Controller");
-    } else {
-        $uri->redirect('error/404');
-    }
-}
-
-//-----------------------------------------------------------------
-
 date_default_timezone_set('PRC');
 
 /*
@@ -62,16 +40,29 @@ date_default_timezone_set('PRC');
 */
 $input  = new Input(NULL);
 $output = new Output();
-E(array(
-    'uri'    => $uri,
-    'output' => $output
-));
+E('output', $output);
 
-//get the executed result and display it
+/*
+ * parse the current request uri that fetched througth $_SERVER['REQUEST_URI']
+ * then locate the controller througth the parsed result
+ * finally invoke the controller#run method to handler the request
+ *
+ * @see syrian.core.kerner.Function#parse_uri
+ * @see syrian.core.kerner.Function#controller
+*/
+
 try {
-    $ret = $ctrl->run($uri, $input, $output);
-    $output->display(is_array($ret) ? json_encode($ret) : $ret);
+    $uri = parse_uri($_SERVER['REQUEST_URI'], '/', array('article', 'index'));
+    $ret = controller($uri, $input, $output);
+    if ( ! is_null($ret) ) {
+        $output->display(is_array($ret) ? json_encode($ret) : $ret);
+    }
 } catch ( Exception $e ) {
-    //You may need to do the error log here
+    //@Note: You may need to do the error log here
+    if ( SR_CLI_MODE ) echo $e, "\n";
+    else {
+        echo("Sorry, We cannot process the current request with uri=\"{$_SERVER['REQUEST_URI']}\"\n");
+    }
 }
+
 ?>

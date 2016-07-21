@@ -10,31 +10,25 @@
  * @author  chenxin <chenxin619315@gmail.com>
 */
 
+import('core.Cli_Controller', false);
+
 //------------------------------------
 
 class PmController extends Cli_Controller
 {
-
     private $debug;
 
     public function __construct()
     {
         parent::__construct();
-    } 
+    }
 
-    /**
-     * controller entrace method you could use the default one
-     *      by just invoke parent::run() or write you own implementation
-     *
-     * @see Controller#run()
-    */
-    public function run()
+    public function __before($uri, $input, $output)
     {
-        parent::run();
+        parent::__before($uri, $input, $output);
 
-        $this->debug   = $this->input->getBoolean('debug', false);
-
-        $taskFile = $this->input->get('taskFile');
+        $this->debug = $input->getBoolean('debug', false);
+        $taskFile = $input->get('taskFile');
         if ( $taskFile == false ) {
             echo "Usage: sudo php server.php /cli/pm/@action?taskFile=xxxxx.json\n";
             exit();
@@ -52,8 +46,6 @@ class PmController extends Cli_Controller
             echo "Error: Invalid cmd file path {$taskFile}\n";
             exit();
         }
-
-
 
         //---------------------------------------------
         //@Note: load and parse the task file
@@ -83,119 +75,51 @@ class PmController extends Cli_Controller
         //record the root user id
         $this->rootUid   = posix_getuid();
         $this->taskFile  = $taskFile;
-        $this->monitor   = $this->input->getBoolean('monitor', true);
-        $this->logFile   = $this->input->get('logFile');
+        $this->monitor   = $input->getBoolean('monitor', true);
+        $this->logFile   = $input->get('logFile');
 
         # @Note: added at 2016/06/23
         # we define this cuz in the shell_exec process posix_getlogin
         # will not return the valid login user name
-        $this->loginUser = $this->input->get('loginUser', NULL, posix_getlogin());
+        $this->loginUser = $input->get('loginUser', NULL, posix_getlogin());
         $this->loginUid  = 0;
         if ( ($uinfo = posix_getpwnam($this->loginUser)) != false ) {
             $this->loginUid = $uinfo['uid'];
         }
 
-        if ( strncmp($this->uri->page, 'start', 5) == 0 )        $this->_do_request('start', $json);
-        else if ( strncmp($this->uri->page, 'stop', 4) == 0 )    $this->_do_request('stop', $json);
-        else if ( strncmp($this->uri->page, 'restart', 7) == 0 ) $this->_do_request('restart', $json);
-        else if ( strncmp($this->uri->page, 'monitor', 7) == 0 ) $this->_monitor($json);
+        $this->json = $json;
     }
 
-    /**
-     * process manager request handler
-     *
-     * @param   $action
-     * @param   $jsonObj
-    */
-    public function _do_request($action, $jsonObj)
+    public function _start($input, $output)
     {
-        //action define && execute
-        foreach ( $jsonObj->cmd as $cmdObj ) {
-            $cmd = str_replace('@action', $action, $cmdObj->cmd);
+        $this->_do_request('start');
+    }
 
-            //check and set the work user
-            $uid  = 0;
-            $user = isset($cmdObj->user) ? $cmdObj->user : 'root';
-            if ( $user == '@login' ) {
-                $user = $this->loginUser;
-                $uid  = $this->loginUid;
-            } else if ( ($uinfo = posix_getpwnam($user)) != FALSE ) {
-                $uid  = $uinfo['uid'];
-            }
+    public function _stop($input, $output)
+    {
+        $this->_do_request('stop');
+    }
 
-            $pipe = isset($cmdObj->pipe) ? $cmdObj->pipe : '/dev/null';
-            $cmd  = "{$cmd} > $pipe &";  //run in background
-
-            echo "+Set effective user to {$user}#{$uid} ... ";
-            $set  = posix_seteuid($uid);
-            if ( $set == false ) {
-                echo " --[Failed]\n";
-                echo "+Set effective user to {$this->loginUser}#{$this->loginUid} instead ... ";
-                echo (posix_seteuid($this->loginUid) ? " --[OK]\n" : " --[Failed]\n");
-            } else {
-                echo " --[Ok]\n";
-            }
-
-            echo "+Run command \"{$cmd}\"\n";
-            shell_exec($cmd);
-        }
-
-        //@Note: we got to switch the user back to root
-        echo "+-Set effective user back to root#{$this->rootUid} ... ";
-        echo (posix_seteuid($this->rootUid)) ? " --[Ok]\n" : " --[Failed]\n";
-
-        /*
-         * @Note: added at 2016/06/24
-         * stop the old monitor with the same instance first
-         * and no matter there is an old one running or not.
-         * and we got to wait the old terminated first.
-        */
-        echo "+-Stopping the monitor ... \n";
-        $instand = md5(realpath($this->taskFile));
-        $instand = substr($instand, 0, 4).substr($instand, 28);
-        $cmd = "php server.php /cli/pm/monitor?instance={$instand}:action=stop:taskFile={$this->taskFile}";
-        echo "+-Run command \"{$cmd}\"\n";
-        shell_exec($cmd);
-        echo "-[Done]\n";
-
-        if ( $action == 'stop' || $this->monitor == false ) {
-            return true;
-        }
-
-        //check and start the running script monitor
-        echo "+-Starting the monitor ... \n";
-        $logFile = ($this->logFile==FALSE) ? '/dev/null' : $this->logFile;
-        $cmd = "php server.php /cli/pm/monitor?instance={$instand}:action=start:loginUser={$this->loginUser}:taskFile={$this->taskFile} > {$logFile} &";
-        echo "+-Run command \"{$cmd}\"\n";
-        shell_exec($cmd);
-        echo "-[Done]\n";
-
-        return true;
+    public function _restart($input, $output)
+    {
+        $this->_do_request('restart');
     }
 
     /**
      * script monitor, check the running status of all the
      *  started script at specified interval and if the script is down start it
-     *
-     * @param   $jsonObj
     */
-    public function _monitor($jsonObj)
+    public function _monitor($input, $output)
     {
-        if ( ($sIdx = strpos($this->uri->self, '/', 2)) !== false ) {
-            $pre = substr($this->uri->self, 0, $sIdx+1);
-        } else {
-            $pre = '/cli/';
-        }
-
-        $interval = $this->input->getInt('interval', 10);    //in seconds
+        $interval = $input->getInt('interval', 10);    //in seconds
         $trackArr = array();
-        foreach ( $jsonObj->cmd as $cmdObj ) {
+        foreach ( $this->json->cmd as $cmdObj ) {
             if ( isset($cmdObj->track) 
                 && $cmdObj->track == false ) {
                 continue;
             }
 
-            if ( strpos($cmdObj->cmd, $pre) === false ) {
+            if ( strpos($cmdObj->cmd, '/cli/') === false ) {
                 echo "[Warning]: Nonstandard Cli_Controller script \"{$cmdObj->cmd}\"\n";
                 continue;
             }
@@ -227,8 +151,6 @@ class PmController extends Cli_Controller
             $trackArr[]     = $cmdObj;
             unset($user, $uid, $cmd, $pipe, $pFile);
         }
-
-        unset($pre, $jsonObj);
 
         if ( empty($trackArr) ) {
             echo "+-Empty track list\n";
@@ -316,10 +238,80 @@ class PmController extends Cli_Controller
     }
 
     /**
+     * process manager request handler
+     *
+     * @param   $action
+    */
+    private function _do_request($action)
+    {
+        //action define && execute
+        foreach ( $this->json->cmd as $cmdObj ) {
+            $cmd = str_replace('@action', $action, $cmdObj->cmd);
+
+            //check and set the work user
+            $uid  = 0;
+            $user = isset($cmdObj->user) ? $cmdObj->user : 'root';
+            if ( $user == '@login' ) {
+                $user = $this->loginUser;
+                $uid  = $this->loginUid;
+            } else if ( ($uinfo = posix_getpwnam($user)) != FALSE ) {
+                $uid  = $uinfo['uid'];
+            }
+
+            $pipe = isset($cmdObj->pipe) ? $cmdObj->pipe : '/dev/null';
+            $cmd  = "{$cmd} > $pipe &";  //run in background
+
+            echo "+Set effective user to {$user}#{$uid} ... ";
+            $set  = posix_seteuid($uid);
+            if ( $set == false ) {
+                echo " --[Failed]\n";
+                echo "+Set effective user to {$this->loginUser}#{$this->loginUid} instead ... ";
+                echo (posix_seteuid($this->loginUid) ? " --[OK]\n" : " --[Failed]\n");
+            } else {
+                echo " --[Ok]\n";
+            }
+
+            echo "+Run command \"{$cmd}\"\n";
+            shell_exec($cmd);
+        }
+
+        //@Note: we got to switch the user back to root
+        echo "+-Set effective user back to root#{$this->rootUid} ... ";
+        echo (posix_seteuid($this->rootUid)) ? " --[Ok]\n" : " --[Failed]\n";
+
+        /*
+         * @Note: added at 2016/06/24
+         * stop the old monitor with the same instance first
+         * and no matter there is an old one running or not.
+         * and we got to wait the old terminated first.
+        */
+        echo "+-Stopping the monitor ... \n";
+        $instand = md5(realpath($this->taskFile));
+        $instand = substr($instand, 0, 4).substr($instand, 28);
+        $cmd = "php server.php /cli/pm/monitor?instance={$instand}:action=stop:taskFile={$this->taskFile}";
+        echo "+-Run command \"{$cmd}\"\n";
+        shell_exec($cmd);
+        echo "-[Done]\n";
+
+        if ( $action == 'stop' || $this->monitor == false ) {
+            return true;
+        }
+
+        //check and start the running script monitor
+        echo "+-Starting the monitor ... \n";
+        $logFile = ($this->logFile==FALSE) ? '/dev/null' : $this->logFile;
+        $cmd = "php server.php /cli/pm/monitor?instance={$instand}:action=start:loginUser={$this->loginUser}:taskFile={$this->taskFile} > {$logFile} &";
+        echo "+-Run command \"{$cmd}\"\n";
+        shell_exec($cmd);
+        echo "-[Done]\n";
+
+        return true;
+    }
+
+    /**
      * parse and return the basic info
      *
      * @param   $cmd
-     * @param   $pre
      * @return  Array {
      *  path => 
      *  instance => 

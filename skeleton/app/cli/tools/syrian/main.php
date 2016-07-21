@@ -5,31 +5,20 @@
  * @author  chenxin <chenxin619315@gmail.com>
 */
 
+import('core.Cli_Controller', false);
+
 //------------------------------------
 
 class SyrianController extends Cli_Controller
 {
-
-    private $debug  = false;
-
     public function __construct()
     {
         parent::__construct();
     } 
 
-    /**
-     * controller entrace method you could use the default one
-     *      by just invoke parent::run() or write you own implementation
-     *
-     * @see Controller#run()
-    */
-    public function run()
+    public function __before($uri, $input, $output)
     {
-        parent::run();
-
-        $this->debug = $this->input->getBoolean('debug', false);
-
-        if ( strncmp($this->uri->page, 'minify', 6) == 0 )  $this->_minify();
+        parent::__before($uri, $input, $output);
     }
 
     /**

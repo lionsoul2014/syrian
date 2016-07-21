@@ -45,13 +45,15 @@ class Output
     {
         $this->_zlib_oc = @ini_get('zlib.output_compression');
 
-        //check and auto append the charset header
-        //@Note: added at 2016-03-20
-        if ( defined('SR_CHARSET') ) {
-            $this->_header['Content-Type'] = 'text/html; charset=' . SR_CHARSET;
+        if ( SR_CLI_MODE != true ) {
+            //check and auto append the charset header
+            //@Note: added at 2016/03/20
+            if ( defined('SR_CHARSET') ) {
+                $this->setHeader('Content-Type', 'text/html; charset= ' . SR_CHARSET);
+            }
+
+            $this->setHeader('X-Powered-By', defined(SR_POWERBY) ? SR_POWERBY : 'Syrian/2.0');
         }
-        
-        $this->setHeader('X-Powered-By', defined(SR_POWERBY) ? SR_POWERBY : 'Syrian/2.0');
     }
     
     /**
@@ -193,14 +195,12 @@ class Output
         //define the output string
         if ( $_output == '' ) $_output = &$this->_final_output;
 
-        //Try to send the server heaer
+        //Try to send the server header
         if ( count($this->_header) > 0 ) {
             foreach ( $this->_header as $hKey => $hVal ) {
                 header("{$hKey}: {$hVal}");
             }
         }
-
-        header("X-Powered-By: Syrian/2.0");
         
         //Try to send the server response content
         // if $this->_gzip_oc is enabled then compress the output

@@ -5,6 +5,8 @@
  * @author  chenxin <chenxin619315@gmail.com>
 */
 
+import('core.Cli_Controller', false);
+
 //------------------------------------
 
 defined('SR_SERVICE_WORKER') or define('SR_SERVICE_WORKER', true);
@@ -29,31 +31,23 @@ class GearmanController extends Cli_Controller
         parent::__construct();
     } 
 
-    /**
-     * controller entrace method you could use the default one
-     *      by just invoke parent::run() or write you own implementation
-     *
-     * @see Controller#run()
-    */
-    public function run()
+    public function __before($uri, $input, $output)
     {
-        parent::run();
+        parent::__before($uri, $input, $output);
 
-        $this->debug  = $this->input->getBoolean('debug', false);
-        $this->maxmem = $this->input->getInt('maxmem', 0);
+        $this->debug  = $input->getBoolean('debug', false);
+        $this->maxmem = $input->getInt('maxmem', 0);
 
         Loader::import('LocalExecutor', 'service');
         $this->localExecutor = new LocalExecutor(NULL);
-
-        if ( strncmp($this->uri->page, 'worker', 7) == 0 )  $this->_worker();
     }
 
     /**
      * gearman service executor worker
     */
-    private function _worker()
+    protected function _worker($input, $output)
     {
-        $sharding = $this->input->get('sharding');
+        $sharding = $input->get('sharding');
         if ( $sharding == false ) {
             exit("Error: Missing sharding arguments\n");
         }

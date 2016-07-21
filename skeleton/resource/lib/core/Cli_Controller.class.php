@@ -67,20 +67,13 @@ class Cli_Controller extends Controller
     */
     protected $process_state = 0;
 
-
     public function __construct()
     {
         parent::__construct();
     }
-    
-    /**
-     * Rewrite the run method
-     * to add some basic initialize
-    */
-    public function run()
-    {
-        parent::run();
 
+    public function __before($uri, $input, $output)
+    {
         //cli limitation
         if ( SR_CLI_MODE == false ) {
             exit("Error: Access only for cli sapi.\n");
@@ -94,13 +87,13 @@ class Cli_Controller extends Controller
             exit("Error: Pcntl extension need to run the script.\n");
         }
 
-        $this->instance = $this->input->get('instance', NULL, 'default');
-        $this->action   = $this->input->get('action', NULL, 'start');
+        $this->instance = $input->get('instance', NULL, 'default');
+        $this->action   = $input->get('action', NULL, 'start');
         if ( ! isset(self::$action_mapping[$this->action]) ) {
             exit("Error: Unknow action {$this->action}\n");
         }
 
-        $ruri = $this->uri->self;
+        $ruri = $uri->path;
         $sIdx = strpos($ruri, '/', 2);
         if ( $sIdx === false ) {
             exit("Error: Internal error.\n");
@@ -131,7 +124,7 @@ class Cli_Controller extends Controller
 
             $signo = $this->action == 'pause' ? SIGSTOP : SIGCONT;
             echo "+-Try to send {$this->action} signal to process with pid={$procInfo->pid} ... ";
-            if (posix_kill($procInfo->pid, $signo) == false) {
+            if ( posix_kill($procInfo->pid, $signo) == false ) {
                 echo " --[Failed]\n";
             } else {
                 echo " --[Ok]\n";
@@ -207,9 +200,8 @@ EOF;
 
         
         //do whatever you want now ...
-
     }
-
+    
     /**
      * default signal handler functions
      *

@@ -5,6 +5,8 @@
  * @author  chenxin <chenxin619315@gmail.com>
 */
 
+import('core.Cli_Controller', false);
+
  //------------------------------------------------
 
 class TestController extends Cli_Controller
@@ -13,21 +15,13 @@ class TestController extends Cli_Controller
     {
         parent::__construct();
     }
-    
-    /**
-     * controller entrace method you could use the default one
-     *      by just invoke parent::run() or write you own implementation
-     *
-     * @see Controller#run()
-    */
-    public function run()
+
+    public function __before($uri, $input, $output)
     {
-        parent::run();
-
-        if ( strncmp($this->uri->page, 'base', 4) == 0 )   $this->_base();
+        parent::__before($uri, $input, $output);
     }
-
-    public function _base()
+    
+    public function _base($input, $output)
     {
         //echo "Yat, the cpu has got me\n";
         $counter = 1;

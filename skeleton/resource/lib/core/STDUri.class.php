@@ -65,16 +65,6 @@ class STDUri extends Uri
             return NULL;
         }
 
-        switch ( $this->_parts[0] ) {
-        case 'cli':
-            import('core.Cli_Controller', false);
-            break;
-        #add more case here
-        default:
-            import('core.C_Controller', false);
-            break;
-        }
-
         require $_ctrl_file;
         
         //get the controller class
@@ -83,15 +73,11 @@ class STDUri extends Uri
             return NULL;
         }
         
-        $_CTRL          = new $_class();
-        //$_CTRL->uri     = $this;
-        //$_CTRL->input   = new Input();
-        //$_CTRL->output  = new Output();
+        $_CTRL = new $_class();
         
         //clear the temp variable
-        $_ctrl_file     = NULL;
-        $_class         = NULL;
-        
+        unset($_ctrl_file, $_class);
+
         return $_CTRL;
     }
 

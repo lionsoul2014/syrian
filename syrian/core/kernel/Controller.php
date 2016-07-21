@@ -38,7 +38,7 @@ class Controller
      * @param   $input
      * @param   $output
     */
-    protected function init($uri, $input, $output)
+    protected function __init($uri, $input, $output)
     {
         //@Added at 2015-05-29
         //define the flush mode global sign
@@ -63,14 +63,14 @@ class Controller
      * default to invoke the uri->page.logic.php to handler
      *  the request, you may need to rewrite this method to self define
      *
-     * @param   $uri could be a string or URI parser object
+     * @param   $uri (standart parse_uri result)
      * @param   $input
      * @param   $output
      * @access  public
     */
     public function run($uri, $input, $output)
     {
-        $this->init($uri, $input, $output);
+        $this->__init($uri, $input, $output);
 
         $ret = NULL;
 
@@ -78,29 +78,26 @@ class Controller
          * check and invoke the before method
          * basically you could do some initialize work here
         */
-        if ( method_exists($this, '_before') ) {
-            $this->_before($input, $output);
+        if ( method_exists($this, '__before') ) {
+            $this->__before($uri, $input, $output);
         }
 
         /*
          * check and invoke the main function to handler the current request
         */
-        $method = is_object($uri) ? $uri->page : $uri;
-        if ( strlen($method) < 1 ) $method = 'index';
-        $method = "{$this->method_prefix}{$method}";
+        $method = "{$this->method_prefix}{$uri->page}";
         if ( method_exists($this, $method) ) {
             $ret = $this->{$method}($input, $output);
         } else {
-            //throw new Exception("Undefined handler \"{$method}\" for " . __class__);
-            abort(404);
+            throw new Exception("Undefined handler \"{$method}\" for " . __class__);
         }
 
         /*
          * check and invoke the after method here
          * basically you could do some destroy work here
         */
-        if ( method_exists($this, '_after') ) {
-            $this->_after($input, $output);
+        if ( method_exists($this, '__after') ) {
+            $this->__after($uri, $input, $output);
         }
 
         return $ret;
