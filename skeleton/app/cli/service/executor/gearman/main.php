@@ -31,9 +31,9 @@ class GearmanController extends Cli_Controller
         parent::__construct();
     } 
 
-    public function __before($uri, $input, $output)
+    public function __before($input, $output)
     {
-        parent::__before($uri, $input, $output);
+        parent::__before($input, $output);
 
         $this->debug  = $input->getBoolean('debug', false);
         $this->maxmem = $input->getInt('maxmem', 0);

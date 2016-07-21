@@ -72,7 +72,7 @@ class Cli_Controller extends Controller
         parent::__construct();
     }
 
-    public function __before($uri, $input, $output)
+    public function __before($input, $output)
     {
         //cli limitation
         if ( SR_CLI_MODE == false ) {
@@ -93,11 +93,11 @@ class Cli_Controller extends Controller
             exit("Error: Unknow action {$this->action}\n");
         }
 
-        $ruri = $uri->path;
-        $sIdx = strpos($ruri, '/', 2);
-        if ( $sIdx === false ) {
-            exit("Error: Internal error.\n");
-        }
+        //$ruri = $uri->path;
+        //$sIdx = strpos($ruri, '/', 2);
+        //if ( $sIdx === false ) {
+        //    exit("Error: Internal error.\n");
+        //}
 
         //define the pid file
         $this->pidPath = substr($ruri, $sIdx+1)."/{$this->instance}.pid";

@@ -79,7 +79,7 @@ class Controller
          * basically you could do some initialize work here
         */
         if ( method_exists($this, '__before') ) {
-            $this->__before($uri, $input, $output);
+            $this->__before($input, $output);
         }
 
         /*
@@ -97,7 +97,7 @@ class Controller
          * basically you could do some destroy work here
         */
         if ( method_exists($this, '__after') ) {
-            $this->__after($uri, $input, $output);
+            $this->__after($input, $output);
         }
 
         return $ret;
