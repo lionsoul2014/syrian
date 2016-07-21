@@ -46,7 +46,7 @@ function json_view($errno, $data, $ext=NULL)
 
 /**
  * quick way to response the data througth json view
- * and it just return the encoded data string part not the whole encoded string
+ * and it return the whole encoded data string 
  * @Note: and the data could be a json encoded string
  *
  * @param   $errno
@@ -74,7 +74,18 @@ function json_define_view($errno, $data, $ext=NULL)
     }
 EOF;
 
-    return $data;
+    return $CC;
+}
+
+/**
+ * redirect to the specified request
+ *
+ * @param   $uri
+ * @param   $args
+*/
+function redirect($uri, $args)
+{
+    E('uri')->redirect($uri, $args);
 }
 
 ?>

@@ -14,7 +14,7 @@ class ArticleController extends C_Controller
         $this->model = model('article.Article');
     }
     
-    public function index($input, $output)
+    public function _index($input, $output)
     {
         $pageno = $input->getInt('pageno', 1);
 
@@ -27,12 +27,21 @@ class ArticleController extends C_Controller
         );
     }
     
-    public function about($input, $output)
+    public function _about($input, $output)
     {
         return view('article/about.html', null, true);
     }
 
-    public function json($input, $output)
+    public function _json($input, $output)
+    {
+        return array(
+            'head_img'  => 'http://git.oschina.net/uploads/87/5187_lionsoul.jpg',
+            'nickname'  => 'lionsoul',
+            'signature' => '平凡 | 执着'
+        );
+    }
+
+    public function _profile()
     {
         $data = array(
             'head_img'  => 'http://git.oschina.net/uploads/87/5187_lionsoul.jpg',
@@ -40,7 +49,8 @@ class ArticleController extends C_Controller
             'signature' => '平凡 | 执着'
         );
 
-        return json_view(STATUS_OK, $data);
+        //return json_view(STATUS_OK, $data);
+        return json_define_view(STATUS_OK, json_encode($data));
     }
     
 }

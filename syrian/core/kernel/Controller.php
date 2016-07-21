@@ -12,6 +12,11 @@
 class Controller
 {
     /**
+     * method prefix and it default to '_'
+    */
+    protected $method_prefix = '_';
+
+    /**
      * Construct method to create and initialize the controller
     */
     public function __construct()
@@ -23,18 +28,17 @@ class Controller
 
         $this->conf = config('app');
     }
-    
+
     /**
-     * the entrance of the current controller
-     * default to invoke the uri->page.logic.php to handler
-     *  the request, you may need to rewrite this method to self define
+     * basic initialize method, if the class extends this
+     *  need to rewrite the run method(self-define the router) invoke this to
+     * do the initialize work
      *
-     * @param   $uri could be a string or URI parser object
+     * @param   $uri
      * @param   $input
      * @param   $output
-     * @access  public
     */
-    public function run($uri, $input, $output)
+    protected function init($uri, $input, $output)
     {
         //@Added at 2015-05-29
         //define the flush mode global sign
@@ -52,6 +56,21 @@ class Controller
         if ( $ignoreMode == 1 ) {
             _G(SR_IGNORE_MODE, true);
         }
+    }
+    
+    /**
+     * the entrance of the current controller
+     * default to invoke the uri->page.logic.php to handler
+     *  the request, you may need to rewrite this method to self define
+     *
+     * @param   $uri could be a string or URI parser object
+     * @param   $input
+     * @param   $output
+     * @access  public
+    */
+    public function run($uri, $input, $output)
+    {
+        $this->init($uri, $input, $output);
 
         $ret = NULL;
 
@@ -64,10 +83,11 @@ class Controller
         }
 
         /*
-         * invoke the main function to handler the current request
+         * check and invoke the main function to handler the current request
         */
         $method = is_object($uri) ? $uri->page : $uri;
         if ( strlen($method) < 1 ) $method = 'index';
+        $method = "{$this->method_prefix}{$method}";
         if ( method_exists($this, $method) ) {
             $ret = $this->{$method}($input, $output);
         } else {
