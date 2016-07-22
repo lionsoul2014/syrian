@@ -46,7 +46,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) require(BASEPATH . 'core/kernel/Input.php
 if ( (SR_INC_COMPONENTS & 0x20) != 0 ) require(BASEPATH . 'core/kernel/Output.php');
 
 //Load the parent Model class
-require(BASEPATH . 'core/kernel/Model.php');
+//require(BASEPATH . 'core/kernel/Model.php');
 
 //Load the parent Controller class
 if ( (SR_INC_COMPONENTS & 0x80) != 0 ) require(BASEPATH . 'core/kernel/Controller.php');

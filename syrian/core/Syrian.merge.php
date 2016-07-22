@@ -645,6 +645,7 @@ class Helper
 
 //Load the input class manage the input of the controller/
 if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
+    //--------------------------------------------------------------
     //normal data type
     defined('OP_NULL')      or define('OP_NULL',        1 <<  0);
     defined('OP_LATIN')     or define('OP_LATIN',       1 <<  1);
@@ -696,7 +697,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
         {
             //check the load status of Filter class
             if ( self::$_loaded == false ) {
-                Loader::import('Filter');
+                import('Filter');
                 self::$_loaded = true;
             }
         }
@@ -1284,7 +1285,6 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
 
             return true;
         }
-
     }
 }
 
@@ -1497,15 +1497,6 @@ if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
     }
 }
 
-//Load the parent Model class
-class Model
-{
-    public function __construct()
-    {
-        
-    }
-}
-
 //Load the parent Controller class
 if ( (SR_INC_COMPONENTS & 0x80) != 0 ) {
     class Controller
@@ -1601,6 +1592,7 @@ if ( (SR_INC_COMPONENTS & 0x80) != 0 ) {
 
             return $ret;
         }
+
     }
 }
 
