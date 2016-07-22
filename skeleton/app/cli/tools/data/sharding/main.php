@@ -36,8 +36,8 @@ class ShardingController extends Cli_Controller
             exit("missing originalModel or shardingModel\n");
         }
 
-        $originalModel = self::loadModelFromPath($originalModelPath);
-        $shardingModel = self::loadModelFromPath($shardingModelPath);
+        $originalModel = model($originalModelPath);
+        $shardingModel = model($shardingModelPath);
 
         if ( $this->debug ) $originalModel->setDebug(true);
         if ( $this->debug ) $shardingModel->setDebug(true);
@@ -131,28 +131,6 @@ class ShardingController extends Cli_Controller
         }
 
         echo "+--Done, script overed!\n";
-    }
-
-    /**
-     * load model from a package path
-     *
-     * @param   $model_path
-     * @return  Mixed(IModel, Flase)
-    */
-    private static function loadModelFromPath($model_path)
-    {
-        $name    = NULL;
-        $package = NULL;
-
-        $point = strrpos($model_path, '.');
-        if ( $point > 0 ) {
-            $name    = substr($model_path, $point + 1);
-            $package = substr($model_path, 0, $point);
-        } else {
-            $name = $model_path;
-        }
-
-        return Loader::model($name, $package, true);
     }
 
 }

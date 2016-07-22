@@ -94,7 +94,7 @@ class GearmanExecutor
          * we should execute the service locally.
         */
         if ( $this->local_ensure == true ) {
-            Loader::import('LocalExecutor', 'service');
+            import('service.LocalExecutor');
             $executor = new LocalExecutor(NULL);
             return $executor->execute($serv_path, $args, $asyn, $priority);
         }

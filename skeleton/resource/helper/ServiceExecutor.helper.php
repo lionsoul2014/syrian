@@ -25,13 +25,13 @@ class ServiceExecutorHelper extends Helper
     */
     protected function createLocalExecutor($sharding=NULL)
     {
-        //$conf = Loader::config('executor', NULL, false, 'dist_main');
+        //$conf = config('executor#dist_main');
         //if ( $conf == NULL ) return NULL;
 
-        //Loader::import('GearmanExecutor', 'service');
+        //import('service.GearmanExecutor');
         //return new GearmanExecutor($conf);
 
-        Loader::import('LocalExecutor', 'service');
+        import('service.LocalExecutor');
         return new LocalExecutor(NULL);
     }
 

@@ -19,7 +19,7 @@ class SyrianController extends Cli_Controller
     */
     public function _minify($input)
     {
-        Loader::import('PHPSource', 'util');
+        import('util.PHPSource');
         $srcFile = BASEPATH . 'core/Syrian.merge.php';
         $dstFile = BASEPATH . 'core/Syrian.merge.min.php';
         $ret = PHPSource::minify($srcFile, $dstFile);

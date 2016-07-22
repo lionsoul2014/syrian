@@ -6,8 +6,8 @@
  * that will be show up at many logic, so
  * it could help reduce the uneccessary logic code.
  * 
- * Loader::import(xxxx)
- * $conf = Loader::config(xxxx):
+ * import(xxxx)
+ * $conf = config(xxxx):
  * $obj = new XXXX($conf);
  * //serials of initialize working
  * //return ready to fly(well initialized) object

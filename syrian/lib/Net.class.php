@@ -72,7 +72,7 @@ class Net
 
             //make a thumb image for the downloaded images
             if ( $toThumb && $ret != false && $thumb != NULL ) {
-                Loader::import('Thumb', 'image');
+                import('images.Thumb');
                 Thumb::_getInstance()->write(array($thumb['width'], 
                     $thumb['height']), $toFile, $toFile, $thumb['style']);
             }

@@ -774,11 +774,11 @@ class RouterShardingModel implements IModel
         }
 
         $sIdx  = self::__hash($data[$this->router]) % count($this->shardings);
-        $mconf = $this->shardings[$sIdx];
-        $mObj  = Loader::model($mconf[0], $mconf[1]);
+        $mpath = $this->shardings[$sIdx];
+        $mObj  = model($mpath);
         $this->resetModelAttr($mObj);
         $this->lastAcitveModel = $mObj;
-        $this->activeModels["{$mconf[1]}.{$mconf[0]}"] = $mObj;
+        $this->activeModels[$mpath] = $mObj;
 
         return $mObj;
     }
@@ -877,11 +877,11 @@ class RouterShardingModel implements IModel
         $models = array();
         switch ($optimize_code) {
         case 1:
-            $conf = $this->shardings[$shardIdx];
-            $mObj = Loader::model($conf[0], $conf[1]);
+            $mpath = $this->shardings[$shardIdx];
+            $mObj  = model($mpath);
             $this->resetModelAttr($mObj);
             $this->lastAcitveModel = $mObj;
-            $this->activeModels["{$conf[1]}.{$conf[0]}"] = $mObj;
+            $this->activeModels[$mpath] = $mObj;
             $models[] = array(
                 'model' => $mObj,
                 'where' => $where
@@ -891,11 +891,11 @@ class RouterShardingModel implements IModel
             foreach ( $shardings as $shard ) {
                 $items = $shard['items'];
                 $sIdx  = $shard['sIdx'];
-                $conf  = $this->shardings[$sIdx];
-                $mObj  = Loader::model($conf[0], $conf[1]);
+                $mpath = $this->shardings[$sIdx];
+                $mObj  = model($mpath);
                 $this->resetModelAttr($mObj);
                 $this->lastAcitveModel = $mObj;
-                $this->activeModels["{$conf[1]}.{$conf[0]}"] = $mObj;
+                $this->activeModels[$mpath] = $mObj;
 
                 /*
                  * @Note: here we got to rewrite the query condition
@@ -926,11 +926,11 @@ class RouterShardingModel implements IModel
     private function __getAllShardingModels($where)
     {
         $models = array();
-        foreach ( $this->shardings as $mconf ) {
-            $mObj = Loader::model($mconf[0], $mconf[1]);
+        foreach ( $this->shardings as $mpath ) {
+            $mObj = model($mpath);
             $this->resetModelAttr($mObj);
             $this->lastAcitveModel = $mObj;
-            $this->activeModels["{$mconf[1]}.{$mconf[0]}"] = $mObj;
+            $this->activeModels[$mpath] = $mObj;
             $models[] = array(
                 'model' => $mObj,
                 'where' => $where
@@ -1000,8 +1000,7 @@ class RouterShardingModel implements IModel
             $seed = $val[$this->router];
             $sIdx = self::__hash($seed) % count($this->shardings);
             if ( ! isset($gDataSet[$sIdx]) ) {
-                $mconf = $this->shardings[$sIdx];
-                $mObj  = Loader::model($mconf[0], $mconf[1]);
+                $mObj = model($this->shardings[$sIdx]);
                 $this->resetModelAttr($mObj);
                 $modelSet[$sIdx] = $mObj;
                 $gDataSet[$sIdx] = array();
@@ -1039,8 +1038,7 @@ class RouterShardingModel implements IModel
         }
 
         $sIdx  = $routerVal % count($this->shardings);
-        $mconf = $this->shardings[$sIdx];
-        $mObj  = Loader::model($mconf[0], $mconf[1]);
+        $mObj  = model($this->shardings[$sIdx]);
         $this->resetModelAttr($mObj);
 
         //check and reset the last active model

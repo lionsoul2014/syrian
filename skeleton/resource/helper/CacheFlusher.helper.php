@@ -34,7 +34,7 @@ class CacheFlusherHelper extends CacheHelper
     private static function E($dist)
     {
         if ( self::$SE == NULL ) {
-            self::$SE = Loader::helper('ServiceExecutor');
+            self::$SE = helper('ServiceExecutor');
         }
 
         if ( $dist ) {
@@ -74,7 +74,7 @@ class CacheFlusherHelper extends CacheHelper
             "stream/view?site=pc&stream_id={$stream_id}&_ack={$ack_code}"
         );
 
-        $bizMapping = Loader::config('contentThirdParty');
+        $bizMapping = config('contentThirdParty');
         foreach ( $bizMapping as $biz_name => $biz ) {
             if ( $biz['is_reflux'] == false ) {
                 continue;

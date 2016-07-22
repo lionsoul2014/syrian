@@ -34,7 +34,7 @@ class GearmanController extends Cli_Controller
         $this->debug  = $input->getBoolean('debug', false);
         $this->maxmem = $input->getInt('maxmem', 0);
 
-        Loader::import('LocalExecutor', 'service');
+        import('service.LocalExecutor');
         $this->localExecutor = new LocalExecutor(NULL);
     }
 
@@ -48,7 +48,7 @@ class GearmanController extends Cli_Controller
             exit("Error: Missing sharding arguments\n");
         }
 
-        $conf = Loader::config('executor', NULL, false, $sharding);
+        $conf = config("executor#{$sharding}");
         if ( $conf == false ) {
             exit("Error: Invalid sharding arguments {$sharding} \n");
         }

@@ -10,7 +10,7 @@
  //--------------------------------------------------------------
  
 //Syrian Version Number
-define('SR_VERSION', '1.2.4');
+define('SR_VERSION', '2.0');
 
 //sapi mode define
 defined('SR_CLI_MODE')      or define('SR_CLI_MODE', strncmp(php_sapi_name(), 'cli', 3)=='cli');
@@ -33,14 +33,14 @@ defined('SR_INC_COMPONENTS') or define('SR_INC_COMPONENTS', 0xFF);
 
 //Load the common resource loader
 require(BASEPATH . 'core/kernel/Function.php');
-require(BASEPATH . 'core/kernel/Loader.php');
+//require(BASEPATH . 'core/kernel/Loader.php');
 require(BASEPATH . 'core/kernel/Helper.php');
 
 //Load the input class manage the input of the controller/
 if ( (SR_INC_COMPONENTS & 0x08) != 0 ) require(BASEPATH . 'core/kernel/Input.php');
 
 //Load the Uri class offer qucik interface to access the request uri
-if ( (SR_INC_COMPONENTS & 0x10) != 0 ) require(BASEPATH . 'core/kernel/Uri.php');
+//if ( (SR_INC_COMPONENTS & 0x10) != 0 ) require(BASEPATH . 'core/kernel/Uri.php');
 
 //Load the Output class
 if ( (SR_INC_COMPONENTS & 0x20) != 0 ) require(BASEPATH . 'core/kernel/Output.php');

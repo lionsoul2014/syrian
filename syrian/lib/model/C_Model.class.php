@@ -360,8 +360,7 @@ class C_Model implements IModel
                 }
 
                 if ( ! empty($item) ) {
-                    $mconf = $fragment['model'];
-                    $mObj  = $this->__copy(Loader::model($mconf[0], $mconf[1]));
+                    $mObj  = $this->__copy(model($fragment['model']));
                     $sQueries[] = array(
                         'fields' => &$item,
                         'model'  => $mObj
@@ -532,8 +531,7 @@ class C_Model implements IModel
                 }
 
                 if ( ! empty($item) ) {
-                    $mconf = $fragment['model'];
-                    $mObj  = $this->__copy(Loader::model($mconf[0], $mconf[1]));
+                    $mObj = $this->__copy(model($fragment['model']));
                     $sQueries[] = array(
                         'fields' => &$item,
                         'model'  => $mObj
@@ -675,8 +673,7 @@ class C_Model implements IModel
             }
 
             if ( ! empty($item) ) {
-                $mconf = $fragment['model'];
-                $mObj  = $this->__copy(Loader::model($mconf[0], $mconf[1]));
+                $mObj = $this->__copy(model($fragment['model']));
                 $sData[] = array(
                     'data'  => &$item,
                     'model' => $mObj
@@ -787,8 +784,7 @@ class C_Model implements IModel
                 }
 
                 if ( ! empty($item) ) {
-                    $mconf = $fragment['model'];
-                    $mObj  = $this->__copy(Loader::model($mconf[0], $mconf[1]));
+                    $mObj  = $this->__copy(model($fragment['model']));
                     $sData[] = array(
                         'data'  => &$item,
                         'model' => $mObj
@@ -1085,8 +1081,7 @@ class C_Model implements IModel
 
         $primary = NULL;
         foreach ( $this->fragments as $fragment ) {
-            $mconf  = $fragment['model'];
-            $sModel = $this->__copy(Loader::model($mconf[0], $mconf[1]));
+            $sModel = $this->__copy(model($fragment['model']));
             $swhere = array($sModel->getPrimaryKey() => "{$idstr}");
             if ( $sModel->delete($swhere, false) == false ) {
                 $activeModel = ($sModel instanceof C_Model) ? $sModel : $sModel->getLastActiveModel();
@@ -1313,11 +1308,8 @@ class C_Model implements IModel
             return false;
         }
 
-        $modelName = $this->binLogModel[0];
-        $package   = isset($this->binLogModel[1]) ? $this->binLogModel[1] : NULL;
-
         //load the bin log model
-        $logModel = Loader::model($modelName, $package);
+        $logModel = model($this->binLogModel);
         $binLog = array(
             'data'      => $opt_data,
             'where'     => $opt_where,

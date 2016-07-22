@@ -33,7 +33,7 @@ class CacheHelper extends Helper
         }
 
         $conf = config("cache#{$key}", false);
-        Loader::import('CacheFactory', 'cache');
+        import('cache.CacheFactory');
 
         //@Added at 2015-07-29 with service logic cache support
         //    compatible with the old cache setting style

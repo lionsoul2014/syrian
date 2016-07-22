@@ -62,7 +62,7 @@ class Input
     {
         //check the load status of Filter class
         if ( self::$_loaded == false ) {
-            Loader::import('Filter');
+            import('Filter');
             self::$_loaded = true;
         }
     }

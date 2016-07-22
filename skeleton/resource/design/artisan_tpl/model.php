@@ -13,7 +13,7 @@ COMMENT;
 if ( $artisan['model'] == 'sharding' ) {
 $tplStr = <<<TPL
 
-Loader::import('RouterShardingModel', NULL, false);
+import('model.RouterShardingModel');
 
 class {$artisan['name']}Model extends RouterShardingModel
 {
@@ -40,7 +40,7 @@ TPL;
 } else if ( $artisan['model'] == 'elasticSearch' ) {
 $tplStr = <<<TPL
 
-Loader::import('ElasticSearchModel', NULL, false);
+import('model.ElasticSearchModel');
 
 class {$artisan['name']}Model extends ElasticSearchModel
 {

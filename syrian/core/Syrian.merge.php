@@ -417,7 +417,7 @@ function abort($http_code)
  * @param   $timer  view compile cache time in seconds
  * @return  string
 */
-function view($tpl, $vars, $sanitize=false, $timer=0)
+function view($tpl, $vars=null, $sanitize=false, $timer=0)
 {
     $viewObj = E('view_obj');
     if ( $viewObj == NULL ) {
@@ -433,211 +433,185 @@ function view($tpl, $vars, $sanitize=false, $timer=0)
     }
 
     //check and set the tpl cache timer
-    if ( $timer > 0 ) {
-        $viewObj->setCacheTime($timer);
-    }
+    if ( $timer > 0 )    $viewObj->setCacheTime($timer);
+    if ( $vars != null ) $viewObj->load($vars);
 
-    return $viewObj->load($vars)->getContent($tpl, $sanitize);
+    return $viewObj->getContent($tpl, $sanitize);
 }
 
-class Loader
+/**
+ * redirect to the specified request
+ *
+ * @param   $uri
+ * @param   $args
+ * @param   $exit exit the current request
+*/
+function redirect($uri, $args=NULL, $exit=true)
 {
-    /**
-     * all the loaded class
-     *
-     * @access private
-    */
-    private static $_loadedClass = array();
-
-    /**
-     * all the loaded model object
-     *
-     * @access private
-    */
-    private static $_loadedModel = array();
-
-    /**
-     * all the loaded helper object
-     *
-     * @access private
-    */
-    private static $_loadedHelper = array();
-
-
-    /**
-     * make construct method private
-    */   
-    private function __construct() {}
-    
-    /**
-     * Import class file from the specified path
-     * The function will check script file $_path.class.php first
-     *     and then $_path.php
-     *
-     * @param   $_class
-     * @param   $_section
-     * @param   $_inc   If $_inc is TRUE check the syrian/lib  or check APPPATH/lib
-     * @param   $_exit  exit for not found the specifield class
-     * @return  bool    true for loaded successfully and false for not
-     */
-    public static function import($_class, $_section=NULL, $_inc=true, $_exit=true)
-    {
-        //$_class = ucfirst($_class);
-        $_cls = ($_section == NULL) ? $_class : str_replace('.', '/', $_section).'/'.$_class;
-        if ( isset(self::$_loadedClass[$_cls]) ) return true;
-        
-        //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
-        //Or check the APPPATH/lib 
-        $_dir  = (($_inc) ? BASEPATH . '/lib/' : SR_LIBPATH);
-        $_dir .= $_cls;
-        
-        foreach( array($_dir . '.class.php', $_dir . '.php') as $_file ) {
-            if ( file_exists($_file) ) {
-                require $_file;
-                self::$_loadedClass[$_cls] = true;
-                return true;
-            }
+    if ( is_array($args) ) {
+        $arr = array();
+        foreach ( $args as $k => $v ) {
+            $arr[] = "{$k}={$v}";
         }
-        
-        if ( $_exit ) {
-            throw new Exception('Syrian:Loader#import: Unable to load class ' . $_class);
-        }
-
-        return false;
-    }
-    
-    
-    /**
-     * function to load data from the specified file
-     *     and return the return of the included file as the final result
-     *
-     * @param   $_config
-     * @param   $_section
-     * @param   $_inc   True for seach files in syrian/config
-     * @param   $_key   specifield key
-     * @Param   $_exit  exit for not found the config file ? 
-     * @return  mixed(Array, Object, Bool)
-     */
-    public static function config($_config, $_section=NULL, $_inc=false, $key=NULL, $_exit=true)
-    {
-        //make the included file name
-        $_dir = (($_inc) ? BASEPATH . '/config/' : SR_CONFPATH);
-        
-        //append the section
-        if ( $_section != NULL ) {
-            $_dir .= str_replace('.', '/', $_section) . '/';
-        }
-
-        $_dir .= $_config;
-        
-        //search the config file and include it
-        foreach ( array($_dir . '.conf.php', $_dir . '.php' ) as $_file ) {
-            if ( file_exists($_file) ) {
-                //return include $_file;
-                $conf = include $_file;
-                if ( $key != NULL ) {
-                    return isset($conf["{$key}"]) ? $conf["{$key}"] : NULL;
-                }
-
-                return $conf;
-            }
-        }
-        
-        //throw new Exception('No such file or directory');
-        if ( $_exit ) {
-            throw new Exception('Syrian:Loader#config: Unable to load config ' . $_config);
-        }
-
-        return false;
-    }
-    
-    /**
-     * function to load the specifile model maybe from the
-     *         specifile path and return the instance of the model
-     *
-     * @param   $_model
-     * @param   $_section
-     * @param   $_exit exit for not found the model
-     * @return  Object
-    */
-    public static function model($_model, $_section=NULL, $_exit=true)
-    {
-        $_model = ucfirst($_model);
-        
-        //check the loaded of the class
-        $_cls = ($_section == NULL) ? $_model : str_replace('.', '/', $_section).'/'.$_model;
-        if ( isset(self::$_loadedModel[$_cls] ) ) {
-            return self::$_loadedModel[$_cls];
-        }
-        
-        //model base directory
-        $_dir = SR_MODELPATH . $_cls;
-            
-        foreach ( array( $_dir . '.model.php', $_dir . '.php' ) as $_file ) {
-            if ( file_exists( $_file ) ) {
-                include $_file;                //include the model class file
-                
-                $o = NULL;
-                $_class = $_model.'Model';
-                if ( class_exists($_class) )  {
-                    $o = new $_class();
-                } else {
-                    $o = new $_model();
-                }
-
-                //mark loaded for the current class
-                self::$_loadedModel[$_cls] = $o;
-
-                return $o;
-            }
-        }
-        
-        if ( $_exit ) {
-            throw new Exception('Syrain:Loader#model: Unable to load model ' . $_model);
-        }
-
-        return false;
+        $args = '?'.implode('&', $arr);
+    } else {
+        $args = "?{$args}";
     }
 
-    /**
-     * function to load and create helper instance
-     *
-     * @param   $_helper
-     * @param   $_section
-     * @param   $_inc   True for seach files in syrian/helper
-     * @param   $_conf  configuration to create the instance
-     * @param   $_exit  exit for not found the helper
-     * @return  mixed(Array, Object, Bool)
-     */
-    public static function helper($_helper, $conf=NULL, $_section=NULL, $_inc=false, $_exit=true)
-    {
-        //$_class = ucfirst($_class);
-        $_cls = ($_section == NULL) ? $_helper : str_replace('.', '/', $_section).'/'.$_helper;
-        if ( isset(self::$_loadedHelper[$_cls]) ) {
-            return self::$_loadedHelper[$_cls];
-        }
-        
-        //Look for the class in the SYSPATH/lib folder if $_inc is TRUE
-        //Or check the APPPATH/lib 
-        $_dir  = (($_inc) ? BASEPATH . '/helper/' : SR_HELPERPATH);
-        $_dir .= $_cls;
-        
-        foreach( array($_dir . '.helper.php', $_dir . '.php') as $_file ) {
-            if ( file_exists($_file) ) {
-                require $_file;
-                $_class = $_helper.'Helper';
-                $obj    = new $_class($conf);
-                self::$_loadedHelper[$_cls] = &$obj;
-                return $obj;
-            }
-        }
-        
-        if ( $_exit ) {
-            throw new Exception('Syrian:Loader#helper: Unable to load helper ' . $_helper);
+    if ( $uri[0] != '/' 
+        && strpos($uri, '://') === false ) {
+        $uri = "/{$uri}";
+    }
+
+    header("Location: {$uri}{$args}");
+    if ( $exit ) exit();
+}
+
+/**
+ * parse the specified request url and return the parsed info
+ *
+ * @param   $uri (the relative request uri only with the path part)
+ * @param   $separator and default to '/' it could be '.' or '-'
+ * @return  Mixed (Object or NULL)
+ * {
+ *  uri    : "",        //the original uri string
+ *  path   : "",        //the original path
+ *  parts  : array(),   //splited parts
+ *  package: "",        //package part of the controller
+ *  module : "",        //module name
+ *  page   : "",        //page name
+ * }
+*/
+function parse_uri($uri, $separator='/', $default=NULL)
+{
+    /*
+     * move the arguments to get the path
+     * and make sure it start with the '/'
+    */
+    if ( ($argsIdx = strpos($uri, '?')) !== false ) {
+        $path = substr($uri, 0, $argsIdx);
+    } else {
+        $path = $uri;
+    }
+
+    if ( strlen($path) < 1 ) return NULL;
+    if ( $path[0] == '/'   ) $path = substr($path, 1);
+
+    //-----------------------------------------------
+
+    $uriBean = new StdClass();
+    $uriBean->uri     = $uri;
+    $uriBean->path    = $path;
+    $uriBean->parts   = NULL;
+    $uriBean->package = NULL;
+    $uriBean->module  = NULL;
+    $uriBean->page    = NULL;
+
+    if ( strlen($path) >= 1 ) {
+        $parts  = explode($separator, $path);
+        $length = count($parts);
+        $uriBean->parts = $parts;
+        switch ( $length ) {
+        case 1:
+            $uriBean->module  = $parts[0];
+            break;
+        case 2:
+            $uriBean->module  = $parts[0];
+            $uriBean->page    = $parts[1];
+            break;
+        case 3:
+            $uriBean->page    = $parts[$length-1];
+            $uriBean->module  = $parts[$length-2];
+            $uriBean->package = $parts[$length-3];
+            break;
+        default:
+            $uriBean->page    = array_pop($parts);
+            $uriBean->module  = array_pop($parts);
+            $uriBean->package = implode('/', $parts);
         }
 
-        return false;
+        unset($parts, $length);
     }
+
+    if ( $uriBean->module == NULL ) {
+        if ( is_string($default) ) {
+            $uriBean->module = $default;
+        } else if ( is_array($default) 
+            && isset($default[0]) ) {
+            $uriBean->module = $default[0];
+        }
+    }
+
+    if ( $uriBean->page == NULL ) {
+        if ( is_array($default) 
+            && isset($default[1]) ) {
+            $uriBean->page = $default[1];
+        }
+    }
+
+    unset($path);
+
+    return $uriBean;
+}
+
+/**
+ * search and invoke the specified controller through the 
+ * specified request uri by passing the request input and output object
+ * it will finally return the executed result
+ *
+ * @param   $uri (a uri parsed object return by parse_uri or a standart http request uri)
+ * @param   $input
+ * @param   $output
+ * @param   $res_preload_callback resource preload callback
+ * @return  Object uri bean with only attributes
+ * @see     #parse_uri
+*/
+function controller(
+    $uri, $input, $output, $res_preload_callback=NULL, &$ctrl=NULL)
+{
+    /*
+     * check and parse the uri if it is a request uri string
+     * make this function directly runnable from a standart request uri
+    */
+    if ( is_string($uri) ) $uri = parse_uri($uri);
+
+    /*
+     * get and check the existence of the controller main file
+    */
+    $_ctrl_file = SR_CTRLPATH;
+    if ( $uri->package != NULL ) $_ctrl_file .= "{$uri->package}/";
+    $_ctrl_file .= "{$uri->module}/main.php";
+
+    if ( ! file_exists($_ctrl_file) ) {
+        throw new Exception("Unable to locate the controller with request uri {$uri->uri}");
+    }
+
+    /*
+     * check and invoke the request dynamic resource pre load callback
+    */
+    if ( $res_preload_callback != NULL ) {
+        $res_preload_callback($uri);
+    }
+
+    require $_ctrl_file;
+    
+    /*
+     * search and check the existence of the controller class
+     * then create the controller instance
+     * and invoke its run method to process the current request
+    */
+    $_class = ucfirst($uri->module) . 'Controller';
+    if ( ! class_exists($_class) ) {
+        throw new Exception("Undefined class {$_class} with request uri {$uri->uri}");
+    }
+
+    $ctrl = new $_class();
+    $ret  = $ctrl->run($input, $output, $uri);
+
+    //let gc do its work
+    unset($_ctrl_file, $_class);
+
+    return $ret;
 }
 
 class Helper
@@ -671,7 +645,6 @@ class Helper
 
 //Load the input class manage the input of the controller/
 if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
-    //--------------------------------------------------------------
     //normal data type
     defined('OP_NULL')      or define('OP_NULL',        1 <<  0);
     defined('OP_LATIN')     or define('OP_LATIN',       1 <<  1);
@@ -1315,279 +1288,6 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
     }
 }
 
-//Load the Uri class offer qucik interface to access the request uri
-if ( (SR_INC_COMPONENTS & 0x10) != 0 ) {
-     //link style constants
-     defined('URI_DIR_STYLE')    or define('URI_DIR_STYLE', 0);
-     defined('URI_STD_STYLE')    or define('URI_STD_STYLE', 1);
-
-     //---------------------------------------------------------
-     
-    abstract class Uri
-    {
-        //request url
-        public $url         = NULL;
-        public $self        = NULL;
-        
-        //request module/page
-        public $section     = NULL;
-        public $module      = NULL;
-        public $page        = NULL;
-        
-        /**
-         * request base part of the uri before the script file
-         *      like    /syrian/skeleton/ of /syrian/skeleton/index.php
-         *
-         * @access  protected
-        */
-        protected $_base      = '/';
-        
-        /**
-         * require rounter part of the url, eg: article/list
-         *      of syrian/skeleton/index.php/article/list.html
-         *
-         * @access  protected
-        */
-        protected $_request   = NULL;
-        
-        //link style (@see Uri#style constants)
-        protected $_style     = NULL;
-        
-        //request script file extension
-        protected $_ext       = NULL;
-        
-        //use url rewrite, hide the 'index.php' in request url
-        protected $_rewrite   = false;
-        protected $_parts     = NULL;
-        
-        /**
-         * construct method to initialize the class
-         *
-         * @param   $_rewrite   start the url rewrite?
-         * @param   $_style get http request link style
-        */
-        public function __construct( $_rewrite = false, $_style = URI_STD_STYLE )
-        {
-            //copy
-            $this->url  = $_SERVER['REQUEST_URI'];
-            $this->self = $_SERVER['REQUEST_URI'];
-            if ( ($args = strpos($this->self, '?') ) !== false ) {
-                $this->self = substr($this->self, 0, $args);
-            }
-             
-            //normalized the url and make sure it start with /
-            if ( $this->url[0] != '/' )     $this->url  = "/{$this->url}";
-            if ( $this->self[0] != '/' )    $this->self = "/{$this->self}";
-            
-            /*
-             * Analysis and initialize the base
-            */
-            $self = $_SERVER['PHP_SELF'];
-            if ( $self[0] != '/' ) $self = "/{$self}";
-
-            if ( ($pos = stripos($self, '.php')) !== FALSE ) {
-                while ( $self[$pos] != '/' ) $pos--;
-                 //get the base part, include the '/' mark at $i
-                if ( $pos > 0 ) $this->_base = substr($self, 0, $pos + 1);
-            }
-
-            $this->_rewrite = $_rewrite;
-            $this->_style   = $_style;
-        }
-        
-        /**
-         * parse the current request url to find the module
-         *  page arguments, also handler the arguments as need
-         *
-         * @return  bool
-        */
-        protected function parseUrl()
-        {
-            $_spos  = 0;     //start position to determine the request
-            $_epos  = 0;     //end position to determine the request
-            $pos    = 0;     //temp variable
-            
-            $_url   = substr_replace($this->url, '/', 0, strlen($this->_base));
-            $_len   = strlen($_url);
-            
-            if ( ($pos = stripos($_url, '.php')) !== FALSE ) {
-                $_spos = $pos + 4;
-            }
-            
-            /*
-             * move forward the start position, cause:
-             * 1. exclude the '/' punctuation at 0 when match no '.php'
-             * 2. skip the '/' punctuation after '.php' if available
-            */
-            if ( $_spos < $_len ) $_spos++;
-            
-            //check and find the end index
-            $_args = stripos($_url, '?', $_spos);
-            $_extp = stripos($_url, '.', $_spos);
-            
-            //determine the end index
-            if ( $_args !== FALSE && $_extp !== FALSE ) {
-                $_epos = min($_args, $_extp);
-            } else {
-                $_epos = max($_args, $_extp);
-            }
-            
-            /*
-             * mark the final end position
-             *  And clear the last '/' punctuation if it is
-             *
-             * @Note: fixed at 2016/06/27
-             * demo: /script/pc/download/
-             * we consider the page to be NULL
-            */
-            if ( $_epos == FALSE ) $_epos = $_len;
-            //if ( $_url[$_len - 1] == '/' ) $_epos--;
-            $this->_request = substr($_url, $_spos, $_epos - $_spos);
-            if ( $this->_request == '' ) return false;
-            
-            /*
-             * split the request and parse to get the module and page info
-             *      also, initialize the _parts globals variable here
-            */
-            $_ret = explode('/', $this->_request);
-            $this->_parts = &$_ret;
-            
-            return true;
-        }
-        
-        /**
-         * Exit the current process and tell the client
-         *      to goto the speicifled url by http location header
-         *
-         * @param   $_url   request url, 'module/page'
-         * @param   $_args  request arguments
-         * @param   $_ext   url file extension
-        */
-        public function redirect( $_url, $_args = NULL )
-        {
-            $_url = $this->makeStyleUrl($_url, $_args);
-            header("Location: {$_url}");
-            exit();
-        }
-        
-        /**
-         * Make a valid http get requst arguments with the specifiled
-         *      request link style
-         *
-         * @param   $_args quote
-         * @return  String
-         * @access  private
-        */
-        protected function makeStyleArgs( &$_args )
-        {
-            //dir style arguments, demo: /nid/tid/pageno
-            if ( $this->_style == URI_DIR_STYLE ) {
-                return ('/'.implode('/', $_args));
-            }
-            
-            if ( is_string($_args) ) return ('?' . $_args);
-            
-            /*
-             * Consider the args as an key=>value array
-             *  make a valid http get request arguments string
-             * like 'key=val&key2=val2'
-            */
-            $_str = ''; $item = NULL;
-            foreach ( $_args as $_key => $_val ) {
-                $item = $_key . '=' . $_val;
-                $_str .= ($_str == '') ? $item : '&' . $item;
-            }
-            
-            return ('?' . $_str);
-        }
-        
-        /**
-         * Make a valid request url with the specifiled request arguments
-         *
-         * @param   $_url
-         * @param   $_args  key=>val arguments array
-         * @param   $_ext   url file extension
-         * @return  String  a valid request url
-        */
-        public function makeStyleUrl($_url, $_args = NULL)
-        {
-            $_uri  = $this->_base;
-            $_uri .= ($this->_rewrite ? '' : 'index.php/') . $_url;
-            if ( $this->_ext != NULL ) $_uri .= $this->_ext;
-            
-            //check and append the arguments as needed
-            if ( $_args != NULL ) $_uri .= $this->makeStyleArgs($_args);
-            
-            return $_uri;
-        }
-        
-        /**
-         * set the file extension of the request url
-         *
-         * @param   $_ext   should start with '.'
-        */
-        public function setFileExt( $_ext )
-        {
-            $this->_ext = $_ext;
-        }
-        
-        /**
-         * parse the directory style http get arguments
-         *      to the global $_GET array with a specifial template
-         *
-         * Note: argments parse start from the back
-         *
-         * @param   $_temp style like nid/tid/pageno
-         * @return  Integer - number of successfully parsed arguments  or false for failed
-        */
-        public function parseArgsGet( $_temp )
-        {
-            //check and make sure the uri style is URI_DIR_STYLE
-            if ( $this->_style != URI_DIR_STYLE ) return 0;
-            
-            $_plen = count($this->_parts);
-            $_keys = explode('/', $_temp);
-            $_klen = count($_keys);
-            
-            /*the module and the page part is need so, $_klen + 2*/
-            if ( $_klen + 2 > $_plen  ) return false;
-            $_idx  = $_plen - $_klen - 1;
-            
-            foreach ( $_keys as $_key ) {
-                //mapping $_counter's value of _parts with key $_key
-                //  in global $_GET array
-                $_GET[$_key] = $this->_parts[$_idx];
-                $_idx++;
-            }
-            
-            return true;
-        }
-        
-        /**
-         * get the specifield part of the request url
-         *
-         * @param   $_idx
-         * @return  String
-        */
-        public function getPartById( $idx )
-        {
-            if ( $idx >= 0 && $idx < count($idx->_parts) )
-                return $this->_parts[$idx];
-            return NULL;
-        }
-        
-        /**
-         * method to fetch the controll class file
-         *  and return a valid instance of the controll class throught
-         *  the current request url pattern
-         *
-         * @param   $_module    default module
-         * @return  Object or NULL when failed
-        */
-        protected abstract function getController( $_module );
-    }
-}
-
 //Load the Output class
 if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
     class Output
@@ -1621,13 +1321,15 @@ if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
         {
             $this->_zlib_oc = @ini_get('zlib.output_compression');
 
-            //check and auto append the charset header
-            //@Note: added at 2016-03-20
-            if ( defined('SR_CHARSET') ) {
-                $this->_header['Content-Type'] = 'text/html; charset=' . SR_CHARSET;
+            if ( SR_CLI_MODE != true ) {
+                //check and auto append the charset header
+                //@Note: added at 2016/03/20
+                if ( defined('SR_CHARSET') ) {
+                    $this->setHeader('Content-Type', 'text/html; charset= ' . SR_CHARSET);
+                }
+
+                $this->setHeader('X-Powered-By', defined(SR_POWERBY) ? SR_POWERBY : 'Syrian/2.0');
             }
-            
-            $this->setHeader('X-Powered-By', defined(SR_POWERBY) ? SR_POWERBY : 'Syrian/2.0');
         }
         
         /**
@@ -1769,14 +1471,12 @@ if ( (SR_INC_COMPONENTS & 0x20) != 0 ) {
             //define the output string
             if ( $_output == '' ) $_output = &$this->_final_output;
 
-            //Try to send the server heaer
+            //Try to send the server header
             if ( count($this->_header) > 0 ) {
                 foreach ( $this->_header as $hKey => $hVal ) {
                     header("{$hKey}: {$hVal}");
                 }
             }
-
-            header("X-Powered-By: Syrian/2.0");
             
             //Try to send the server response content
             // if $this->_gzip_oc is enabled then compress the output
@@ -1811,6 +1511,11 @@ if ( (SR_INC_COMPONENTS & 0x80) != 0 ) {
     class Controller
     {
         /**
+         * method prefix and it default to '_'
+        */
+        protected $method_prefix = '_';
+
+        /**
          * Construct method to create and initialize the controller
         */
         public function __construct()
@@ -1822,18 +1527,17 @@ if ( (SR_INC_COMPONENTS & 0x80) != 0 ) {
 
             $this->conf = config('app');
         }
-        
+
         /**
-         * the entrance of the current controller
-         * default to invoke the uri->page.logic.php to handler
-         *  the request, you may need to rewrite this method to self define
+         * basic initialize method, if the class extends this
+         *  need to rewrite the run method(self-define the router) invoke this to
+         * do the initialize work
          *
-         * @param   $uri could be a string or URI parser object
          * @param   $input
          * @param   $output
-         * @access  public
+         * @param   $uri
         */
-        public function run($uri, $input, $output)
+        protected function __init($input, $output, $uri)
         {
             //@Added at 2015-05-29
             //define the flush mode global sign
@@ -1851,6 +1555,21 @@ if ( (SR_INC_COMPONENTS & 0x80) != 0 ) {
             if ( $ignoreMode == 1 ) {
                 _G(SR_IGNORE_MODE, true);
             }
+        }
+        
+        /**
+         * the entrance of the current controller
+         * default to invoke the uri->page.logic.php to handler
+         *  the request, you may need to rewrite this method to self define
+         *
+         * @param   $input
+         * @param   $output
+         * @param   $uri (standart parse_uri result)
+         * @access  public
+        */
+        public function run($input, $output, $uri)
+        {
+            $this->__init($input, $output, $uri);
 
             $ret = NULL;
 
@@ -1858,33 +1577,30 @@ if ( (SR_INC_COMPONENTS & 0x80) != 0 ) {
              * check and invoke the before method
              * basically you could do some initialize work here
             */
-            if ( method_exists($this, '_before') ) {
-                $this->_before($input, $output);
+            if ( method_exists($this, '__before') ) {
+                $this->__before($input, $output, $uri);
             }
 
             /*
-             * invoke the main function to handler the current request
+             * check and invoke the main function to handler the current request
             */
-            $method = is_object($uri) ? $uri->page : $uri;
-            if ( strlen($method) < 1 ) $method = 'index';
+            $method = "{$this->method_prefix}{$uri->page}";
             if ( method_exists($this, $method) ) {
-                $ret = $this->{$method}($input, $output);
+                $ret = $this->{$method}($input, $output, $uri);
             } else {
-                //throw new Exception("Undefined handler \"{$method}\" for " . __class__);
-                abort(404);
+                throw new Exception("Undefined handler \"{$method}\" for " . __class__);
             }
 
             /*
              * check and invoke the after method here
              * basically you could do some destroy work here
             */
-            if ( method_exists($this, '_after') ) {
-                $this->_after($input, $output);
+            if ( method_exists($this, '__after') ) {
+                $this->__after($input, $output, $uri);
             }
 
             return $ret;
         }
-
     }
 }
 
