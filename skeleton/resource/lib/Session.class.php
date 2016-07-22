@@ -1,57 +1,34 @@
 <?php
 /**
- * Authorize checking class of light app, current base on session
+ * Application session manager class
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
 
  //---------------------------------------------------------
  
-class Auth
+class Session
 {
-    /*
-     * The only instance to this class
-     *
-     * @access  private
-    */
-    private static $_instance = NULL;
-    
     private $_mapping = array(
-        'UID',                  //user id
-        'UAGENT'                //user agent
+        'UID',              //user id
+        'UAGENT'            //user agent
     );
 
     //session instance
-    private $_SESS    = null;
+    private $_SESS  = null;
     
     /**
-     * get the only instance of UserAuth
-     *
-     * @param    $_conf
-     * @return  $_instance
+     * method to initialize the class and start the session here
     */
-    public static function create($_key, $_conf)
-    {
-        if ( self::$_instance == NULL )
-            self::$_instance = new self($_key, $_conf);
-            
-        return self::$_instance;
-    }
-    
-    /**
-     * method to initialize the class
-     *  start the session here
-    */
-    public function __construct($_key, &$_conf)
+    public function __construct($_key, $_conf)
     {
         //load and create the user file session
-        //we set the expire time to 3y, yat, that's crazy
-        Loader::import('SessionFactory', 'session');
+        import('session.SessionFactory');
         $this->_SESS = SessionFactory::create($_key, $_conf);
 
         //specifial setting
         if ( isset($_conf['R8C']) )     $this->_SESS->setR8C($_conf['R8C']);
-        if ( isset($_conf['sessid']) )     $this->_SESS->setSessionId($_conf['sessid']);
+        if ( isset($_conf['sessid']) )  $this->_SESS->setSessionId($_conf['sessid']);
         $this->_SESS->start();
     }
       
@@ -83,21 +60,22 @@ class Auth
     public function authorize($uAgent)
     {
         //check the setting of all the item
-        foreach ( $this->_mapping as $_key )
-        {
+        foreach ( $this->_mapping as $_key ) {
             if ( ! $this->_SESS->has($_key) ) return false;
         }
         
         //make sure the user agent is still the same
-        if ( strcmp($this->_SESS->get('UAGENT'), $uAgent) != 0 )
+        if ( strcmp($this->_SESS->get('UAGENT'), $uAgent) != 0 ) {
             return false;
+        }
 
         //compare the random 8 chars when it exists
         //when R8C was find in the session but match nothing in getR8C
-        //    absolutely is it not a valid request.
+        //  absolutely is it not a valid request.
         $R8C = $this->_SESS->get('R8C');
-        if ( $R8C != NULL && strcmp($R8C, $this->_SESS->getR8C()) != 0 )
+        if ( $R8C != NULL && strcmp($R8C, $this->_SESS->getR8C()) != 0 ) {
             return false;
+        }
         
         return true;
     }
@@ -134,5 +112,6 @@ class Auth
         $this->_SESS->set($_key, $_val);
         return $this;
     }
+
 }
 ?>
