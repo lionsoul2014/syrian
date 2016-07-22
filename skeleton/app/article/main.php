@@ -5,10 +5,6 @@
  * @author chenxin <chenxin619315@gmail.com>
 */
 
- //------------------------------------------------------
-
-import('core.C_Controller', false);
- 
 class ArticleController extends C_Controller
 {    
     public function __before($input, $output, $uri)

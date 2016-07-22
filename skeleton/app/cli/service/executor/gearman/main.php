@@ -5,10 +5,6 @@
  * @author  chenxin <chenxin619315@gmail.com>
 */
 
-import('core.Cli_Controller', false);
-
-//------------------------------------
-
 defined('SR_SERVICE_WORKER') or define('SR_SERVICE_WORKER', true);
 
 class GearmanController extends Cli_Controller

@@ -88,4 +88,25 @@ function redirect($uri, $args)
     E('uri')->redirect($uri, $args);
 }
 
+/**
+ * application layer dynamic request resource pre-load
+ * main for #controller function, cuz:
+ * import('core.Cli_Controller') will cause the singal not working
+ * and pre-load is the current way i choose to sovel this problem
+ *
+ * @param   $uri (standart parse_uri result)
+*/
+function resource_preload_callback($uri)
+{
+    switch ( $uri->parts[0] ) {
+        case 'cli':
+            import('core.Cli_Controller', false);
+            break;
+        #add more case here
+        default:
+            import('core.C_Controller', false);
+            break;
+    }
+}
+
 ?>

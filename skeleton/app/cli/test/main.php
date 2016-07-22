@@ -5,10 +5,6 @@
  * @author  chenxin <chenxin619315@gmail.com>
 */
 
-import('core.Cli_Controller', false);
-
- //------------------------------------------------
-
 class TestController extends Cli_Controller
 {
     public function __construct()

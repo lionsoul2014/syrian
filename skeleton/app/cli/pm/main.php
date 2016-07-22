@@ -10,10 +10,6 @@
  * @author  chenxin <chenxin619315@gmail.com>
 */
 
-import('core.Cli_Controller', false);
-
-//------------------------------------
-
 class PmController extends Cli_Controller
 {
     private $debug;

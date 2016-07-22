@@ -49,20 +49,20 @@ E('output', $output);
  *
  * @see syrian.core.kerner.Function#parse_uri
  * @see syrian.core.kerner.Function#controller
+ * @see app.core.Function#resource_preload_callback
 */
 
 try {
     $uri = parse_uri($_SERVER['REQUEST_URI'], '/', array('article', 'index'));
-    $ret = controller($uri, $input, $output);
-    if ( ! is_null($ret) ) {
-        $output->display(is_array($ret) ? json_encode($ret) : $ret);
-    }
+    $ret = controller($uri, $input, $output, 'resource_preload_callback');
+    $output->display(is_array($ret) ? json_encode($ret) : $ret);
 } catch ( Exception $e ) {
-    //@Note: You may need to do the error log here
     if ( SR_CLI_MODE ) echo $e, "\n";
     else {
-        echo("Sorry, We cannot process the current request with uri=\"{$_SERVER['REQUEST_URI']}\"\n");
+        echo("Oops, Something is wrong while processing the request with uri=\"{$_SERVER['REQUEST_URI']}\"\n");
     }
+
+    //@Note: You may need to do the error log here
 }
 
 ?>

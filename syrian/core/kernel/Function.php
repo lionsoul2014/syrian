@@ -509,10 +509,12 @@ function parse_uri($uri, $separator='/', $default=NULL)
  * @param   $uri (a uri parsed object return by parse_uri or a standart http request uri)
  * @param   $input
  * @param   $output
+ * @param   $res_preload_callback resource preload callback
  * @return  Object uri bean with only attributes
  * @see     #parse_uri
 */
-function controller($uri, $input, $output, &$ctrl=NULL)
+function controller(
+    $uri, $input, $output, $res_preload_callback=NULL, &$ctrl=NULL)
 {
     /*
      * check and parse the uri if it is a request uri string
@@ -529,6 +531,13 @@ function controller($uri, $input, $output, &$ctrl=NULL)
 
     if ( ! file_exists($_ctrl_file) ) {
         throw new Exception("Unable to locate the controller with request uri {$uri->uri}");
+    }
+
+    /*
+     * check and invoke the request dynamic resource pre load callback
+    */
+    if ( $res_preload_callback != NULL ) {
+        $res_preload_callback($uri);
     }
 
     require $_ctrl_file;
