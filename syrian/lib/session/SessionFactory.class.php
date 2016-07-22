@@ -13,12 +13,12 @@ interface ISession
     public function setSessionId($_sessid);
     public function getSessionId();
 
-    public function has( $key );
-    public function get( $key );
-    public function set( $key, $val );
+    public function has($key);
+    public function get($key);
+    public function set($key, $val);
 
     public function getR8C();
-    public function setR8C( $r8c );
+    public function setR8C($r8c);
 }
 
  //----------------------------------------------------
@@ -49,9 +49,8 @@ class SessionFactory
         
         //Fetch the class
         $_class = ucfirst( $_class ) . 'Session';
-        if ( ! isset( self::$_classes[$_class] ) )
-        {
-            require  dirname(__FILE__) .'/'.$_class.'.class.php';
+        if ( ! isset( self::$_classes[$_class] ) ) {
+            require  dirname(__FILE__) ."/{$_class}.class.php";
             self::$_classes[$_class] = true;
         }
         

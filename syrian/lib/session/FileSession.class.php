@@ -3,7 +3,7 @@
  * user level session handler class and base on file
  *    
  *    R8C security was append after the session_id
- *        and take the '__' as the dilimiter
+ *        and take the '---' as the delimiter
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
@@ -13,15 +13,15 @@
 class FileSession implements ISession
 {
     private $_partitions    = 1000;
-    private $_save_path        = NULL;
-    private $_ttl             = 0;
-    private    $_ext            = '.ses';
-    private    $_sessid        = NULL;
-    private $_R8C            = NULL;
+    private $_save_path     = NULL;
+    private $_ttl           = 0;
+    private $_ext           = '.ses';
+    private $_sessid        = NULL;
+    private $_R8C           = NULL;
     private $_session_name  = NULL;
 
     //valud of session_id's hash value
-    private $_hval            = -1;
+    private $_hval  = -1;
     
     /**
      * construct method to initialize the class
@@ -33,7 +33,7 @@ class FileSession implements ISession
         if ( isset( $conf['save_path'] ) ) 
             $this->_save_path = $conf['save_path'];
         if ( isset( $conf['ttl'] ) )
-            $this->_ttl    = $conf['ttl'];
+            $this->_ttl = $conf['ttl'];
         if ( isset( $conf['partitions'] ) )
             $this->_partitions = $conf['partitions'];
         if ( isset( $conf['file_ext'] ) )
@@ -50,26 +50,22 @@ class FileSession implements ISession
             array($this, '_gc')
         );
 
-        $_more    = 86400;
-        if ( isset( $conf['more_for_cookie'] ) )
-        {
+        $_more = 86400;
+        if ( isset( $conf['more_for_cookie'] ) ) {
             $_more = $conf['more_for_cookie'];
         }
         
 
-        if ( isset($conf['session_name']) && $conf['session_name'] )
-        {
+        if ( isset($conf['session_name']) && $conf['session_name'] ) {
             $this->_session_name = $conf['session_name']; 
             session_name($this->_session_name);
         }
 
         $cookie_domain = '';
         if ( isset($conf['cookie_domain']) ) $cookie_domain = $conf['cookie_domain'];
-        else if ( isset($conf['domain_strategy']) )
-        {
+        else if ( isset($conf['domain_strategy']) ) {
             $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
-            switch ( $conf['domain_strategy'] )
-            {
+            switch ( $conf['domain_strategy'] ) {
             case 'cur_host': $cookie_domain = $host; break;
             case 'all_sub_host':
                 $pnum = 0;
@@ -91,8 +87,7 @@ class FileSession implements ISession
     //start the session
     public function start()
     {
-        if ( $this->_sessid != NULL ) 
-        {
+        if ( $this->_sessid != NULL ) {
             if ( $this->_R8C == NULL ) $_sessid = $this->_sessid;
             else $_sessid = $this->_sessid.'---'.$this->_R8C;
 
@@ -112,8 +107,7 @@ class FileSession implements ISession
         $_SESSION = array();
 
         //2. destroy the session file or stored data
-        if ( $this->_sessid != NULL )
-        {
+        if ( $this->_sessid != NULL ) {
             $this->_destroy($this->_sessid);
         }
         
@@ -161,15 +155,14 @@ class FileSession implements ISession
     
     /**
      * The read callback must always return a session encoded (serialized) string,
-     *         or an empty string if there is no data to read.
+     *  or an empty string if there is no data to read.
      * This callback is called internally by PHP when the session starts or when session_start()
-     *         is called. Before this callback is invoked PHP will invoke the open callback.
+     *  is called. Before this callback is invoked PHP will invoke the open callback.
     */
     function _read( $_sessid )
     {
         //check if the R8C is appended
-        if ( ($pos = strpos($_sessid, '---')) !== false )
-        {
+        if ( ($pos = strpos($_sessid, '---')) !== false ) {
             $this->_R8C = substr($_sessid, $pos+3);
             $_sessid = substr($_sessid, 0, $pos);
         }
@@ -178,8 +171,7 @@ class FileSession implements ISession
         if ( $this->_sessid == NULL ) $this->_sessid = $_sessid;
 
         //take the _hval as the partitions number
-        if ( $this->_hval == -1 )
-        {
+        if ( $this->_hval == -1 ) {
             $this->_hval = self::bkdrHash($_sessid, $this->_partitions);
         }
 
@@ -191,8 +183,7 @@ class FileSession implements ISession
 
         //@Note: atime update maybe closed by filesystem
         $ctime = max(filemtime($_file), fileatime($_file));
-        if ( $ctime + $this->_ttl < time() )
-        {
+        if ( $ctime + $this->_ttl < time() ) {
             @unlink($_file);
             return '';
         }
@@ -204,9 +195,9 @@ class FileSession implements ISession
     
     /**
      * The write callback is called when the session needs to be saved and closed.
-     *     The serialized session data passed to this callback should be stored against
-     *         the passed session ID. When retrieving this data, the read callback must
-     *         return the exact value that was originally passed to the write callback.
+     * The serialized session data passed to this callback should be stored against
+     *  the passed session ID. When retrieving this data, the read callback must
+     *  return the exact value that was originally passed to the write callback.
     */
     function _write( $_sessid, $_data )
     {
@@ -214,19 +205,17 @@ class FileSession implements ISession
         $_sessid = $this->_sessid;
 
         //take the _hval as the partitions number
-        if ( $this->_hval == -1 )
-        {
+        if ( $this->_hval == -1 ) {
             $this->_hval = self::bkdrHash($_sessid, $this->partitions);
         }
 
         //make the final session file
         $_baseDir = "{$this->_save_path}/{$this->_hval}";
-        if ( ! file_exists($_baseDir) )    @mkdir($_baseDir, 0777);
+        if ( ! file_exists($_baseDir) ) @mkdir($_baseDir, 0777);
 
         //write the data to the final session file
-        $_sfile    = "{$_baseDir}/{$_sessid}{$this->_ext}";
-        if ( @file_put_contents($_sfile, $_data) != FALSE )
-        {
+        $_sfile = "{$_baseDir}/{$_sessid}{$this->_ext}";
+        if ( @file_put_contents($_sfile, $_data) != FALSE ) {
             //chmod the newly created file
             @chmod($_sfile, 0755);
             return TRUE;
@@ -247,8 +236,7 @@ class FileSession implements ISession
 
         //delete the PHPSESSId cookies
         $sessname = session_name();
-        if ( isset($_COOKIE[$sessname]) ) 
-        {
+        if ( isset($_COOKIE[$sessname]) ) {
             setcookie($sessname, '', time() - 42000, '/');
         }
 
@@ -257,7 +245,7 @@ class FileSession implements ISession
     
     /**
      * The garbage collector callback is invoked internally by PHP periodically
-     *         in order to purge old session data.
+     *  in order to purge old session data.
      * The frequency is controlled by session.gc_probability and session.gc_divisor. 
     */
     function _gc( $_lifetime )
@@ -295,7 +283,7 @@ class FileSession implements ISession
     //@param    $r8c
     public function setR8C( $r8c )
     {
-        $this->_R8C    = $r8c;
+        $this->_R8C = $r8c;
         return $this;
     }
 
@@ -303,18 +291,18 @@ class FileSession implements ISession
     //bkdr hash function
     private static function bkdrHash( $_str, $_size )
     {
-        $_hash    = 0;
-        $len     = strlen($_str);
+        $_hash = 0;
+        $len   = strlen($_str);
     
-        for ( $i = 0; $i < $len; $i++ ) 
-        {
-            $_hash = ( int ) ( $_hash * 1331 + ( ord($_str[$i]) % 127 ) );
+        for ( $i = 0; $i < $len; $i++ ) {
+            $_hash = (int) ($_hash * 1331 + (ord($_str[$i]) % 127));
         }
         
-        if ( $_hash < 0 )             $_hash *= -1;
-        if ( $_hash >= $_size )     $_hash = ( int ) $_hash % $_size; 
+        if ( $_hash < 0 )       $_hash *= -1;
+        if ( $_hash >= $_size ) $_hash = ( int ) $_hash % $_size; 
         
         return ( $_hash & 0x7FFFFFFF );
     }
+
 }
 ?>

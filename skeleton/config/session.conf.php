@@ -9,28 +9,28 @@
 //save_path: the session file store path
 //ttl: to to live for the session
 return array(
-    'File'        => array(
+    'File' => array(
         'save_path'     => '/Code/php/session/app/',
         'file_ext'      => '.ses',
-        'ttl'           => 94608000,
+        'ttl'           => 604800,
         //'cookie_domain' => '.lerays.com',     // must start with dot to support all sub share the cookies  
-        //'session_name'  => 'PHPSESSID'
-        'domain_strategy'    => 'all_sub_host'    //domain strategy cur_host | all_sub_host
+        'session_name'  => 'SR_SESSID',
+        'domain_strategy' => 'all_sub_host'     //domain strategy cur_host | all_sub_host
     ),
     
     'Memcached' => array(
-        'servers'   => array(
-            array('localhost', 11211, 100)        // host, port, weight
+        'servers'       => array(
+            array('localhost', 11211, 100)      // host, port, weight
         ),
-        'ttl'           => 2592000, // time to live
+        'ttl'           => 604800,              // time to live
         // default: standard,  consistent was recommended,
         // for more infomation,  search 'consistent hash'
         'hash_strategy' => 'consistent',
         //'hash'          => 'default', // default| md5 | crc | fnv1_32 | fnv1a_32 | fnv1a_64 | fnv1_64 | hsieh | murmur
         'prefix'        => '',
-        //'cookie_domain' => '.lerays.com',        // must start with dot to support all sub share the cookies  
-        //'session_name'  => 'PHPSESSID'
-        'domain_strategy'   => 'all_sub_host'    //domain strategy cur_host | all_sub_host
+        //'cookie_domain' => '.lerays.com',     // must start with dot to support all sub share the cookies  
+        'session_name'  => 'SR_SESSID',
+        'domain_strategy' => 'all_sub_host'     //domain strategy cur_host | all_sub_host
     )
 );
 ?>

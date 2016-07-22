@@ -29,27 +29,6 @@ class ArticleController extends C_Controller
     {
         return view('article/about.html', null, true);
     }
-
-    public function _json($input)
-    {
-        return array(
-            'head_img'  => 'http://git.oschina.net/uploads/87/5187_lionsoul.jpg',
-            'nickname'  => 'lionsoul',
-            'signature' => '平凡 | 执着'
-        );
-    }
-
-    public function _profile($input)
-    {
-        $data = array(
-            'head_img'  => 'http://git.oschina.net/uploads/87/5187_lionsoul.jpg',
-            'nickname'  => 'lionsoul',
-            'signature' => '平凡 | 执着'
-        );
-
-        //return json_view(STATUS_OK, $data);
-        return json_define_view(STATUS_OK, json_encode($data));
-    }
     
 }
 ?>
