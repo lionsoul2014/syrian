@@ -66,13 +66,13 @@ class STDUri extends Uri
         }
 
         switch ( $this->_parts[0] ) {
-            case 'cli':
-                import('core.Cli_Controller', false);
-                break;
-            #add more case here
-            default:
-                import('core.C_Controller', false);
-                break;
+        case 'cli':
+            import('core.Cli_Controller', false);
+            break;
+        #add more case here
+        default:
+            import('core.C_Controller', false);
+            break;
         }
 
         require $_ctrl_file;

@@ -415,6 +415,34 @@ function view($tpl, $vars=null, $sanitize=false, $timer=0)
 }
 
 /**
+ * redirect to the specified request
+ *
+ * @param   $uri
+ * @param   $args
+ * @param   $exit exit the current request
+*/
+function redirect($uri, $args=NULL, $exit=true)
+{
+    if ( is_array($args) ) {
+        $arr = array();
+        foreach ( $args as $k => $v ) {
+            $arr[] = "{$k}={$v}";
+        }
+        $args = '?'.implode('&', $arr);
+    } else {
+        $args = "?{$args}";
+    }
+
+    if ( $uri[0] != '/' 
+        && strpos($uri, '://') === false ) {
+        $uri = "/{$uri}";
+    }
+
+    header("Location: {$uri}{$args}");
+    if ( $exit ) exit();
+}
+
+/**
  * parse the specified request url and return the parsed info
  *
  * @param   $uri (the relative request uri only with the path part)
