@@ -7,3 +7,7 @@ body {text-align: center;font-size: 12px;background-color: #EEEEEE;}
 #list-box p b, #list-box h3 {color: #305E67;}
 #list-box p a {color: #305E67;text-decoration: underline;}
 #list-box p a:hover {color: #A7A7A7;}
+
+.pr-links {margin-bottom:10px;padding:5px 0px;background:#181818;}
+.pr-links li {padding:2px 10px;color:#305E67;list-style-type:none;}
+.pr-links li a {color:#305E67;text-decoration:underline;}
