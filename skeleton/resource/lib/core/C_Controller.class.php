@@ -14,5 +14,24 @@ class C_Controller extends Controller
         parent::__construct();
     }
 
+    /**
+     * check the current request is logged in or not
+     * and if it is logged in we return its session object
+     *
+     * @param   $errno (the error number)
+     * @return  Mixed(boolean or lib.Session Object)
+     * @see     app.lib.Session#validate
+    */
+    public function isLoggedIn(&$errno)
+    {
+        import('Session', false);
+        $sessKey = isset($this->session_key) ? $this->session_key : 'File';
+        $sessObj = Session::start($sessKey, config('session#File'));
+        if ( $sessObj->validate($errno) == false ) {
+            return false;
+        }
+
+        return $sessObj;
+    }
 }
 ?>

@@ -6,6 +6,7 @@
 * 05. add application layer function                                       --done
 * 06. new uri parse and return the parsed info object                      --done
 * 07. add function controller('api.stream.view', $args);                   --done
-* 08. add session quick manager
+* 08. add session quick manager                                            --done
 * 09. add namespace support for controller
 * 10. add #service('path', args, $executor=local executor) function
+* 11. Uri with self-define arguments support

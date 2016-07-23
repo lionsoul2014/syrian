@@ -10,7 +10,7 @@
 //ttl: to to live for the session
 return array(
     'File' => array(
-        'save_path'     => '/Code/php/session/app/',
+        'save_path'     => '/Code/php/session/syrian/',
         'file_ext'      => '.ses',
         'ttl'           => 604800,
         //'cookie_domain' => '.lerays.com',     // must start with dot to support all sub share the cookies  

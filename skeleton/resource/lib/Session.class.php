@@ -9,13 +9,19 @@
  
 class Session
 {
-    private $_mapping = array(
-        'UID',              //user id
-        'UAGENT'            //user agent
-    );
-
-    //session instance
     private $_SESS  = null;
+
+    /**
+     * create and start the user-level session
+     *
+     * @param   $key
+     * @param   $conf
+     * @return  Object
+    */
+    public static function start($key, $conf)
+    {
+        return new self($key, $conf);
+    }
     
     /**
      * method to initialize the class and start the session here
@@ -26,54 +32,79 @@ class Session
         import('session.SessionFactory');
         $this->_SESS = SessionFactory::create($_key, $_conf);
 
-        //specifial setting
-        if ( isset($_conf['R8C']) )     $this->_SESS->setR8C($_conf['R8C']);
-        if ( isset($_conf['sessid']) )  $this->_SESS->setSessionId($_conf['sessid']);
+        if ( isset($_conf['sessid']) ) {
+            $this->_SESS->setSessionId($_conf['sessid']);
+
+            /*
+             * check and set the r8c value
+             * @Note: 
+             * for the first time to create session better with a r8c setting
+            */
+            if ( isset($_conf['r8c']) ) {
+                import('Util');
+                $this->_SESS->setR8C(Util::randomLetters(8));
+            }
+        }
+
         $this->_SESS->start();
     }
       
     /**
-     * register the authorize item
+     * register the basic item data
      *
-     * @param   $_cfg
+     * @param   $uid
     */
-    public function register( $_cfg )
+    public function register($uid)
     {
-        //set the UID
-        if ( isset($_cfg['UID']) )        $this->_SESS->set('UID', $_cfg['UID']);
-        
-        //set the user agent
-        if ( isset($_cfg['UAGENT']) )    $this->_SESS->set('UAGENT', $_cfg['UAGENT']);
+        $r8cVal = $this->_SESS->getR8C();
+        if ( $r8cVal != NULL ) {
+            $this->_SESS->set('r8c', $r8cVal);
+        }
 
-        //self register the R8C
-        $_R8C    = $this->_SESS->getR8C();
-        if ( $_R8C != NULL )            $this->_SESS->set('R8C', $_R8C);
-            
+        $this->_SESS->set('uid', $uid);
+        $this->_SESS->set(
+            'uAgent',
+            isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'Syrian/2.0'
+        );
+
         return $this;
     }
     
     /**
-     * check the current request is authorized or not
+     * Validate the current session
+     * and you could get the error info througth passing the errno:
+     * 1: means missing value items
+     * 2: user agent not match (user has changed the user agent ? )
+     * 3: r8c value error
      *
+     * @param   $errno
      * @return  bool
     */
-    public function authorize($uAgent)
+    public function validate(&$errno=null)
     {
-        //check the setting of all the item
-        foreach ( $this->_mapping as $_key ) {
-            if ( ! $this->_SESS->has($_key) ) return false;
-        }
-        
-        //make sure the user agent is still the same
-        if ( strcmp($this->_SESS->get('UAGENT'), $uAgent) != 0 ) {
-            return false;
+        foreach ( array('uid', 'uAgent') as $key ) {
+            if ( ! $this->_SESS->has($key) ) {
+                $errno = 1;
+                return false;
+            }
         }
 
-        //compare the random 8 chars when it exists
-        //when R8C was find in the session but match nothing in getR8C
-        //  absolutely is it not a valid request.
-        $R8C = $this->_SESS->get('R8C');
-        if ( $R8C != NULL && strcmp($R8C, $this->_SESS->getR8C()) != 0 ) {
+        if ( ! isset($_SERVER['HTTP_USER_AGENT']) 
+            || strcmp($_SERVER['HTTP_USER_AGENT'], 
+                    $this->_SESS->get('uAgent')) != 0 ) {
+            $errno = 2;
+            return false;
+        }
+        
+        /* compare the random 8 chars
+         * when R8C was find in the session but match nothing in getR8C
+         * definitely is it not a valid request 
+         * often mean the second sign in override the previous one
+        */
+        $r8cVal = $this->_SESS->getR8C();
+        if ( $r8cVal != NULL 
+            && strcmp($r8cVal, $this->_SESS->get('r8c')) != 0 ) {
+            $errno = 3;
             return false;
         }
         
@@ -87,9 +118,19 @@ class Session
     {
         $this->_SESS->destroy();
     }
+
+    /**
+     * get the unique id or (user id)
+     *
+     * @return  string
+    */
+    public function getUid()
+    {
+        return $this->_SESS->get('uid');
+    }
     
     /**
-     * get value mapping the specifiled key
+     * get value mapping the specified key
      *
      * @param   $_key
      * @return  String
@@ -101,7 +142,7 @@ class Session
     }
     
     /**
-     * set the value mapping with the specifiled key
+     * set the value mapping with the specified key
      *
      * @param   $_key
      * @param   $_val

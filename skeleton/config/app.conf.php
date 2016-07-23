@@ -28,7 +28,8 @@ $config->script = array(
     'compress'  => 0
 );
 
-$config->flush_key  = 'mqh-flush-key';
+$config->flush_key   = 'mqh-flush-key';
+$config->session_key = 'File';  //default session key
 
 //distribute servers
 // multiples web servers will be use to do the load balancing
