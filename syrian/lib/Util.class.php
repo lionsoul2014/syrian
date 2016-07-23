@@ -12,10 +12,10 @@ class Util
 {
     /**
      * create the given path
-     *		like the unix command 'mkdir -p'
+     *        like the unix command 'mkdir -p'
      *
-     * @param 	$filename
-     */	
+     * @param   $filename
+     */    
     public static function makePath( $filename, $mode=0755 ) 
     {
         $dirArray = array();
@@ -24,11 +24,11 @@ class Util
         while ($filename != '.' && $filename != '..') {
             if ( file_exists($filename) ) {
                 $baseDir = $filename;
-                break;	 
+                break;     
             }
 
             $dirArray[] = basename($filename);   //basename part
-            $filename 	= dirname($filename); 
+            $filename   = dirname($filename); 
         }
 
         for ( $i = count($dirArray) - 1; $i >= 0; $i--) {
@@ -46,10 +46,10 @@ class Util
 
     /**
      * common method to get the access internet address
-     *		of the access client
+     *        of the access client
      *
-     * @param 	$convert
-     * @return 	mixed(int or string)
+     * @param     $convert
+     * @return     mixed(int or string)
      */
     public static function getIpAddress( $convert = false ) 
     {
@@ -80,48 +80,48 @@ class Util
     /**
      * implode a hash array's specifield key by specifield letter
      *
-     * @param 	$array
-     * @param 	$key
-     * @param 	$glue
-     * @param 	$dup remove the dupliate value when it's true
-     * @param	$leftQuote left quote string
-     * @param	$rightQuote right quote string
-     * @return 	string
+     * @param     $array
+     * @param     $key
+     * @param     $glue
+     * @param     $dup remove the dupliate value when it's true
+     * @param    $leftQuote left quote string
+     * @param    $rightQuote right quote string
+     * @return     string
      */
     public static function implode(
         &$array, $key, $glue, $dup=false, $leftQuote=NULL, $rightQuote=NULL)
     {
         if ( $array == false || empty($array) ) return NULL;
 
-        //$str 	= NULL;
-        //$idx 	= NULL;
-        //if ( $dup )		$idx = array();
+        //$str     = NULL;
+        //$idx     = NULL;
+        //if ( $dup )        $idx = array();
 
         //foreach ( $array as $value ) 
         //{
-        //	if ( $str == NULL ) 
-        //	{
-        //		$str = $value[$key];
-        //		if ( $dup ) $idx["{$value[$key]}"] = true;
-        //		continue;
-        //	}
+        //    if ( $str == NULL ) 
+        //    {
+        //        $str = $value[$key];
+        //        if ( $dup ) $idx["{$value[$key]}"] = true;
+        //        continue;
+        //    }
 
-        //	if ( $dup == false ) 
-        //		$str .= "{$glue}{$value[$key]}";
-        //	else 
-        //	{
-        //		//remove the duplicate
-        //		$v 		= $value[$key];
-        //		if ( isset( $idx["{$v}"] ) ) continue;
-        //		$str   .= "{$glue}{$v}";
-        //		$idx["{$v}"] = true;
-        //	}
+        //    if ( $dup == false ) 
+        //        $str .= "{$glue}{$value[$key]}";
+        //    else 
+        //    {
+        //        //remove the duplicate
+        //        $v         = $value[$key];
+        //        if ( isset( $idx["{$v}"] ) ) continue;
+        //        $str   .= "{$glue}{$v}";
+        //        $idx["{$v}"] = true;
+        //    }
         //}
 
-        $value	= array();
-        $idx	= array();
+        $value = array();
+        $idx   = array();
         foreach ( $array as $val ) {
-            $v	= $val["{$key}"];
+            $v    = $val["{$key}"];
             if ( $dup == false || ! isset($idx["{$v}"]) ) {
                 $value[] = "{$leftQuote}{$v}{$rightQuote}";
             }
@@ -136,31 +136,31 @@ class Util
 
     /**
      * make a hash index for the specifield key of a specifield hash array
-     * 	and the late one will rewrite the previous one when face a dupliate key
+     *     and the late one will rewrite the previous one when face a dupliate key
      *
-     * @param 	$array
-     * @param 	$key
-     * @param 	$quote 		wether to quote its original array value
-     * @param 	Array
+     * @param     $array
+     * @param     $key
+     * @param     $quote         wether to quote its original array value
+     * @param     Array
      */
     public static function makeIndex( &$arr, $key, $quote=false )
     {
         if ( $arr == false ) return array();
 
-        //$index 	= array();
+        //$index     = array();
         //$length = count($arr);
         //for ( $i = 0; $i < $length; $i++ )
         //{
-        //	if ( $quote == false )
-        //	{
-        //		$index["{$arr[$i][$key]}"] = true;
-        //		continue;
-        //	}
+        //    if ( $quote == false )
+        //    {
+        //        $index["{$arr[$i][$key]}"] = true;
+        //        continue;
+        //    }
 
-        //	$index["{$arr[$i][$key]}"] = &$arr[$i];
+        //    $index["{$arr[$i][$key]}"] = &$arr[$i];
         //}
 
-        $index 	= array();
+        $index = array();
         foreach ( $arr as $val ) {
             $_m_key = $val["{$key}"];
             $index["{$_m_key}"] = $quote ? $val : true;
@@ -215,32 +215,32 @@ class Util
 
     /**
      * group the specifield array by specifield field
-     * 	and take the value of the group key as the key the array of the 
+     *     and take the value of the group key as the key the array of the 
      * same items with the some group key value.
      *
-     * @param 	$array
-     * @param 	$key
-     * @param	$count	only count the number of each group
-     * @return 	Array
+     * @param     $array
+     * @param     $key
+     * @param    $count    only count the number of each group
+     * @return     Array
      */
     public static function groupBy( &$array, $key, $count=false )
     {
         if ( $array == false ) return array();
 
-        //$index 	= array();		//returning index array
-        //$length 	= count($array);
+        //$index     = array();        //returning index array
+        //$length     = count($array);
         //for ( $i = 0; $i < $length; $i++ )
         //{
-        //	$vkey 	= $array[$i]["{$key}"];
-        //	if ( ! isset( $index["{$vkey}"] ) )
-        //	{
-        //		$index["{$vkey}"] = array();
-        //	}
+        //    $vkey     = $array[$i]["{$key}"];
+        //    if ( ! isset( $index["{$vkey}"] ) )
+        //    {
+        //        $index["{$vkey}"] = array();
+        //    }
 
-        //	$index["{$vkey}"][]	= &$array[$i];
+        //    $index["{$vkey}"][]    = &$array[$i];
         //}
 
-        $index	= array();
+        $index = array();
         if ( $count == false ) {
             foreach ( $array as $val ) {
                 $_m_key = $val["{$key}"];
@@ -262,10 +262,10 @@ class Util
     /**
      * simple http GET request
      *
-     * @param	string $url
-     * @param	Array header
+     * @param    string $url
+     * @param    Array header
      * @param   setting
-     * @return	Mixed(false or the http response body)
+     * @return    Mixed(false or the http response body)
      */
     public static function httpGet( $url, $_header=NULL, $setting=NULL )
     {
@@ -302,10 +302,10 @@ class Util
 
     /**
      * simple POST post request
-     * @param	string	$url
-     * @param	array	$param
+     * @param    string    $url
+     * @param    array    $param
      * @param   array   $setting
-     * @return	Mixed	false or the http response content
+     * @return    Mixed    false or the http response content
      */
     public static function httpPost( $url, $param, $_header=NULL, $setting=NULL )
     {
@@ -315,15 +315,15 @@ class Util
             curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
         }
 
-        $postfields	= NULL;
+        $postfields    = NULL;
         if ( is_string($param) ) $postfields = $param;
         else {
-            $args	= array();
+            $args    = array();
             foreach ( $param as $key => $val) {
-                $args[]	= $key . '=' . urlencode($val);
+                $args[]    = $key . '=' . urlencode($val);
             }
 
-            $postfields	= implode('&', $args);
+            $postfields    = implode('&', $args);
             unset($args);
         }
 
@@ -460,14 +460,14 @@ class Util
         if ( $uAgent == NULL ) return 'xx';
         
         //define the mobile source
-        $isMobile	= false;
+        $isMobile = false;
         if ( isset($_SERVER['HTTP_X_WAP_PROFILE']) ) {
             $isMobile = true;
         } else if ( isset($_SERVER['HTTP_VIA']) && strpos($_SERVER['HTTP_VIA'], 'wap') !== false ) {
             $isMobile = true;
         } else {
-            $lowerAgent	= strtolower($uAgent);
-            $mobileOS	= array(
+            $lowerAgent = strtolower($uAgent);
+            $mobileOS   = array(
                 'phone', 'mobile', 'tablet', 'android', 'iphone', 'blackberry', 'symbian', 'nokia', 'palmos', 'j2me'
             );
             foreach ( $mobileOS as $os ) {
@@ -479,12 +479,12 @@ class Util
         }
 
         //define the device part
-        $device	= 'x';
-        if ( stripos($uAgent, 'Android') !== false )		$device = 'a';	//Android
-        else if ( stripos($uAgent, 'iPhone') !== false )	$device = 'i';	//ios
-        else if ( stripos($uAgent, 'Linux') !== false )		$device = 'l';	//linux
-        else if ( stripos($uAgent, 'Windows') !== false ) 	$device = 'w';	//winnt
-        else if ( stripos($uAgent, 'Mac') !== false )		$device = 'm';
+        $device    = 'x';
+        if ( stripos($uAgent, 'Android') !== false )        $device = 'a';    //Android
+        else if ( stripos($uAgent, 'iPhone') !== false )    $device = 'i';    //ios
+        else if ( stripos($uAgent, 'Linux') !== false )     $device = 'l';    //linux
+        else if ( stripos($uAgent, 'Windows') !== false )   $device = 'w';    //winnt
+        else if ( stripos($uAgent, 'Mac') !== false )       $device = 'm';
 
         return ($isMobile?'m':'p') . $device;
     }

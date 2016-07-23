@@ -100,65 +100,59 @@ class StringUtil
         $length = strlen($string);
 
         switch( strtoupper($encode) ) {
-            case 'GBK':
-            case 'GB2312':
-                for ( $i = 0; $i < $length; ) {
-                    $code = ord($string[$i]);
-
-                    if ( $code <= 127 ) {
-                        if ( $code < 32
-                            && ! in_array($code, $reserve) ) {
-                            $i++;
-                            continue;
-                        }
-
-                        array_push($buffer, $string[$i]);
-
-                        $bytes = 1;
-                    }
-                    else {
-                        //gbk, gb2312, skip two bytes
-                        array_push($buffer, $string[$i]);
-                        array_push($buffer, $string[$i+1]);
-
-                        $bytes = 2;
+        case 'GBK':
+        case 'GB2312':
+            for ( $i = 0; $i < $length; ) {
+                $code = ord($string[$i]);
+                if ( $code <= 127 ) {
+                    if ( $code < 32
+                        && ! in_array($code, $reserve) ) {
+                        $i++;
+                        continue;
                     }
 
-                    $i += $bytes;
+                    array_push($buffer, $string[$i]);
+
+                    $bytes = 1;
+                } else {
+                    //gbk, gb2312, skip two bytes
+                    array_push($buffer, $string[$i]);
+                    array_push($buffer, $string[$i+1]);
+
+                    $bytes = 2;
                 }
-                break;
-            case 'UTF-8':
-                for ( $i = 0; $i < $length; ) {
-                    $code  = ord($string[$i]);
 
-                    if ( ($code & 0x80) == 0 ) {
-                        if ( $code < 32
-                            && ! in_array($code, $reserve) ) {
-                            $i++;
-                            continue;
-                        }
+                $i += $bytes;
+            }
+            break;
+        case 'UTF-8':
+            for ( $i = 0; $i < $length; ) {
+                $code  = ord($string[$i]);
 
-                        array_push($buffer, $string[$i]);
-
-                        $bytes = 1;
+                if ( ($code & 0x80) == 0 ) {
+                    if ( $code < 32
+                        && ! in_array($code, $reserve) ) {
+                        $i++;
+                        continue;
                     }
-                    else {
-                        $bytes = 0;
+                    array_push($buffer, $string[$i]);
+                    $bytes = 1;
+                } else {
+                    $bytes = 0;
 
-                        //utf-8, skip multiple bytes, no more than 4
-                        for ( ; ($code & 0x80) != 0; $code <<= 1 ) {
-                            $bytes++;
-                        }
-
-                        array_push($buffer, substr($string, $i, $bytes));
+                    //utf-8, skip multiple bytes, no more than 4
+                    for ( ; ($code & 0x80) != 0; $code <<= 1 ) {
+                        $bytes++;
                     }
-
-                    $i += $bytes;
+                    array_push($buffer, substr($string, $i, $bytes));
                 }
-                break;
-            default:
-                return false;
-                break;
+
+                $i += $bytes;
+            }
+            break;
+        default:
+            return false;
+            break;
         }
 
         return implode('', $buffer);
@@ -203,18 +197,18 @@ class StringUtil
         return implode('', $buff);
     }
 
-	/**
-	 * self define substr and make sure the substring will
-	 * be correct
-	 *
-	 * @param	$str
-	 * @param	$len
-	 * @param	$charset
-	 */
-	public static function substr($str, $len, $charset='UTF-8') 
-	{ 
+    /**
+     * self define substr and make sure the substring will
+     * be correct
+     *
+     * @param    $str
+     * @param    $len
+     * @param    $charset
+     */
+    public static function substr($str, $len, $charset='UTF-8') 
+    { 
         if ( strlen($str) <= $len ) return $str;
-        $CH	= strtolower(str_replace('-', '', $charset));
+        $CH = strtolower(str_replace('-', '', $charset));
 
         //get the substring
         $substr = ''; 
@@ -229,28 +223,28 @@ class StringUtil
         }
 
         return $substr; 
-	}
+    }
 
 
-	/*
-	 * get x random letters
-	 *
-	 * @param	$x
-	 * @param	$numberOnly only generate number?
-	*/
-	public static function randomLetters($x, $numberOnly=false)
-	{
-		//random seed
-		$_letters = $numberOnly ? '0123456789' : '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-		$length	  = strlen($_letters);
+    /*
+     * get x random letters
+     *
+     * @param    $x
+     * @param    $numberOnly only generate number?
+    */
+    public static function randomLetters($x, $numberOnly=false)
+    {
+        //random seed
+        $_letters = $numberOnly ? '0123456789' : '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $length   = strlen($_letters);
 
-		$CHARS = array();
-		for ( $i = 0; $i < $x; $i++ ) {
-			$CHARS[] = $_letters[mt_rand()%$length];
-		}
+        $CHARS = array();
+        for ( $i = 0; $i < $x; $i++ ) {
+            $CHARS[] = $_letters[mt_rand()%$length];
+        }
 
-		return implode('', $CHARS);
-	}
+        return implode('', $CHARS);
+    }
 
     /**
      * convert an integer to a binary string 
