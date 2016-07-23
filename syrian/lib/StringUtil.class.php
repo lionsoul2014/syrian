@@ -213,22 +213,22 @@ class StringUtil
 	 */
 	public static function substr($str, $len, $charset='UTF-8') 
 	{ 
-		if ( strlen($str) <= $len ) return $str;
-		$CH	= strtolower(str_replace('-', '', $charset));
+        if ( strlen($str) <= $len ) return $str;
+        $CH	= strtolower(str_replace('-', '', $charset));
 
-		//get the substring
-		$substr = ''; 
-		if ( $CH == 'utf8' ) {
-			for( $i = 0; $i < $len - 3; $i++ ) {
-				$substr .= ord($str[$i])>127 ? $str[$i].$str[++$i].$str[++$i] : $str[$i]; 
+        //get the substring
+        $substr = ''; 
+        if ( $CH == 'utf8' ) {
+            for( $i = 0; $i < $len - 3; $i++ ) {
+                $substr .= ord($str[$i])>127 ? $str[$i].$str[++$i].$str[++$i] : $str[$i]; 
             }
-		} else if ( $CH == 'gbk' || $CH == 'gb2312' ) {
-			for( $i = 0; $i < $len - 2; $i++ ) {
-				$substr .= ord($str[$i])>127 ? $str[$i].$str[++$i] : $str[$i]; 
+        } else if ( $CH == 'gbk' || $CH == 'gb2312' ) {
+            for( $i = 0; $i < $len - 2; $i++ ) {
+                $substr .= ord($str[$i])>127 ? $str[$i].$str[++$i] : $str[$i]; 
             }
-		}
+        }
 
-		return $substr; 
+        return $substr; 
 	}
 
 
