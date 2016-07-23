@@ -324,5 +324,48 @@ class StringUtil
         );
     }
 
+    /**
+     * generate a universal unique identifier
+     *
+     * @return  String
+    */
+    public static function genGlobalUid($b32=true)
+    {
+        /*
+         * 1, create a guid
+         * check and append the node name to
+         *  guarantee the basic server unique
+        */
+        $prefix = NULL;
+        if ( defined('SR_NODE_NAME') ) {
+            $prefix = substr(md5(SR_NODE_NAME), 0, 4);
+        } else {
+            $prefix = sprintf("%04x", mt_rand(0, 0xffff));
+        }
+
+        $tArr = explode(' ', microtime());
+        $tsec = $tArr[1];
+        $msec = $tArr[0];
+        if ( ($sIdx = strpos($msec, '.')) !== false ) {
+            $msec = substr($msec, $sIdx + 1);
+        }
+
+        return $b32 ? sprintf(
+            "%08x%08x%0s%04x%04x%04x",
+            $tsec,
+            $msec,
+            $prefix,
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff)
+        ) : sprintf(
+            "%08x%08x%0s%04x%04x",
+            $tsec,
+            $msec,
+            $prefix,
+            mt_rand(0, 0xffff)
+        );
+    }
+
 }
 ?>

@@ -16,34 +16,37 @@ class Session
      *
      * @param   $key
      * @param   $conf
+     * @param   $gen
      * @return  Object
     */
-    public static function start($key, $conf)
+    public static function start($key, $conf, $gen=false)
     {
-        return new self($key, $conf);
+        return new self($key, $conf, $gen);
     }
     
     /**
      * method to initialize the class and start the session here
+     *
+     * @param   $_key
+     * @param   $_conf
+     * @param   $gen
     */
-    public function __construct($_key, $_conf)
+    public function __construct($_key, $_conf, $gen)
     {
         //load and create the user file session
         import('session.SessionFactory');
         $this->_SESS = SessionFactory::create($_key, $_conf);
 
-        if ( isset($_conf['sessid']) ) {
-            $this->_SESS->setSessionId($_conf['sessid']);
-
-            /*
-             * check and set the r8c value
-             * @Note: 
-             * for the first time to create session better with a r8c setting
-            */
-            if ( isset($_conf['r8c']) ) {
-                import('Util');
-                $this->_SESS->setR8C(Util::randomLetters(8));
-            }
+        /*
+         * check and set the session id and the r8c value
+         * @Note: 
+         * we only need to do this for the first time to create the session
+        */
+        if ( $gen == true ) {
+            import('StringUtil');
+            $sessid = isset($_conf['sessid']) ? $_conf['sessid'] : StringUtil::genGlobalUid();
+            $this->_SESS->setSessionId($sessid);
+            $this->_SESS->setR8C(StringUtil::randomLetters(8));
         }
 
         $this->_SESS->start();

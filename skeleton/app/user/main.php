@@ -35,10 +35,9 @@ class UserController extends C_Controller
 
         $sessKey = isset($this->session_key) ? $this->session_key : 'File';
         $conf    = config("session#{$sessKey}");
-        $conf['r8c']    = true;
         $conf['sessid'] = '1707ydlteVx9VPM9W0LBMHKCRWT648m9';
 
-        $sessObj = Session::start($sessKey, $conf);
+        $sessObj = Session::start($sessKey, $conf, true);
         $sessObj->register(7);
 
         $sessObj->set('user_id',  7);
