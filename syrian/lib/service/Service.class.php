@@ -124,6 +124,20 @@ class ServiceInputBean
         return false;
     }
 
+    public function __toString()
+    {
+        if ( $this->args == NULL ) {
+            return NULL;
+        }
+
+        $str = array();
+        foreach ( $this->args as $k => $v ) {
+            $str[] = "{$k}={$v}";
+        }
+
+        return implode(',', $str);
+    }
+
     public function __destruct()
     {
         if ( $this->args != NULL ) {

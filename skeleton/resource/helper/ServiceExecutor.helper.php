@@ -43,10 +43,10 @@ class ServiceExecutorHelper extends Helper
     */
     protected function createGearmanExecutor($sharding)
     {
-        $conf = loader::config('executor', null, false, $sharding);
+        $conf = config("executor#{$sharding}");
         if ( $conf == null ) return null;
 
-        loader::import('GearmanExecutor', 'service');
+        import('service.GearmanExecutor');
         return new GearmanExecutor($conf);
     }
 

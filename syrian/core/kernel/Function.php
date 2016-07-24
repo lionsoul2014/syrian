@@ -589,4 +589,30 @@ function controller(
     return $ret;
 }
 
+/**
+ * search and invoke the specified service through the specified service path
+ * then return the executed result
+ * @Note: this is just a quick lancher for Executor->execute() not mean to take its place
+ *
+ * @param   $serv_path
+ * @param   $args
+ * @param   $executor (default to the local executor)
+ * @param   $asyn (default to true)
+ * @param   $priority
+*/
+function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
+{
+    if ( $executor == NULL ) {
+        import('service.LocalExecutor');
+        $executor = new LocalExecutor(NULL);
+    }
+
+    return $executor->execute(
+        $serv_path, 
+        $args, 
+        $asyn, 
+        $priority
+    );
+}
+
 ?>

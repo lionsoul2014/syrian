@@ -27,8 +27,7 @@ class TestService extends Service
     */
     public function hello($input)
     {
-        var_dump($input);
-        echo "hello\n";
+        return "hello, {$input}\n";
     }
 
     /**
@@ -39,8 +38,7 @@ class TestService extends Service
     */
     public function greeting($input)
     {
-        var_dump($input);
-        echo "nice to meet you\n";
+        return "nice to meet you, {$input}\n";
     }
     
 }
