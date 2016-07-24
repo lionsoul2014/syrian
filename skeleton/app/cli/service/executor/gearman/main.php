@@ -19,14 +19,6 @@ class GearmanController extends Cli_Controller
     */
     private $localExecutor = NULL;
 
-    /**
-     * construct method
-    */
-    public function __construct()
-    {
-        parent::__construct();
-    } 
-
     public function __before($input, $output, $uri)
     {
         parent::__before($input, $output, $uri);
@@ -41,7 +33,7 @@ class GearmanController extends Cli_Controller
     /**
      * gearman service executor worker
     */
-    protected function _worker($input)
+    protected function actionWorker($input)
     {
         $sharding = $input->get('sharding');
         if ( $sharding == false ) {

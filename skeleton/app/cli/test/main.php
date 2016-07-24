@@ -12,7 +12,7 @@ class TestController extends Cli_Controller
         parent::__construct();
     }
 
-    public function _base($input)
+    public function actionBase($input)
     {
         $counter = 1;
         while ( true ) {

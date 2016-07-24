@@ -7,17 +7,12 @@
 
 class SyrianController extends Cli_Controller
 {
-    public function __construct()
-    {
-        parent::__construct();
-    } 
-
     /**
      * minify the syrian framework
      * target source file: BASEPATH/core/Syrian.merge.php
      * destination file  : BASEPATH/core/Syrian.merge.min.php
     */
-    public function _minify($input)
+    public function actionMinify($input)
     {
         import('util.PHPSource');
         $srcFile = BASEPATH . 'core/Syrian.merge.php';

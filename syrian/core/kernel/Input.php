@@ -46,25 +46,9 @@ if ( ! function_exists('OP_SIZE') )
 
 class Input
 {
-    private static $_loaded = false;
-    
     public function __construct()
     {
        //Do nothing here
-    }
-    
-    /**
-     * check and load the Filter class if it is not load
-     *
-     * @see    lib.util.filter.Filter
-    */
-    private static function checkAndLoadFilter()
-    {
-        //check the load status of Filter class
-        if ( self::$_loaded == false ) {
-            import('Filter');
-            self::$_loaded = true;
-        }
     }
 
     /**
@@ -108,9 +92,7 @@ class Input
         
         //apply the model if it is not null
         if ( $_model != NULL ) {
-            //check the load status of Filter class
-            self::checkAndLoadFilter();
-            
+            import('Filter');
             return Filter::get( $_GET, $_key, $_model, $_errno );
         }
         
@@ -199,9 +181,7 @@ class Input
     */
     public function getModel( $_model, &$_errno=NULL )
     {
-        //check the load status of Filter class
-        self::checkAndLoadFilter();
-            
+        import('Filter');
         return Filter::loadFromModel($_GET, $_model, $_errno);
     }
     
@@ -222,9 +202,7 @@ class Input
         
         //apply the model if it is not null
         if ( $_model != NULL ) {
-            //check the load status of Filter class
-            self::checkAndLoadFilter();
-            
+            import('Filter');
             return Filter::get( $_POST, $_key, $_model, $_errno );
         }
         
@@ -312,9 +290,7 @@ class Input
     */
     public function postModel( $_model, &$_errno=NULL )
     {
-        //check the load status of Filter class
-        self::checkAndLoadFilter();
-        
+        import('Filter');
         return Filter::loadFromModel($_POST, $_model, $_errno);
     }
     
@@ -335,9 +311,7 @@ class Input
         
         //apply the model if it is not null
         if ( $_model != NULL ) {
-            //check the load status of Filter class
-            self::checkAndLoadFilter();
-            
+            import('Filter');
             return Filter::get( $_COOKIE, $_key, $_model, $_errno );
         }
         
@@ -425,9 +399,7 @@ class Input
     */
     public function cookieModel( $_model, &$_errno=NULL )
     {
-        //check the load status of Filter class
-        self::checkAndLoadFilter();
-            
+        import('Filter');
         return Filter::loadFromModel($_COOKIE, $_model, $_errno);
     }
     
@@ -448,9 +420,7 @@ class Input
         
         //apply the model if it is not null
         if ( $_model != NULL ) {
-            //check the load status of Filter class
-            self::checkAndLoadFilter();
-            
+            import('Filter');
             return Filter::get( $_SESSION, $_key, $_model, $_errno );
         }
         
@@ -475,9 +445,7 @@ class Input
         
         //apply the model if it is not null
         if ( $_model != NULL ) {
-            //check the load status of Filter class
-            self::checkAndLoadFilter();
-            
+            import('Filter');
             return Filter::get( $_REQUEST, $_key, $_model, $_errno );
         }
         
@@ -565,9 +533,7 @@ class Input
     */
     public function requestModel( $_model, &$_errno=NULL )
     {
-        //check the load status of Filter class
-        self::checkAndLoadFilter();
-            
+        import('Filter');
         return Filter::loadFromModel($_REQUEST, $_model, $_errno);
     }
     
@@ -588,9 +554,7 @@ class Input
         
         //apply the model if it is not null
         if ( $_model != NULL ) {
-            //check the load status of Filter class
-            self::checkAndLoadFilter();
-            
+            import('Filter');
             return Filter::get( $_SERVER, $_key, $_model, $_errno );
         }
         
@@ -615,9 +579,7 @@ class Input
         
         //apply the model if it is not null
         if ( $_model != NULL ) {
-            //check the load status of Filter class
-            self::checkAndLoadFilter();
-            
+            import('Filter');
             return Filter::get( $_ENV, $_key, $_model, $_errno );
         }
         

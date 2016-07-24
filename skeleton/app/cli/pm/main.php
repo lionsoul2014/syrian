@@ -14,11 +14,6 @@ class PmController extends Cli_Controller
 {
     private $debug;
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     public function __before($input, $output, $uri)
     {
         parent::__before($input, $output, $uri);
@@ -86,17 +81,17 @@ class PmController extends Cli_Controller
         $this->json = $json;
     }
 
-    public function _start($input)
+    public function actionStart($input)
     {
         $this->_do_request('start');
     }
 
-    public function _stop($input)
+    public function actionStop($input)
     {
         $this->_do_request('stop');
     }
 
-    public function _restart($input)
+    public function actionRestart($input)
     {
         $this->_do_request('restart');
     }
@@ -105,7 +100,7 @@ class PmController extends Cli_Controller
      * script monitor, check the running status of all the
      *  started script at specified interval and if the script is down start it
     */
-    public function _monitor($input)
+    public function actionMonitor($input)
     {
         $interval = $input->getInt('interval', 10);    //in seconds
         $trackArr = array();

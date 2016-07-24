@@ -9,7 +9,7 @@
  
 class TestController extends C_Controller
 {    
-    public function _helper($input)
+    public function actionHelper($input)
     {
         $stream_id = 13564;
         $ack_code  = '8KacYuPl';
@@ -17,7 +17,7 @@ class TestController extends C_Controller
         var_dump(helper('ServiceExecutor#Test', array($stream_id, $ack_code, $biz)));
     }
 
-    public function _service($input)
+    public function actionService($input)
     {
         //return service('test.hello', array('name' => 'liroe'));
         return service(
