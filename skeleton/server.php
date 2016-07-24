@@ -26,8 +26,7 @@ define('SR_POWERBY',        'Syrian/2.0');
  * set the SR_INC_COMPONENTS to controll the parts to load
 */
 define('SR_INC_COMPONENTS', 0xFF);
-//require(BASEPATH . 'core/Syrian.merge.min.php');
-require(BASEPATH . 'core/Syrian.php');
+require(BASEPATH . 'core/Syrian.merge.min.php');
 
 //-----------------------------------------------------------------
 

@@ -615,4 +615,26 @@ function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
     );
 }
 
+/**
+ * quick way to fetch/store the value from the default session
+ *
+ * @param   $key
+ * @param   $val
+ * @return  Mixed
+*/
+function session($key, $val=null)
+{
+    if ( E('session_start') == NULL ) {
+        session_start();
+        E('session_start', true);
+    }
+
+    if ( $val == null ) {
+        return isset($_SESSION[$key]) ? $_SESSION[$key] : null;
+    }
+
+    $_SESSION[$key] = $val;
+    return true;
+}
+
 ?>
