@@ -26,8 +26,7 @@ define('SR_POWERBY',        'Syrian/2.0');
  * set the SR_INC_COMPONENTS to controll the parts to load
 */
 define('SR_INC_COMPONENTS', 0xFF);
-//require(BASEPATH . 'core/Syrian.merge.min.php');
-require(BASEPATH . 'core/Syrian.php');
+require(BASEPATH . 'core/Syrian.merge.min.php');
 
 //-----------------------------------------------------------------
 
@@ -59,7 +58,7 @@ try {
 } catch ( Exception $e ) {
     if ( SR_CLI_MODE ) echo $e, "\n";
     else {
-        echo("Oops, Something is wrong while processing the request with uri=\"{$_SERVER['REQUEST_URI']}\"\n");
+        echo("Oops, Something is wrong while processing the request \"{$_SERVER['REQUEST_URI']}\"\n");
     }
 
     //@Note: You may need to do the error log here
