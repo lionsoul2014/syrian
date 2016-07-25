@@ -78,6 +78,30 @@ EOF;
 }
 
 /**
+ * quick interface to build or fetch the cache
+ *
+ * @param   $key cache service logic name
+ * @return  Object specified cache object
+*/
+function build_cache($key='NFile')
+{
+    static $_loaded = array();
+
+    if ( isset($_loaded[$key]) ) {
+        return $_loaded[$key];
+    }
+
+    import('cache.CacheFactory');
+    $conf   = config("cache#{$key}");
+    $cacher = CacheFactory::create($conf['key'], $conf['conf']);
+
+    //cache the current cacher
+    $_loaded[$key] = $cacher;
+
+    return $cacher;
+}
+
+/**
  * application layer dynamic request resource pre-load
  * main for #controller function, cuz:
  * import('core.Cli_Controller') will cause the singal not working
@@ -90,6 +114,9 @@ function resource_preload_callback($uri)
     switch ( $uri->parts[0] ) {
     case 'cli':
         import('core.Cli_Controller', false);
+        break;
+    case 'script':
+        import('core.S_Controller', false);
         break;
     #add more case here
     default:
