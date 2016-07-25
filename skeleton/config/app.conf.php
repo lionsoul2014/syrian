@@ -52,12 +52,6 @@ $config->clusters   = array(
 );
 
 /*
- * App client user agent identifier 
- * currently mainly for Controller#isAndroid Controller#isIOS define
-*/
-$config->app_ua_identifier = NULL;
-
-/*
  * admin allow access hosts
 */
 $config->admin_allow_hosts  = array(
