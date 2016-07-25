@@ -27,7 +27,7 @@ function _G($key, $val=NULL)
         return true;
     }
 
-    if ( $val == NULL ) {
+    if ( $val === NULL ) {
         return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
     }
 
@@ -53,7 +53,7 @@ function E($key, $val=NULL)
         return true;
     }
 
-    if ( $val == NULL ) {
+    if ( $val === NULL ) {
         return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
     }
 
@@ -624,12 +624,12 @@ function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
 */
 function session($key, $val=null)
 {
-    if ( E('session_start') == NULL ) {
+    if ( E('session_start') === NULL ) {
         session_start();
         E('session_start', true);
     }
 
-    if ( $val == null ) {
+    if ( $val === null ) {
         return isset($_SESSION[$key]) ? $_SESSION[$key] : null;
     }
 

@@ -31,6 +31,16 @@ $config->script = array(
 $config->flush_key   = 'mqh-flush-key';
 $config->session_key = 'File';  //default session key
 
+/*
+ * script configuration
+ * debug: merge & cache & compress the script ?
+ * compress: compress level setting
+*/
+$config->script = array(
+    'debug'     => true,
+    'compress'  => 0
+);
+
 //distribute servers
 // multiples web servers will be use to do the load balancing
 //DNS resolution is the current way
@@ -38,7 +48,7 @@ $config->session_key = 'File';  //default session key
 $config->clusters   = array(
     //'http://node1.lerays.com/',
     //'http://node2.lerays.com/'
-    'http://192.168.1.10/'
+    'http://192.168.1.105/'
 );
 
 /*
