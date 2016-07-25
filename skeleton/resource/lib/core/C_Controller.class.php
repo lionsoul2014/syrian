@@ -22,11 +22,10 @@ class C_Controller extends Controller
      * @return  Mixed(boolean or lib.Session Object)
      * @see     app.lib.Session#validate
     */
-    public function isLoggedIn(&$errno)
+    public function isLoggedIn(&$errno=null)
     {
-        import('Session', false);
-        $sessKey = isset($this->session_key) ? $this->session_key : 'File';
-        $sessObj = Session::start($sessKey, config('session#File'));
+        $sessKey = isset($this->conf->session_key) ? $this->conf->session_key : 'File';
+        $sessObj = build_session($sessKey);
         if ( $sessObj->validate($errno) == false ) {
             return false;
         }

@@ -5,38 +5,33 @@
  * @author chenxin <chenxin619315@gmail.com>
 */
 
- //---------------------------------------------------------
+import('session.SessionFactory');
  
 class Session
 {
     private $_SESS  = null;
 
     /**
-     * create and start the user-level session
+     * method to initialize the class and start the session here
      *
      * @param   $key
      * @param   $conf
+    */
+    public function __construct($key, $conf)
+    {
+        //create the user level session
+        $this->_SESS = SessionFactory::create($key, $conf);
+    }
+
+    /**
+     * start the current session
+     *
+     * @param   $sessid user defined session id
      * @param   $gen
      * @return  Object
     */
-    public static function start($key, $conf, $gen=false)
+    public function start($gen, $sessid=null)
     {
-        return new self($key, $conf, $gen);
-    }
-    
-    /**
-     * method to initialize the class and start the session here
-     *
-     * @param   $_key
-     * @param   $_conf
-     * @param   $gen
-    */
-    public function __construct($_key, $_conf, $gen)
-    {
-        //load and create the user file session
-        import('session.SessionFactory');
-        $this->_SESS = SessionFactory::create($_key, $_conf);
-
         /*
          * check and set the session id and the r8c value
          * @Note: 
@@ -44,16 +39,21 @@ class Session
         */
         if ( $gen == true ) {
             import('StringUtil');
-            $sessid = isset($_conf['sessid']) ? $_conf['sessid'] : StringUtil::genGlobalUid();
+            if ( $sessid == null ) {
+                $sessid = StringUtil::genGlobalUid() ;
+            }
+
             $this->_SESS->setSessionId($sessid);
             $this->_SESS->setR8C(StringUtil::randomLetters(8));
         }
 
         $this->_SESS->start();
+        return $this;
     }
       
     /**
      * register the basic item data
+     * @Note: invoke the #start before invoke this
      *
      * @param   $uid
     */
@@ -81,9 +81,10 @@ class Session
      * 3: r8c value error
      *
      * @param   $errno
+     * @param   $check_ua
      * @return  bool
     */
-    public function validate(&$errno=null)
+    public function validate(&$errno=null, $check_ua=false)
     {
         foreach ( array('uid', 'uAgent') as $key ) {
             if ( ! $this->_SESS->has($key) ) {
@@ -92,9 +93,8 @@ class Session
             }
         }
 
-        if ( ! isset($_SERVER['HTTP_USER_AGENT']) 
-            || strcmp($_SERVER['HTTP_USER_AGENT'], 
-                    $this->_SESS->get('uAgent')) != 0 ) {
+        if ( $check_ua && ( ! isset($_SERVER['HTTP_USER_AGENT']) 
+            || strcmp($_SERVER['HTTP_USER_AGENT'],  $this->_SESS->get('uAgent')) != 0 ) ) {
             $errno = 2;
             return false;
         }

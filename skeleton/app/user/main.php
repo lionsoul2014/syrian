@@ -7,11 +7,6 @@
 
 class UserController extends C_Controller
 {    
-    public function actionIndex($input)
-    {
-
-    }
-
     public function actionProfile()
     {
         $sess = $this->isLoggedIn();
@@ -31,13 +26,8 @@ class UserController extends C_Controller
     
     public function actionSignIn($input)
     {
-        import('Session', false);
-
         $sessKey = isset($this->conf->session_key) ? $this->conf->session_key : 'File';
-        $conf    = config("session#{$sessKey}");
-        $conf['sessid'] = '1707ydlteVx9VPM9W0LBMHKCRWT648m9';
-
-        $sessObj = Session::start($sessKey, $conf, true);
+        $sessObj = build_session($sessKey, true, '1707ydlteVx9VPM9W0LBMHKCRWT648m9');
         $sessObj->register(7);
 
         $sessObj->set('user_id',  7);

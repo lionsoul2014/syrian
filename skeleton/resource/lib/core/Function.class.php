@@ -80,8 +80,9 @@ EOF;
 /**
  * quick interface to build or fetch the cache
  *
- * @param   $key cache service logic name
+ * @param   $key cache service logic name defined in config/cache.conf.php
  * @return  Object specified cache object
+ * @see     app/config/cache.config.php
 */
 function build_cache($key='NFile')
 {
@@ -92,13 +93,42 @@ function build_cache($key='NFile')
     }
 
     import('cache.CacheFactory');
-    $conf   = config("cache#{$key}");
-    $cacher = CacheFactory::create($conf['key'], $conf['conf']);
+    $conf  = config("cache#{$key}");
+    $cache = CacheFactory::create($conf['key'], $conf['conf']);
 
-    //cache the current cacher
-    $_loaded[$key] = $cacher;
+    //cache the current cache instance
+    $_loaded[$key] = $cache;
 
-    return $cacher;
+    return $cache;
+}
+
+/**
+ * quick interface to build or fetch the session
+ *
+ * @param   $key session service logic name defined in the config/session.conf.php
+ * @param   $sessid user-define session id
+ * @return  Object specified session object
+ * @see     app/config/session.conf.php
+*/
+function build_session($key='File', $gen=false, $sessid=null)
+{
+    static $_loaded = array();
+
+    if ( isset($_loaded[$key]) ) {
+        return $_loaded[$key];
+    }
+
+    import('Session', false);
+    $conf = config("session#{$key}");
+    if ( $sessid != null ) {
+        $conf['sessid'] = $sessid;
+    }
+
+    //create and cache the session instance
+    $sess = new Session($key, $conf);
+    $_loaded[$key] = $sess;
+
+    return $sess->start($gen, $sessid);
 }
 
 /**
