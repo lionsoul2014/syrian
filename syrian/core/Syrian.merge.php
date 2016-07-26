@@ -454,7 +454,7 @@ function redirect($uri, $args=NULL, $exit=true)
             $arr[] = "{$k}={$v}";
         }
         $args = '?'.implode('&', $arr);
-    } else {
+    } else if ( ! is_null($args) ) {
         $args = "?{$args}";
     }
 
