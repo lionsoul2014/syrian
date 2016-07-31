@@ -624,7 +624,7 @@ function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
 */
 function session($key, $val=null)
 {
-    if ( E('session_start') === NULL ) {
+    if ( E('session_start') == false ) {
         session_start();
         E('session_start', true);
     }
@@ -661,6 +661,7 @@ function session_close()
         }
     }
 
+    E('session_start', false);
     session_destroy();
 }
 
