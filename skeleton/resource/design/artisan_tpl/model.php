@@ -12,7 +12,7 @@ COMMENT;
 
 if ( $artisan['model'] == 'sharding' ) {
 $tplStr = <<<TPL
-
+\n
 import('model.RouterShardingModel');
 
 class {$artisan['name']}Model extends RouterShardingModel
@@ -30,7 +30,7 @@ class {$artisan['name']}Model extends RouterShardingModel
          * (sub-model) can not be changed
         */
 		{this}->shardings = array(
-            // array('sharding01', 'section'),
+            // 'package.Model',
         );
 	}
 
@@ -39,7 +39,7 @@ class {$artisan['name']}Model extends RouterShardingModel
 TPL;
 } else if ( $artisan['model'] == 'elasticSearch' ) {
 $tplStr = <<<TPL
-
+\n
 import('model.ElasticSearchModel');
 
 class {$artisan['name']}Model extends ElasticSearchModel
@@ -72,6 +72,8 @@ class {$artisan['name']}Model extends ElasticSearchModel
 TPL;
 } else {
 $tplStr = <<<TPL
+\n
+import('model.C_Model');
 
 class {$artisan['name']}Model extends C_Model
 {
@@ -79,9 +81,9 @@ class {$artisan['name']}Model extends C_Model
 	{
 		parent::__construct();
 
-		{this}->db    = C_Model::getDatabase('Mysql', "{$artisan['db']}");
-		{this}->table = "{$artisan['prefix']}{$artisan['table']}";
-		{this}->primary_key = "{$artisan['pk']}";
+		{this}->db    = self::getDatabase('Mysql', '{$artisan['db']}');
+		{this}->table = '{$artisan['prefix']}{$artisan['table']}';
+		{this}->primary_key = '{$artisan['pk']}';
 	}
 
 }

@@ -637,4 +637,31 @@ function session($key, $val=null)
     return true;
 }
 
+/**
+ * quick way to do the session clean up:
+ * 1, clear all the data in $_SESSION
+ * 2, unlink the session file if it is possible
+ * 3, delete the session cookies
+*/
+function session_close()
+{
+    session_start();
+    session_unset();    
+    setcookie(session_name(), '', time() - 42000, '/');
+
+    /*
+     * check and try to delete the session file
+     * if the session_save_handler is bean set to 'N;/path' and we will just ignore it
+    */
+    $save_path = session_save_path();
+    if ( strpos($save_path, ';') === false ) {
+        $sessFile = "{$save_path}/sess_" . session_id();
+        if ( file_exists($sessFile) ) {
+            @unlink($sessFile);
+        }
+    }
+
+    session_destroy();
+}
+
 ?>
