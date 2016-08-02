@@ -732,7 +732,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
     defined('OP_NUMERIC')   or define('OP_NUMERIC',     1 <<  6);
     defined('OP_STRING')    or define('OP_STRING',      1 <<  7);
     defined('OP_ZIP')       or define('OP_ZIP',         1 <<  8);
-    defined('OP_CELLPHONE') or define('OP_CELLPHONE',   1 <<  9);
+    defined('OP_MOBILE')    or define('OP_MOBILE',      1 <<  9);
     defined('OP_TEL')       or define('OP_TEL',         1 << 10);
     defined('OP_IDENTIRY')  or define('OP_IDENTIRY',    1 << 11);
 

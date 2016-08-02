@@ -17,7 +17,7 @@ defined('OP_DATE')      or define('OP_DATE',        1 <<  5);
 defined('OP_NUMERIC')   or define('OP_NUMERIC',     1 <<  6);
 defined('OP_STRING')    or define('OP_STRING',      1 <<  7);
 defined('OP_ZIP')       or define('OP_ZIP',         1 <<  8);
-defined('OP_CELLPHONE') or define('OP_CELLPHONE',   1 <<  9);
+defined('OP_MOBILE')    or define('OP_MOBILE',      1 <<  9);
 defined('OP_TEL')       or define('OP_TEL',         1 << 10);
 defined('OP_IDENTIRY')  or define('OP_IDENTIRY',    1 << 11);
 
@@ -42,53 +42,53 @@ if ( ! function_exists('OP_SIZE') )
 
 class Filter
 {
-    private static function isLatin( &$_val )
+    private static function isLatin( $_val )
     {
         return (preg_match('/^[a-z0-9_]+$/i', $_val) == 1);
     }
     
-    private static function isUrl( &$_val )
+    private static function isUrl( $_val )
     {
-        return (filter_var($_val, FILTER_VALIDATE_URL) != FALSE);
+        return (filter_var($_val, FILTER_VALIDATE_URL) != false);
     }
     
-    private static function isEmail( &$_val )
+    private static function isEmail( $_val )
     {
-        return (filter_var($_val, FILTER_VALIDATE_EMAIL) != FALSE);
+        return (filter_var($_val, FILTER_VALIDATE_EMAIL) != false);
     }
     
-    private static function isQQ( &$_val )
+    private static function isQQ( $_val )
     {
         return (preg_match('/^[1-9][0-9]{4,14}$/', $_val) == 1);
     }
     
-    private static function isDate( &$_val )
+    private static function isDate( $_val )
     {
         return ( preg_match('/^[0-9]{4}-(0[1-9]|1[012])-([0][1-9]|[12][0-9]|[3][01])$/', $_val) == 1 );
     }
     
     //not all whitespace
-    private static function isString( &$_val )
+    private static function isString( $_val )
     {
         return ($_val != '' && preg_match('/^\s{1,}$/', $_val) == 0);
     }
     
-    private static function isZip( &$_val )
+    private static function isZip( $_val )
     {
         return (preg_match('/^[0-9]{6}$/', $_val) == 1);
     }
     
-    private static function isCellphone( &$_val )
+    private static function isMobile( $_val )
     {
         return (preg_match('/^1[3|5|4|7|8][0-9]{9}$/', $_val) == 1);
     }
     
-    private static function isTel( &$_val )
+    private static function isTel( $_val )
     {
         return (preg_match('/^0[1-9][0-9]{1,2}-[0-9]{7,8}$/', $_val) == 1);
     }
     
-    private static function isIdentity( &$_val )
+    private static function isIdentity( $_val )
     {
         return (
             preg_match('/^[1-6][0-9]{5}[1|2][0-9]{3}(0[1-9]|10|11|12)([0|1|2][0-9]|30|31)[0-9]{3}[0-9A-Z]$/',
@@ -119,34 +119,29 @@ class Filter
         return preg_replace($_rules, array('', '<$1$2>'), $_val);
     }
     
-    private static function check( &$_val, &$_model, &$_errno )
+    private static function check( &$_val, $_model, &$_errno )
     {
         //1. data type check
         if ( $_val == NULL && ( $_model[0] & OP_NULL ) != 0 ) return '';
         
         $_errno = 0;
-        if ( ($_model[0] & OP_LATIN) != 0 ) 
-            if ( ! self::isLatin( $_val ) )     return FALSE;
-        if ( ($_model[0] & OP_URL) != 0 ) 
-            if ( ! self::isUrl( $_val ) )       return FALSE;
-        if ( ($_model[0] & OP_EMAIL) != 0 ) 
-            if ( ! self::isEmail( $_val ) )     return FALSE;
-        if ( ($_model[0] & OP_QQ) != 0 ) 
-            if ( ! self::isQQ( $_val ) )        return FALSE;
-        if ( ($_model[0] & OP_DATE) != 0 ) 
-            if ( ! self::isDate( $_val ) )      return FALSE;
-        if ( ($_model[0] & OP_NUMERIC) != 0 ) 
-            if ( ! is_numeric( $_val ) )        return FALSE;
-        if ( ($_model[0] & OP_STRING) != 0 ) 
-            if ( ! self::isString( $_val ) )    return FALSE;
-        if ( ($_model[0] & OP_ZIP) != 0 ) 
-            if ( ! self::isZip( $_val ) )       return FALSE;
-        if ( ($_model[0] & OP_CELLPHONE) != 0 ) 
-            if ( ! self::isCellphone( $_val ) ) return FALSE;
-        if ( ($_model[0] & OP_TEL) != 0 ) 
-            if ( ! self::isTel( $_val ) )       return FALSE;
-        if ( ($_model[0] & OP_IDENTIRY) != 0 )
-            if ( ! self::isIdentity( $_val ) )  return FALSE;
+        if ( is_integer($_model[0]) ) {
+            if ( ($_model[0] & OP_LATIN) != 0 && ! self::isLatin($_val) )       return false;
+            if ( ($_model[0] & OP_URL) != 0 && ! self::isUrl($_val) )           return false;
+            if ( ($_model[0] & OP_EMAIL) != 0 && ! self::isEmail($_val) )       return false;
+            if ( ($_model[0] & OP_QQ) != 0 && ! self::isQQ($_val) )             return false;
+            if ( ($_model[0] & OP_DATE) != 0 && ! self::isDate($_val) )         return false;
+            if ( ($_model[0] & OP_NUMERIC) != 0 && ! is_numeric($_val) )        return false;
+            if ( ($_model[0] & OP_STRING) != 0 && ! self::isString($_val) )     return false;
+            if ( ($_model[0] & OP_ZIP) != 0 && ! self::isZip($_val) )           return false;
+            if ( ($_model[0] & OP_MOBILE) != 0 && ! self::isMobile($_val) )     return false;
+            if ( ($_model[0] & OP_TEL) != 0 && ! self::isTel($_val) )           return false;
+            if ( ($_model[0] & OP_IDENTIRY) != 0 && ! self::isIdentity($_val) ) return false;
+        } else if ( is_string($_model[0]) ) {
+            if ( preg_match($_model[0], $_val) != 1 ) {
+                return false;
+            }
+        }
         
         $_errno = 1;
         //2. data length check
@@ -154,14 +149,14 @@ class Filter
             switch ( $_model[1][0] ) {
             case 0:             //length limit
                 $_length = strlen($_val);
-                if ( $_length < $_model[1][1] )     return FALSE;
+                if ( $_length < $_model[1][1] )     return false;
                 if ( count($_model[1]) == 3 )
-                    if ( $_length > $_model[1][2] ) return FALSE;
+                    if ( $_length > $_model[1][2] ) return false;
                 break;
             case 1:             //size limit
-                if ( $_val < $_model[1][1] )        return FALSE;
+                if ( $_val < $_model[1][1] )        return false;
                 if ( count($_model[1]) == 3 )
-                    if ( $_val > $_model[1][2] )    return FALSE;
+                    if ( $_val > $_model[1][2] )    return false;
                 break;
             }
         }
@@ -192,7 +187,7 @@ class Filter
         return $_val;
     }
     
-    public static function get( &$_src, $_name, $_model, &$_errno )
+    public static function get( $_src, $_name, $_model, &$_errno )
     {
         if ( ! isset($_src[$_name]) || $_src[$_name] == '' ) {
             $_value = NULL;
@@ -208,14 +203,14 @@ class Filter
         return self::check($_val, $_model, $_errno);
     }
     
-    public static function loadFromModel( &$_src, $_model, &$_errno )
+    public static function loadFromModel( $_src, $_model, &$_errno )
     {
         $_data = array();
         foreach ( $_model as $_name => $_value ) {
             $_ret = self::get($_src, $_name, $_value, $_errno);
-            if ( $_ret === FALSE ) {
+            if ( $_ret === false ) {
                 $_errno = array($_name, $_errno);
-                return FALSE;
+                return false;
             }
             
             //store the returnd item
