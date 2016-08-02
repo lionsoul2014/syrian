@@ -24,9 +24,7 @@ class Verifycode
     /*instance pointer.*/
     private static $_instance = NULL;
     
-    private function __construct()
-    {
-    }
+    private function __construct() {}
     
     /**
      * get the instance of the Verifycode.
