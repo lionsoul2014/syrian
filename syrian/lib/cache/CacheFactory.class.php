@@ -14,7 +14,7 @@ interface ICache
    public function baseKey( $_baseKey );
    public function factor ( $_factor );
    public function fname  ( $_fname ); 
-   public function get    ( $_time=NULL );
+   public function get    ( $_time=NULL, $callback=null);
    public function set    ( $_content, $_ttl=NULL, $mode=NULL);
    public function setTtl ( $_ttl );
    public function exists ();

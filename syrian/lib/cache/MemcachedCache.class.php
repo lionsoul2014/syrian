@@ -113,16 +113,20 @@ class MemcachedCache implements ICache
     }
 
     // we don't need the $_time param, just for implements ICache
-    public function get($_time = NULL) {
-        if ($this->_key == '' ) return false;
-
-        return $this->getByKey($this->_key);
+    public function get($_time=NULL, $callback=null) {
+        if ( $this->_key == '' ) return false;
+        return $this->getByKey($this->_key, $callback);
     }
 
 
-    public function getByKey($_key) 
+    public function getByKey($_key, $callback=null) 
     {
-        return $this->_mem->get($_key);
+        $ret = $this->_mem->get($_key);
+        if ( $ret != false && $callback != null ) {
+            return $callback($ret);
+        }
+
+        return $ret;
     }
 
 

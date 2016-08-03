@@ -92,16 +92,22 @@ class NFileCache implements ICache
         return $this->_cache_f;
     }
 
-    public function get( $_time=NULL )
+    public function get( $_time=NULL, $callback=null)
     {
         $_cache_file = $this->getCacheFile();
         if ( $_time === NULL ) $_time = $this->_ttl;
+
+        if ( ! file_exists($_cache_file) ) return FALSE;
+        if ( $_time >= 0 && filemtime($_cache_file) + $_time < time() ) {
+            return FALSE;
+        }
         
-        if ( ! file_exists( $_cache_file ) ) return FALSE;
-        if ( $_time < 0 ) return file_get_contents($_cache_file);
-        if ( filemtime( $_cache_file ) + $_time < time() ) return FALSE;
-        
-        return file_get_contents($_cache_file);
+        $ret = file_get_contents($_cache_file);
+        if ( $ret != false && $callback != null ) {
+            return $callback($ret);
+        }
+
+        return $ret;
     }
     
     public function set( $_content, $_ttl=NULL, $mode=NULL )

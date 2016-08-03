@@ -31,9 +31,9 @@ class RedisCache implements ICache
 
     //----------------- string functoins --------------
 
-    public function get( $time = NULL )
+    public function get($time=NULL, $callback=null)
     {
-        return $this->getByKey($this->_key);
+        return $this->getByKey($this->_key, $callback);
     }
 
     /**
@@ -52,12 +52,17 @@ class RedisCache implements ICache
         return $this->setByKey($this->_key, $data, $ttl);
     }
 
-    public function getByKey($key)
+    public function getByKey($key, $callback=null)
     {
         if ( $key == '' )          return false;
         if ( !$this->_conn($key) ) return false;
 
-        return $this->_redis->get($this->_key);
+        $ret = $this->_redis->get($this->_key);
+        if ( $ret != false && $callback != null ) {
+            return $callback($ret);
+        }
+
+        return $ret;
     }
 
     public function setByKey($key, $data, $ttl)
