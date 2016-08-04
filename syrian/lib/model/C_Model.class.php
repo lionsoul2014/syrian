@@ -670,7 +670,14 @@ class C_Model implements IModel
                 }
             }
 
-            if ( ! empty($item) ) {
+            /*
+             * @Note added at 2016/08/04
+             * if the sync_w attribtues is marked as true that means
+             * no matter there is data that is going to inserted to the fragment no not
+             * we will do the insert operation for the current fragment
+            */
+            if ( ! empty($item) 
+                || (isset($fragment['sync_w']) && $fragment['sync_w']) ) {
                 $sData[] = array(
                     'data'  => &$item,
                     'model' => $this->getModel($fragment['model'])
