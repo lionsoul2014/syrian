@@ -38,8 +38,8 @@ class C_Model implements IModel
      * with this you could sperate the fields of you table
      *     so store them in different section
     */
-    protected   $fragments      = NULL;
-    protected   $isFragment     = false;
+    protected   $fragments  = NULL;
+    protected   $isFragment = false;
 
     protected   $_debug = false;
 
@@ -624,7 +624,7 @@ class C_Model implements IModel
 
         //-----------------------------------
         //intercept the fragments data
-        $sData  = array();
+        $sData = array();
         foreach ( $this->fragments as $fragment ) {
             $item = array();
             foreach ( $fragment['fields'] as $field ) {

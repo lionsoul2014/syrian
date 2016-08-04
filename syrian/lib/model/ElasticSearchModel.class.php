@@ -80,17 +80,6 @@ class ElasticSearchModel implements IModel
     protected   $isFragment = false;
 
     /**
-     * @Note: this is a core function added at 2016-01-19
-     * with this you could own different table snapshot for the same table
-     *  to handle the different logic process
-     *
-     * @Note: for es there is no need
-    */
-    protected   $views      = NULL;
-    protected   $isView     = false;
-
-
-    /**
      * debug control mask
     */
     protected   $_debug     = false;
@@ -1770,28 +1759,6 @@ class ElasticSearchModel implements IModel
     public function closeFragment()
     {
         $this->isFragment = false;
-        return $this;
-    }
-
-    /**
-     * active the table view status
-     *
-     * @return  $this
-    */
-    public function openView()
-    {
-        $this->isView = true;
-        return $this;
-    }
-
-    /**
-     * disactive the table view status
-     *
-     * @return  $this
-    */
-    public function closeView()
-    {
-        $this->isView = false;
         return $this;
     }
 

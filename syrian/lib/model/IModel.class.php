@@ -214,19 +214,5 @@ interface IModel
     */
     public function closeFragment();
 
-    /**
-     * active the table view status
-     *
-     * @return  $this
-    */
-    public function openView();
-
-    /**
-     * disactive the table view status
-     *
-     * @return  $this
-    */
-    public function closeView();
-
 }
 ?>

@@ -255,6 +255,7 @@ function config($config_path, $_inc=false, $cache=true)
 */
 function model($model_path, $cache=true)
 {
+    static $_clsLoaded   = array();
     static $_loadedModel = array();
 
     if ( $cache == true 
@@ -276,7 +277,8 @@ function model($model_path, $cache=true)
     $_dir = SR_MODELPATH . "{$path}{$model}";
     foreach ( array("{$_dir}.model.php", "{$_dir}.php") as $_file ) {
         if ( file_exists( $_file ) ) {
-            if ( ! isset($_loadedModel[$model_path]) ) {
+            if ( ! isset($_clsLoaded[$model_path]) ) {
+                $_clsLoaded[$model_path] = true;
                 include $_file;
             }
 
@@ -288,7 +290,10 @@ function model($model_path, $cache=true)
             }
 
             //mark loaded for the current model
-            $_loadedModel[$model_path] = $obj;
+            if ( $cache == true ) {
+                $_loadedModel[$model_path] = $obj;
+            }
+
             unset($path, $model, $_dir, $class);
             return $obj;
         }
@@ -311,6 +316,7 @@ function model($model_path, $cache=true)
 */
 function helper($helper_path, $args=NULL, $_inc=false, $cache=true)
 {
+    static $_clsLoaded    = array();
     static $_loadedHelper = array();
 
     if ( ($sIdx = strpos($helper_path, '#')) !== false ) {
@@ -321,8 +327,9 @@ function helper($helper_path, $args=NULL, $_inc=false, $cache=true)
         $method  = NULL;
     }
 
-    $found = true;
-    if ( ! isset($_loadedHelper[$package]) || $cache == false ) {
+    if ( $cache == true && isset($_loadedHelper[$package]) ) {
+        $helperObj = $_loadedHelper[$package];
+    } else {
         if ( ($sIdx = strrpos($package, '/')) !== false ) {
             //@Note: see #model
             $path   = str_replace('.', '/', substr($package, 0, $sIdx + 1));
@@ -340,32 +347,36 @@ function helper($helper_path, $args=NULL, $_inc=false, $cache=true)
         
         foreach ( array("{$_dir}.helper.php", "{$_dir}.php") as $_file ) {
             if ( file_exists($_file) ) {
-                if ( ! isset($_loadedHelper[$package]) ) {
+                if ( ! isset($_clsLoaded[$package]) ) {
+                    $_clsLoaded[$package] = true;
                     require $_file;
                 }
 
                 $found = true;
                 $class = "{$helper}Helper";
-                $obj   = new $class(NULL);
-                $_loadedHelper[$package] = $obj;
+                $helperObj = new $class(NULL);
+                if ( $cache == true ) {
+                    $_loadedHelper[$package] = $helperObj;
+                }
+
                 unset($path, $helper, $_dir, $class);
                 break;
             }
         }
+
+        if ( $found == false ) {
+            unset($package, $method);
+            throw new Exception("helper#Unable to load helper with path {$helper_path}");
+        }
     }
 
-    if ( $found == false ) {
-        unset($package, $method);
-        throw new Exception("helper#Unable to load helper with path {$helper_path}");
-    }
-
+    unset($package);
     if ( $method == NULL ) {
-        return $_loadedHelper[$package];
+        return $helperObj;
     }
 
-    $helperObj = $_loadedHelper[$package];
     if ( ! method_exists($helperObj, $method) ) {
-        unset($helperObj, $package, $method);
+        unset($helperObj, $method);
         throw new Exception("helper#Undefined method {$method} for helper {$helper_path}");
     }
 

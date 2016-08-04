@@ -52,8 +52,9 @@ class ServiceExecutorHelper extends Helper
 
     public function Test($input)
     {
-        $async = isset($input[0]) ? $input[0] : false;
-        return $async ? $this->createGearmanExecutor('dist_main') : $this->createLocalExecutor();
+        //$async = isset($input[0]) ? $input[0] : false;
+        //return $async ? $this->createGearmanExecutor('dist_main') : $this->createLocalExecutor();
+        return $this->createLocalExecutor();
     }
     
 }

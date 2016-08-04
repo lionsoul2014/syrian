@@ -47,7 +47,6 @@ class RouterShardingModel implements IModel
     protected   $_debug     = NULL;
     protected   $_srw       = NULL;
     protected   $isFragment = NULL;
-    protected   $isView     = NULL;
 
     /**
      * all the active models
@@ -737,31 +736,6 @@ class RouterShardingModel implements IModel
     }
 
     /**
-     * active the table view status
-     *
-     * @return  $this
-    */
-    public function openView()
-    {
-        $this->isView = true;
-        return $this;
-    }
-
-    /**
-     * disactive the table view status
-     *
-     * @return  $this
-    */
-    public function closeView()
-    {
-        $this->isView = false;
-        return $this;
-    }
-
-    //----------------------------------------------------
-
-
-    /**
      * get the write/insert operation sharding model
      *
      * @param   $data
@@ -967,12 +941,6 @@ class RouterShardingModel implements IModel
         if ( $this->isFragment !== NULL ) {
             if ( $this->isFragment ) $model->openFragment();
             else $model->closeFragment();
-        }
-
-        //check and set the views status
-        if ( $this->isView !== NULL ) {
-            if ( $this->isView ) $model->openView();
-            else $model->closeView();
         }
     }
 
