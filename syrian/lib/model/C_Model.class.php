@@ -17,31 +17,32 @@ class C_Model implements IModel
      *
      * @access    private
     */
-    private static $_slaveFactor    = array();
+    private static $_slaveFactor = array();
 
-    protected   $db                 = NULL;
-    protected   $_mapping           = false;    //enable the mapping?
-    protected   $_fields_mapping    = NULL;     //field name mapping
-    protected   $_srw               = false;    //separate read/write
-    protected   $_onDuplicateKey    = NULL;     //on duplicate key handler
+    protected $db   = NULL;
+    protected $_srw = false;            //separate read/write
+    protected $_mapping = false;        //enable the mapping?
+    protected $_fields_mapping = NULL;  //field name mapping
+    protected $_onDuplicateKey = NULL;  //on duplicate key handler
 
     /**
      * Basic setting for the current model
      * If set autoPrimaryKey = true:
      * We will generate a uuid to replace the default primary key
     */
-    protected   $primary_key    = NULL;
-    protected   $autoPrimaryKey = false;
+    protected $primary_key    = NULL;
+    protected $autoPrimaryKey = false;
 
     /**
      * @Note: this is a core function added at 2015-06-13
      * with this you could sperate the fields of you table
      *     so store them in different section
     */
-    protected   $fragments  = NULL;
-    protected   $isFragment = false;
+    protected $fragments  = NULL;
+    protected $isFragment = false;
+    protected $modelPool  = array();
 
-    protected   $_debug = false;
+    protected $_debug = false;
 
     //callback method quote
 /*    protected   $_del_callback    = NULL;
@@ -59,6 +60,43 @@ class C_Model implements IModel
          * Set $this->_fields_mapping
         */
 
+    }
+
+    /**
+     * @Note added at 2016/08/04
+     * better way to manager the fragments models with:
+     * 1, unique model instance to avoid the other affected
+     * 2, with auto attribtues setting
+     *
+     * @param   $model_path
+     * @return  Object Model Object
+    */
+    protected function getModel($model_path)
+    {
+        if ( isset($this->modelPool[$model_path]) ) {
+            $model = $this->modelPool[$model_path];
+        } else {
+            $model = model($path, false);
+            $this->modelPool[$model_path] = $model;
+        }
+
+        //check and set the onDuplicateKey handler
+        //if ( $this->_onDuplicateKey !== NULL ) {
+        //    $model->onDuplicateKey($this->_onDuplicateKey);
+        //}
+
+        //check and set the debug statue
+        $model->setDebug($this->_debug);
+
+        //check and set the read/write separate status
+        if ( $this->_srw ) $model->startSepRaw();
+        else $model->closeSepRaw();
+
+        //check and set the fragment status
+        //if ( $this->isFragment ) $model->openFragment();
+        //else $model->closeFragment();
+
+        return $model;
     }
 
     /**
@@ -338,10 +376,9 @@ class C_Model implements IModel
                 }
 
                 if ( ! empty($item) ) {
-                    $mObj  = $this->__copy(model($fragment['model']));
                     $sQueries[] = array(
                         'fields' => &$item,
-                        'model'  => $mObj
+                        'model'  => $this->getModel($fragment['model'])
                     );
                 }
 
@@ -508,10 +545,9 @@ class C_Model implements IModel
                 }
 
                 if ( ! empty($item) ) {
-                    $mObj = $this->__copy(model($fragment['model']));
                     $sQueries[] = array(
                         'fields' => &$item,
-                        'model'  => $mObj
+                        'model'  => $this->getModel($fragment['model'])
                     );
                 }
 
@@ -635,10 +671,9 @@ class C_Model implements IModel
             }
 
             if ( ! empty($item) ) {
-                $mObj = $this->__copy(model($fragment['model']));
                 $sData[] = array(
                     'data'  => &$item,
-                    'model' => $mObj
+                    'model' => $this->getModel($fragment['model'])
                 );
             }
 
@@ -731,10 +766,9 @@ class C_Model implements IModel
                 }
 
                 if ( ! empty($item) ) {
-                    $mObj  = $this->__copy(model($fragment['model']));
                     $sData[] = array(
                         'data'  => &$item,
-                        'model' => $mObj
+                        'model' => $this->getModel($fragment['model'])
                     );
                 }
 
@@ -983,7 +1017,7 @@ class C_Model implements IModel
 
         $primary = NULL;
         foreach ( $this->fragments as $fragment ) {
-            $sModel = $this->__copy(model($fragment['model']));
+            $sModel = $this->getModel($fragment['model']);
             $swhere = array($sModel->getPrimaryKey() => "{$idstr}");
             if ( $sModel->delete($swhere, false) == false ) {
                 $activeModel = ($sModel instanceof C_Model) ? $sModel : $sModel->getLastActiveModel();
@@ -1001,33 +1035,6 @@ class C_Model implements IModel
         return $this->delete(
             array($this->primary_key => "={$id}")
         );
-    }
-
-    /**
-     * reset the model attribtues from global setting
-     *
-     * @param   $model
-     * @param   IModel
-    */
-    private function __copy($model)
-    {
-        //check and set the onDuplicateKey handler
-        //if ( $this->_onDuplicateKey !== NULL ) {
-        //    $model->onDuplicateKey($this->_onDuplicateKey);
-        //}
-
-        //check and set the debug statue
-        $model->setDebug($this->_debug);
-
-        //check and set the read/write separate status
-        if ( $this->_srw ) $model->startSepRaw();
-        else $model->closeSepRaw();
-
-        //check and set the fragment status
-        //if ( $this->isFragment ) $model->openFragment();
-        //else $model->closeFragment();
-
-        return $model;
     }
 
     /**
