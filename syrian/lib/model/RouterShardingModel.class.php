@@ -2,9 +2,9 @@
 /**
  * Child version of C_Model with basic sharding support
  *
- * @started 2016-01-25
- * @See     C_Model
  * @author  chenxin<chenxin619315@gmail.com>
+ * @date    2016-01-25
+ * @see     C_Model
 */
 
 import('model.IModel');

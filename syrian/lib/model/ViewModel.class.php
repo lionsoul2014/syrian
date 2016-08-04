@@ -1,13 +1,22 @@
 <?php
 /**
- * Common DBMS Model with common IDb interface implemented
+ * Common Model for database operation interface with View support
  *
  * @author chenxin <chenxin619315@gmail.com>
 */
 
 import('model.IModel');
 
-class C_Model implements IModel
+//-------------------------------------------------------
+
+defined('MODEL_ADD_OPT_CODE')   or define('MODEL_ADD_OPT_CODE',  0);
+defined('MODEL_DEL_OPT_CODE')   or define('MODEL_DEL_OPT_CODE',  1);
+defined('MODEL_UPT_OPT_CODE')   or define('MODEL_UPT_OPT_CODE',  2);
+defined('MODEL_BADD_OPT_CODE')  or define('MODEL_BADD_OPT_CODE', 3);
+defined('MODEL_OPT_ALL_MASK')   or define('MODEL_OPT_ALL_MASK',  0x0F);
+defined('MODEL_OPT_NOADD_MASK') or define('MODEL_OPT_NOADD_MASK',0x0E);
+
+class ViewModel implements IModel
 {
     /**
      * the global read server selector factor
@@ -41,6 +50,17 @@ class C_Model implements IModel
     protected   $fragments      = NULL;
     protected   $isFragment     = false;
 
+    /**
+     * @Note: this is a core function added at 2016-01-19
+     * with this you could own different table snapshot for the same table
+     *  to handle the different logic process
+    */
+    protected   $views              = NULL;
+    protected   $isView             = false;
+    protected   $binLogMask         = 0;
+    protected   $binLogModel        = NULL;     //array(model_name, package)
+    protected   $binLogErrorFile    = NULL;     //error log file path
+
     protected   $_debug = false;
 
     //callback method quote
@@ -57,6 +77,7 @@ class C_Model implements IModel
          *
          * Set $this->_mapping
          * Set $this->_fields_mapping
+         * Set $this->binLogModel = array($model_name, $package);
         */
 
     }
@@ -420,7 +441,8 @@ class C_Model implements IModel
     }
 
     /**
-     * Quick way to fetch small sets from a big data sets like do data pagenation.
+     * Quick way to fetch small sets from a big data sets
+     *    like do data pagenation.
      * @Note: the primary key is very important for this function
      *
      * @param   $_fields    query fields array
@@ -597,7 +619,7 @@ class C_Model implements IModel
     {
         /*
          * check and append the auto generated primary_key
-         * @Note : added at 2016/02/02
+         * @Note: added at 2016.02.02
         */
         if ( $this->autoPrimaryKey == true
             && ! isset($data[$this->primary_key]) ) {
@@ -615,6 +637,21 @@ class C_Model implements IModel
         $onDK = $onDuplicateKey ? $onDuplicateKey : $this->_onDuplicateKey;
         if ( $this->isFragment == false || $this->fragments == NULL ) {
             $r = $this->db->insert($this->table, $data, $onDK, $affected_rows);
+            //check and to the bin log
+            if ( $r != false
+                && $this->isView == true && $this->views != NULL
+                    && ($this->binLogMask & (0x01<<MODEL_ADD_OPT_CODE)) != 0 ) {
+                /*
+                 * Old version(None auto primary key) support
+                 * auto append the last inserted id as the primary_key
+                */
+                if ( $affected_rows == false ) {
+                    $data[$this->primary_key] = $r;
+                }
+
+                $this->__doBinLog(MODEL_ADD_OPT_CODE, $this->table, $data, NULL, $onDK);
+            }
+
             if ( $r != false ) {
                 return isset($data[$this->primary_key]) ? $data[$this->primary_key] : $r;
             }
@@ -670,6 +707,12 @@ class C_Model implements IModel
             }
         }
 
+        //check and do the bin log
+        if ( $this->isView == true && $this->views != NULL
+            && ($this->binLogMask & (0x01<<MODEL_ADD_OPT_CODE)) != 0 ) {
+            $this->__doBinLog(MODEL_ADD_OPT_CODE, $this->table, $data, NULL, $onDK);
+        }
+
         if ( $insertedId != false ) {
             return isset($data[$this->primary_key]) ? $data[$this->primary_key] : $insertedId;
         }
@@ -703,7 +746,16 @@ class C_Model implements IModel
         }
 
         $onDK = $onDuplicateKey ? $onDuplicateKey : $this->_onDuplicateKey;
-        return $this->db->batchInsert($this->table, $data, $onDK);
+        $r = $this->db->batchInsert($this->table, $data, $onDK);
+
+        //check and do the bin log
+        if ( $r != false
+            && $this->isView == true && $this->views != NULL
+                && ($this->binLogMask & (0x01<<MODEL_BADD_OPT_CODE)) != 0 ) {
+            $this->__doBinLog(MODEL_BADD_OPT_CODE, $this->table, $data, NULL, $onDK);
+        }
+
+        return $r;
     }
 
     /**
@@ -749,7 +801,16 @@ class C_Model implements IModel
         //    for not fragment or empty interceptions
         if ( $isFragment == false || empty($sData) ) {
             if ( is_array($_where) ) $_where = $this->getSqlWhere($_where);
-            return $this->db->update($this->table, $data, $_where, true, $affected_rows);
+            $r = $this->db->update($this->table, $data, $_where, true, $affected_rows);
+
+            //check and do the bin log
+            if ( $r != false
+                && $this->isView == true && $this->views != NULL
+                    && ($this->binLogMask & (0x01<<MODEL_UPT_OPT_CODE)) != 0 ) {
+                $this->__doBinLog(MODEL_UPT_OPT_CODE, $this->table, $data, $where);
+            }
+
+            return $r;
         }
 
 
@@ -791,6 +852,13 @@ class C_Model implements IModel
             $d = $Query['data'];
             $w = array($m->getPrimaryKey() => "{$idstr}");
             $r = $m->update($d, $w, $affected_rows) || $r;
+        }
+
+        //check and do the bin log
+        if ( $r != false
+            && $this->isView == true && $this->views != NULL
+                && ($this->binLogMask & (0x01<<MODEL_UPT_OPT_CODE)) != 0 ) {
+            $this->__doBinLog(MODEL_UPT_OPT_CODE, $this->table, $data, $where);
         }
 
         return $r;
@@ -878,7 +946,18 @@ class C_Model implements IModel
         $_where = $where;
 
         if ( is_array($_where) ) $_where = $this->getSqlWhere($_where);
-        return $this->db->update($this->table, $data, $_where, false, true);
+        $r = $this->db->update($this->table, $data, $_where, false, true);
+
+        //check and do the bin log
+        //@Note: added at 2016-02.23 we got to stdlize this binlog to
+        //  a validate update operation code
+        if ( $r != false
+            && $this->isView != false && $this->views != NULL
+                && ($this->binLogMask & (0x01<<MODEL_UPT_OPT_CODE)) != 0 ) {
+            $this->__doBinLog(MODEL_UPT_OPT_CODE, $this->table, $data, $where);
+        }
+
+        return $r;
     }
 
     //increase by primary_key
@@ -920,7 +999,16 @@ class C_Model implements IModel
         $_where = $where;
 
         if ( is_array($_where) ) $_where = $this->getSqlWhere($_where);
-        return $this->db->update($this->table, $data, $_where, false, true);
+        $r = $this->db->update($this->table, $data, $_where, false, true);
+
+        //check and do the bin log
+        if ( $r != false
+            && $this->isView == true && $this->views != NULL
+                && ($this->binLogMask & (0x01<<MODEL_UPT_OPT_CODE)) != 0 ) {
+            $this->__doBinLog(MODEL_UPT_OPT_CODE, $this->table, $data, $where);
+        }
+
+        return $r;
     }
 
     //reduce by primary_key
@@ -949,7 +1037,16 @@ class C_Model implements IModel
         //so this->isFragment == false checking disabled
         if ( $frag_recur == false || $this->fragments == NULL ) {
             if ( is_array( $_where ) ) $_where = $this->getSqlWhere($_where);
-            return $this->db->delete($this->table, $_where);
+            $r = $this->db->delete($this->table, $_where);
+
+            //check and do the bin log
+            if ( $r != false
+                && $this->isView == true && $this->views != NULL
+                    && ($this->binLogMask & (0x01<<MODEL_DEL_OPT_CODE)) != 0 ) {
+                $this->__doBinLog(MODEL_DEL_OPT_CODE, $this->table, NULL, $where);
+            }
+
+            return $r;
         }
 
         //-------------------------------------
@@ -991,6 +1088,12 @@ class C_Model implements IModel
             }
         }
 
+        //check and do the bin log
+        if ( $this->isView == true && $this->views != NULL
+            && ($this->binLogMask & (0x01<<MODEL_DEL_OPT_CODE)) != 0 )  {
+            $this->__doBinLog(MODEL_DEL_OPT_CODE, $this->table, NULL, $where);
+        }
+
         return true;
     }
 
@@ -1026,6 +1129,10 @@ class C_Model implements IModel
         //check and set the fragment status
         //if ( $this->isFragment ) $model->openFragment();
         //else $model->closeFragment();
+
+        //check and set the views status
+        //if ( $this->isView ) $model->openView();
+        //else $model->closeView();
 
         return $model;
     }
@@ -1139,6 +1246,93 @@ class C_Model implements IModel
     {
         $this->isFragment = false;
         return $this;
+    }
+
+
+    //------------For views function--------------------
+
+    /**
+     * return the views info for the current model
+     *
+     * @return  Mixed Array or NULL
+    */
+    public function getViewInfo()
+    {
+        return array(
+            'binLogMask'        => $this->binLogMask,
+            'binLogModel'       => $this->binLogModel,
+            'binLogErrorFile'   => $this->binLogErrorFile,
+            'views'             => $this->views
+        );
+    }
+
+    /**
+     * active the table view status
+     *
+     * @return  $this
+    */
+    public function openView()
+    {
+        $this->isView = true;
+        return $this;
+    }
+
+    /**
+     * disactive the table view status
+     *
+     * @return  $this
+    */
+    public function closeView()
+    {
+        $this->isView = false;
+        return $this;
+    }
+
+    /**
+     * @Note: this internal function will handle the binlog storage
+     * for all the insert,deletion,update operations.
+     * It will check and bean invoked autoly if you use the default CUD interface
+     * Or check it and invoked it yourself.
+     *
+     * @param   $opt_code
+     * @param   $opt_table
+     * @param   $opt_data
+     * @param   $opt_where
+     * @return  boolean
+    */
+    protected function __doBinLog(
+        $opt_code, $opt_table, $opt_data, $opt_where, $opt_duplicate=NULL)
+    {
+        if ( $this->binLogModel == NULL ) {
+            return false;
+        }
+
+        //load the bin log model
+        $logModel = model($this->binLogModel);
+        $binLog = array(
+            'data'      => $opt_data,
+            'where'     => $opt_where,
+            'duplicate' => $opt_duplicate
+        );
+
+        //bin log data
+        $data   = array(
+            'opt_code'  => $opt_code,
+            'opt_table' => $opt_table,
+            'opt_log'   => json_encode($binLog),
+            'opt_time'  => time()
+        );
+
+        $r = ($logModel->add($data) != false) ? true : false;
+
+        //check and do the error log here
+        if ( $r == false
+            && $this->binLogErrorFile != false ) {
+            $errmsg = json_encode($data) . "\n";
+            @file_put_contents($this->binLogErrorFile, $errmsg, FILE_APPEND);
+        }
+
+        return $r;
     }
 
     /**
