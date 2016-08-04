@@ -440,6 +440,35 @@ function view($tpl, $vars=null, $sanitize=false, $timer=0)
 }
 
 /**
+ * assign a variable into the current may comming global view
+ *
+ * @param   $key could be an Array
+ * @param   $val
+ * @return  Object return the global view object
+*/
+function view_assign($key, $val)
+{
+    $viewObj = E('view_obj');
+    if ( $viewObj == NULL ) {
+        import('view.ViewFactory');
+        $conf = array(
+            'cache_time' => 0,
+            'tpl_dir'    => SR_VIEWPATH,
+            'cache_dir'  => SR_CACHEPATH.'tpl/'
+        );
+
+        $viewObj = ViewFactory::create('html', $conf);
+        E('view_obj', $viewObj);
+    }
+
+    if ( is_array($key) ) {
+        return $viewObj->load($key);
+    }
+
+    return $viewObj->assign($key, $val);
+}
+
+/**
  * redirect to the specified request
  *
  * @param   $uri
@@ -688,6 +717,98 @@ function session_close()
 
     E('session_start', false);
     session_destroy();
+}
+
+
+//--------------------------signature about functions--------------------------
+
+/**
+ * count the hash value of the specified string with bkdr hash algorithm
+ *
+ * @param   $str
+ * @return  Integer
+*/
+function bkdr_hash($str)
+{
+    $hval = 0;
+    $len  = strlen($str);
+
+    for ( $i = 0; $i < $len; $i++ ) {
+        $hval = (int) ($hval * 1331 + (ord($str[$i]) % 127));
+    }
+    
+    return ($hval & 0x7FFFFFFF);
+}
+
+/**
+ * application layer signature quick generator
+ *
+ * @param   $factors all the arguments that will join to the encryption
+ * @param   $timer the unix time stamp that will store in the signature
+ * @return  String
+*/
+function build_signature($factors, $timer=null)
+{
+    $seeds = '=~!@#$%^&*()_+{}|\;:\',./<>"%%`~';
+    $s_len = strlen($seeds);
+
+    $encrypt = array('^');
+    foreach ( $factors as $val ) {
+        $encrypt[] = $val;
+        $sIdx = bkdr_hash($val) % $s_len;
+        for ( $i = 0; $i < 3; $i++ ) {
+            $encrypt[] = $seeds[$sIdx++];
+            if ( $sIdx >= $s_len ) {
+                $sIdx = 0;
+            }
+        }
+    }
+
+    if ( $timer != null ) {
+        $encrypt[] = "@{$timer}";
+    }
+
+    $encrypt[] = '$';
+
+    $sign_val = sha1(implode('|', $encrypt));
+    if ( $timer == null ) {
+        return $sign_val;
+    }
+
+    return $sign_val . sprintf('%08x', $timer);
+}
+
+/**
+ * application layer signature quick validator
+ * with expired time in seconds specified and it could check the 
+ *  whether the signature is expired or not
+ *
+ * @param   $factors
+ * @param   $signature
+ * @param   $expired self-define signature expired time in seconds
+ * @return  bool
+ * @see     #build_signature
+*/
+function valid_signature($factors, $signature, $expired=-1)
+{
+    $sign_len = strlen($signature);
+    if ( $sign_len != 40 && $sign_len != 48 ) {
+        return false;
+    }
+
+    $timer = $sign_len == 48 ? hexdec(substr($signature, 40)) : null;
+    $sign_val = build_signature($factors, $timer);
+    if ( strncmp($sign_val, $signature, 40) != 0 ) {
+        return false;
+    }
+
+    if ( $expired > 0 && $timer != null ) {
+        if ( time() - $timer > $expired ) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 class Helper
