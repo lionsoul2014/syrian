@@ -17,56 +17,35 @@ class HtmlView extends AView
     private $_cache_time = 0;            //template compile cache time in second
     
     /**
-     * Template symtab hold all the mapping
-     *  added from interface assign or assoc
-     *
-     * @access  private
-    */
-    private $_symbol = array();      
-    
-    /**
      * Template compile regex rules
      *
      * @access  private
     */
     private $_rules = array(
-        '/<\?([^=])/'           => '<?php $1',
+        '/<\?([^=])/'   => '<?php $1',
         //<?=
-        '/<\?=/'                => '<?php echo ',
+        '/<\?=/'        => '<?php echo ',
         //for ( val : {array} )
-        '/for\s*\(\s*\$([a-z0-9_]+)\s*:\s*\$\{([a-z0-9_]+)\}\s*\)/i'
-                                => 'foreach ( \$this->_symbol[\'$2\'] as \$$1 )',
-        
+        '/for\s*\(\s*\$([a-z0-9_]+)\s*:\s*\$\{([a-z0-9_]+)\}\s*\)/i' => 'foreach ( \$this->_symbol[\'$2\'] as \$$1 )',
         //${arr}
-        '/\$\{(\$?[a-z0-9_]+)\}/i'
-                                => '\$this->_symbol["$1"]',
+        '/\$\{(\$?[a-z0-9_]+)\}/i' => '\$this->_symbol["$1"]',
         //${arr.key}
-        '/\$\{(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)\}/i'
-                                => '\$this->_symbol["$1"]["$2"]',
+        '/\$\{(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)\}/i' => '\$this->_symbol["$1"]["$2"]',
         //${arr.key1.key2}
-        '/\$\{(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)\}/i'
-                                => '\$this->_symbol["$1"]["$2"]["$3"]',
-        
+        '/\$\{(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)\}/i' => '\$this->_symbol["$1"]["$2"]["$3"]',
         //#{class:method(args)}
-        '/#\{([a-z0-9_]+):([a-z0-9_]+)\((.*?)\)\s*\}/i'
-                                => '$1::$2($3)',
+        '/#\{([a-z0-9_]+):([a-z0-9_]+)\((.*?)\)\s*\}/i' => '$1::$2($3)',
         //#{${object}.method(args)}
         //#{$object.method(args)}
-        '/#\{\$(.*?)\.([a-z0-9_]+)\((.*?)\)\s*\}/i'
-                                => '\$$1->$2($3)',
+        '/#\{\$(.*?)\.([a-z0-9_]+)\((.*?)\)\s*\}/i' => '\$$1->$2($3)',
         //#{func(args)}, ${$func(args)}, #{${func}(args)}
         '/#\{(.*?)\((.*?)\)\}/' => '$1($2)',
-        
         //$arr.key1.key2
-        '/(\$[a-z0-9_]+)\.(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)/i'
-                                => '$1["$2"]["$3"]',
+        '/(\$[a-z0-9_]+)\.(\$?[a-z0-9_]+)\.(\$?[a-z0-9_]+)/i' => '$1["$2"]["$3"]',
         //$arr.key
-        '/(\$[a-z0-9_]+)\.(\$?[a-z0-9_]+)/i'
-                                => '$1["$2"]',
-                        
+        '/(\$[a-z0-9_]+)\.(\$?[a-z0-9_]+)/i' => '$1["$2"]',
         //include|require file
-        '/(include|require)\s+([a-z0-9_\.\/-]+)/i'
-                                => '$1 \$this->getIncludeFile(\'$2\')'
+        '/(include|require)\s+([a-z0-9_\.\/-]+)/i' => '$1 \$this->getIncludeFile(\'$2\')'
     );
 
     /**
@@ -83,8 +62,8 @@ class HtmlView extends AView
     }
 
     /**
-     * internal method to compile the specifiled template
-     *      to a specifield cache file
+     * internal method to compile the specifiled template 
+     * to a specifield cache file
      *
      * @param   $_tpl_file
      * @param   $_cache_file
@@ -136,50 +115,8 @@ class HtmlView extends AView
     }
     
     /**
-     * Assign a mapping to the view
-     *
-     * @param   $_name
-     * @param   $_value
-    */
-    public function assign( $_name, $_value )
-    {
-        $this->_symbol[$_name] = &$_value;
-        
-        return $this;
-    }
-    
-    /**
-     * associate a mapping with the specifield name
-     *  to $_value, and $_name is just a another quote of $_value
-     *
-     * @param   $_name
-     * @param   $_value
-    */
-    public function assoc( $_name, &$_value )
-    {
-        $this->_symbol[$_name] = &$_value;
-        
-        return $this;
-    }
-    
-    /**
-     * Load data from a array, take the key as the new key
-     *      and the value as the new value.
-     *
-     * @param   $_array
-    */
-    public function load( $_array )
-    {
-        if ( ! empty($_array) ) {
-            $this->_symbol = array_merge($this->_symbol, $_array);
-        }
-            
-        return $this;
-    }
-    
-    /**
      * Intermal method to handler include|require markup
-     *      analysis and require the speicifled file
+     * analysis and require the speicifled file
      *
      * @param   $_inc_file
      * @return  String the cache file to include
@@ -225,11 +162,11 @@ class HtmlView extends AView
     
     /**
      * return the executed html content
-     *      $this->display will be invoke to finish the job
      *
      * @param   $_tpl_file
      * @param   $sanitize sanitize the content ?
      * @return  string the executed html text
+     * @see     parent.getContent
     */
     public function getContent( $_tpl_file=NULL, $sanitize=false )
     {
