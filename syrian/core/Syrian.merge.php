@@ -420,6 +420,31 @@ function abort($http_code)
 }
 
 /**
+ * return the default view instance
+ *
+ * @return  Object of AView
+ * @see     syrian.lib.view.ViewFactory#AView
+*/
+function build_view($type='html')
+{
+    $e_name = "{$type}_view_obj";
+    if ( ($viewObj = E($e_name)) == NULL ) {
+        import('view.ViewFactory');
+        $conf = $type == 'html' ? array(
+            'cache_time' => 0,
+            'tpl_dir'    => SR_VIEWPATH,
+            'cache_dir'  => SR_CACHEPATH.'tpl/'
+        ) : null;
+
+        $viewObj = ViewFactory::create($type, $conf);
+        E($e_name, $viewObj);
+    }
+
+    return $viewObj;
+}
+
+
+/**
  * search the specified html template and return the executed dynamic content
  *
  * @param   $tpl_file
@@ -430,20 +455,7 @@ function abort($http_code)
 */
 function view($tpl, $vars=null, $sanitize=false, $timer=0)
 {
-    $viewObj = E('view_obj');
-    if ( $viewObj == NULL ) {
-        import('view.ViewFactory');
-        $conf = array(
-            'cache_time' => 0,
-            'tpl_dir'    => SR_VIEWPATH,
-            'cache_dir'  => SR_CACHEPATH.'tpl/'
-        );
-
-        $viewObj = ViewFactory::create('html', $conf);
-        E('view_obj', $viewObj);
-    }
-
-    //check and set the tpl cache timer
+    $viewObj = build_view();
     if ( $timer > 0 )    $viewObj->setCacheTime($timer);
     if ( $vars != null ) $viewObj->load($vars);
 
@@ -459,25 +471,43 @@ function view($tpl, $vars=null, $sanitize=false, $timer=0)
 */
 function view_assign($key, $val)
 {
-    $viewObj = E('view_obj');
-    if ( $viewObj == NULL ) {
-        import('view.ViewFactory');
-        $conf = array(
-            'cache_time' => 0,
-            'tpl_dir'    => SR_VIEWPATH,
-            'cache_dir'  => SR_CACHEPATH.'tpl/'
-        );
-
-        $viewObj = ViewFactory::create('html', $conf);
-        E('view_obj', $viewObj);
-    }
-
+    $viewObj = build_view();
     if ( is_array($key) ) {
         return $viewObj->load($key);
     }
 
     return $viewObj->assign($key, $val);
 }
+
+/**
+ * report the error code and the error message to the default view instance
+ *
+ * @param   $err_code
+ * @param   $err_msg
+ * @return  Object the default view instance
+*/
+
+defined('VIEW_OK')    or define('VIEW_OK',    0);
+defined('VIEW_INFO')  or define('VIEW_INFO',  1);
+defined('VIEW_ERROR') or define('VIEW_ERROR', 2);
+
+function view_report($err_code, $err_msg=null)
+{
+    static $symbol  = null;
+    //static $errType = array('success', 'info', 'danger');
+
+    if ( $symbol == null ) {
+        $symbol  = array();
+        $viewObj = build_view();
+        $viewObj->assoc('errors', $symbol);
+    }
+
+    $symbol[] = array(
+        'code' => $err_code,
+        'desc' => $err_msg
+    );
+}
+
 
 /**
  * redirect to the specified request
