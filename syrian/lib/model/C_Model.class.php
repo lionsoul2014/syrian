@@ -76,7 +76,7 @@ class C_Model implements IModel
         if ( isset($this->modelPool[$model_path]) ) {
             $model = $this->modelPool[$model_path];
         } else {
-            $model = model($path, false);
+            $model = model($model_path, false);
             $this->modelPool[$model_path] = $model;
         }
 
