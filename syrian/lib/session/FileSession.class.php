@@ -26,7 +26,7 @@ class FileSession implements ISession
     /**
      * construct method to initialize the class
      *
-     * @param    $conf
+     * @param   $conf
      */
     public function __construct( &$conf )
     {
@@ -104,7 +104,8 @@ class FileSession implements ISession
     public function destroy()
     {
         //1. clear the session data
-        $_SESSION = array();
+        //$_SESSION = array();
+        session_unset();    
 
         //2. destroy the session file or stored data
         if ( $this->_sessid != NULL ) {
@@ -135,22 +136,22 @@ class FileSession implements ISession
     /**
      * It is the first callback function executed when the session
      *        is started automatically or manually with session_start().
-     * Return value is TRUE for success, FALSE for failure.
+     * Return value is true for success, false for failure.
      */
     function _open( $_save_path, $_sessname )
     {
         //use the default _save_path without user define save_path
         if ( $this->_save_path == NULL ) $this->_save_path = $_save_path;
-        return TRUE;
+        return true;
     }
 
     /**
      * It is also invoked when session_write_close() is called.
-     * Return value should be TRUE for success, FALSE for failure.
+     * Return value should be true for success, false for failure.
     */
     function _close()
     {
-        return TRUE;
+        return true;
     }
     
     /**
@@ -190,7 +191,7 @@ class FileSession implements ISession
 
         //get and return the content of the session file
         $_txt = file_get_contents($_file);
-        return ($_txt == FALSE ? '' : $_txt);
+        return ($_txt == false ? '' : $_txt);
     }
     
     /**
@@ -201,7 +202,6 @@ class FileSession implements ISession
     */
     function _write( $_sessid, $_data )
     {
-        if ( $_data == NULL || $_data == '' ) return FALSE;
         $_sessid = $this->_sessid;
 
         //take the _hval as the partitions number
@@ -213,20 +213,33 @@ class FileSession implements ISession
         $_baseDir = "{$this->_save_path}/{$this->_hval}";
         if ( ! file_exists($_baseDir) ) @mkdir($_baseDir, 0777);
 
-        //write the data to the final session file
+        /*
+         * @added at 2016/08/09
+         * when the data is empty like the invoke of session close
+         * we choose to clear the session storage file rather than
+         * write an empty string into it.
+         * Also, we we should return true for this or u will receive a
+         * warning from php session module say that: "Fail to write session data ..."
+        */
         $_sfile = "{$_baseDir}/{$_sessid}{$this->_ext}";
-        if ( @file_put_contents($_sfile, $_data) != FALSE ) {
-            //chmod the newly created file
-            @chmod($_sfile, 0755);
-            return TRUE;
+        if ( strlen($_data) < 1 ) {
+            if ( file_exists($_sfile) ) @unlink($_sfile);
+            return true;
         }
 
-        return FALSE;
+        //write the data to the final session file
+        if ( @file_put_contents($_sfile, $_data) !== false ) {
+            //chmod the newly created file
+            @chmod($_sfile, 0755);
+            return true;
+        }
+
+        return false;
     }
     
     /**
      * This callback is executed when a session is destroyed with session_destroy().
-     * Return value should be TRUE for success, FALSE for failure.
+     * Return value should be true for success, false for failure.
     */
     function _destroy( $_sessid )
     {
@@ -240,7 +253,7 @@ class FileSession implements ISession
             setcookie($sessname, '', time() - 42000, '/');
         }
 
-        return TRUE;
+        return true;
     }
     
     /**
@@ -250,7 +263,7 @@ class FileSession implements ISession
     */
     function _gc( $_lifetime )
     {
-        return TRUE;
+        return true;
     }
 
     //check the specifield mapping is exists or not

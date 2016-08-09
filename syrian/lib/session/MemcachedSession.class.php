@@ -65,7 +65,7 @@ class MemcachedSession implements ISession
             && $conf['hash_strategy'] == 'consistent' ) {
             $this->_mem->setOption(Memcached::OPT_DISTRIBUTION,
                      Memcached::DISTRIBUTION_CONSISTENT); 
-            $this->_mem->setOPtion(Memcached::OPT_LIBKETAMA_COMPATIBLE, TRUE);
+            $this->_mem->setOPtion(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
         }
 
         if ( isset($conf['hash']) 
@@ -189,20 +189,20 @@ class MemcachedSession implements ISession
     /**
      * It is the first callback function executed when the session
      *  is started automatically or manually with session_start().
-     * Return value is TRUE for success, FALSE for failure.
+     * Return value is true for success, false for failure.
      */
     function _open( $_save_path, $_sessname )
     {
-        return TRUE;
+        return true;
     }
 
     /**
      * It is also invoked when session_write_close() is called.
-     * Return value should be TRUE for success, FALSE for failure.
+     * Return value should be true for success, false for failure.
     */
     function _close()
     {
-        return TRUE;
+        return true;
     }
     
     /**
@@ -223,7 +223,7 @@ class MemcachedSession implements ISession
         if ( $this->_sessid == NULL ) $this->_sessid = $_sessid;
 
         $ret = $this->_mem->get($_sessid);
-        return $ret == FALSE ? '' : $ret;
+        return $ret == false ? '' : $ret;
     }
     
     /**
@@ -234,16 +234,22 @@ class MemcachedSession implements ISession
     */
     function _write( $_sessid, $_data )
     {
-        if ( $_data == NULL || $_data == '' ) return FALSE;
         $_sessid = $this->_sessid;
 
-        $ret = $this->_mem->set($_sessid, $_data, $this->_ttl);
-        return $ret;
+        //@sess FileSession#_write
+        if ( strlen($_data) < 1 ) {
+            $this->_mem->delete($_sessid);
+            return true;
+        }
+
+        return $this->_mem->set(
+            $_sessid, $_data, $this->_ttl
+        );
     }
     
     /**
      * This callback is executed when a session is destroyed with session_destroy().
-     * Return value should be TRUE for success, FALSE for failure.
+     * Return value should be true for success, false for failure.
     */
     function _destroy( $_sessid )
     {
@@ -255,7 +261,7 @@ class MemcachedSession implements ISession
             setcookie($sessname, '', time() - 42000, '/');
         }
 
-        return TRUE;
+        return true;
     }
     
     /**
@@ -265,7 +271,7 @@ class MemcachedSession implements ISession
     */
     function _gc( $_lifetime )
     {
-        return TRUE;
+        return true;
     }
 
     //check the specifield mapping is exists or not
