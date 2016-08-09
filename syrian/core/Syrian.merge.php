@@ -852,6 +852,17 @@ function valid_signature($factors, $signature, $expired=-1)
     return true;
 }
 
+/**
+ * decode the json to array
+ *
+ * @param   $str
+ * @return  Mixed (Object for null for failed)
+*/
+function json_decode_array($str)
+{
+    return json_decode($str, true);
+}
+
 class Helper
 {
     /**
