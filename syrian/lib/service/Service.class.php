@@ -17,13 +17,6 @@
 class Service
 {
     /**
-     * Construct method to create new instance of the controller
-    */
-    public function __construct()
-    {
-    }
-
-    /**
      * the entrance of the current Service.
      * default to invoke the $this->{$method}() to handler
      * the request, you may need to rewrite this method to define the handler youself
@@ -32,13 +25,13 @@ class Service
      * @param   $args
      * @access  public
     */
-    public function run($handler, $args=NULL)
+    public function run($handler, $args=null)
     {
         if ( method_exists($this, $handler) == false ) {
             throw new Exception("{$handler} not found at class " . __CLASS__);
         }
 
-        if ( $args != NULL && is_array($args) == false) {
+        if ( $args != null && is_array($args) == false) {
             throw new Exception('Arguments must be an array');
         }
 
@@ -83,7 +76,7 @@ class ServiceInputBean
      *
      * @access  private
     */
-    private $args = NULL;
+    private $args = null;
 
     /**
      * construct method
@@ -92,7 +85,7 @@ class ServiceInputBean
     */
     public function __construct($args)
     {
-        $this->args = $args==NULL ? array() : $args;
+        $this->args = $args==null ? array() : $args;
     }
 
     /**
@@ -102,7 +95,7 @@ class ServiceInputBean
      * @param   $default
      * @return  Mixed
     */
-    public function get($key, $default=NULL)
+    public function get($key, $default=null)
     {
         return isset($this->args[$key]) ? $this->args[$key] : $default;
     }
@@ -126,8 +119,8 @@ class ServiceInputBean
 
     public function __toString()
     {
-        if ( $this->args == NULL ) {
-            return NULL;
+        if ( $this->args == null ) {
+            return null;
         }
 
         $str = array();
@@ -140,7 +133,7 @@ class ServiceInputBean
 
     public function __destruct()
     {
-        if ( $this->args != NULL ) {
+        if ( $this->args != null ) {
             unset($this->args);
         }
     }

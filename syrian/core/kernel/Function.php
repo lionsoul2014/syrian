@@ -376,7 +376,7 @@ function helper($helper_path, $args=NULL, $_inc=false, $cache=true)
     }
 
     if ( ! method_exists($helperObj, $method) ) {
-        unset($helperObj, $method);
+        unset($helperObj);
         throw new Exception("helper#Undefined method {$method} for helper {$helper_path}");
     }
 
