@@ -483,6 +483,61 @@ function view_report($err_code, $err_msg=null)
     );
 }
 
+/**
+ * quick paging package define for paging blade component
+ *
+ * @param   $total
+ * @param   $pagesize
+ * @param   $pageno
+ * @param   $name
+ * @param   $style
+ * @param   $left
+ * @param   $offset
+*/
+
+defined('PAGE_STD_STYLE')   or  define('PAGE_STD_STYLE',  0);
+defined('PAGE_SHOP_STYLE')  or  define('PAGE_SHOP_STYLE', 1);
+
+function view_page(
+    $total, $pagesize, $pageno, $name='pageno', $style=1, $left=2, $offset=2 )
+{
+    static $symbol = null;
+
+    if ( $symbol == null ) {
+        $viewObj = build_view();
+        $viewObj->assoc('page', $symbol);
+    }
+
+    if ( ! isset($_SERVER['QUERY_STRING']) 
+        || strlen($_SERVER['QUERY_STRING']) <= 1 ) {
+        $url = "?{$name}=";
+    } else {
+        $pattern = "/(&?){$name}=[^&]*&?/";
+        $url = preg_replace($pattern, '$1', $_SERVER['QUERY_STRING']);
+        if ( ($len = strlen($url)) < 1 ) {
+            $url = "?{$name}=";
+        } else if ( $url[$len-1] =='&' ) {
+            $url = "?{$url}{$name}=";
+        } else {
+            $url = "?{$url}&{$name}=";
+        }
+    }
+
+    //correction the page number
+    $pages = ceil($total / $pagesize);
+    if ( $pageno < 1      ) $pageno = 1;
+    if ( $pageno > $pages ) $pageno = $pages;
+
+    $symbol = array(
+        'total'  => $total,
+        'pages'  => $pages,
+        'pageno' => $pageno,
+        'style'  => $style,
+        'link'   => $url,
+        'left'   => $left,
+        'offset' => $offset
+    );
+}
 
 /**
  * redirect to the specified request
@@ -836,6 +891,44 @@ function valid_signature($factors, $signature, $expired=-1)
 function json_decode_array($str)
 {
     return json_decode($str, true);
+}
+
+/**
+ * set the value of the specifield query string argument
+ *
+ * @param   $key
+ * @param   $val
+ * @param   $src
+ * @return  string
+*/
+function set_query_args($key, $val, $src=null)
+{
+    if ( $src == null ) {
+        if ( ! isset($_SERVER['QUERY_STRING']) ) return null;
+        $src = $_SERVER['QUERY_STRING'];
+    }
+
+    return preg_replace(
+        "/([\?#&]?){$key}=[^&#]*([&#]?)/", "\$1{$key}={$val}\$2", $src
+    );
+}
+
+/**
+ * get the value of the specified argument from the query string
+ *
+ * @param   $key
+ * @param   $src
+ * @return  string | empty string
+*/
+function get_query_args($key, $src=null)
+{
+    if ( $src == null ) {
+        if ( ! isset($_SERVER['QUERY_STRING']) ) return null;
+        $src = $_SERVER['QUERY_STRING'];
+    }
+
+    $pattern = "/[#&\?]?{$key}=([^&#]*)/";
+    return preg_match($pattern, $src, $m) == 1 ? $m[1] : null;
 }
 
 ?>
