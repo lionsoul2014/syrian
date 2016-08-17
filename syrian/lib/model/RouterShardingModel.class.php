@@ -16,7 +16,7 @@ class RouterShardingModel implements IModel
     /**
      * @Note: this is a core function started at 2016-01-25
      * with this you could separate coming data flow into different tables
-     *  router maybe specifiled to guide the storage
+     *  router maybe specified to guide the storage
     */
     protected   $shardings  = NULL;
 
@@ -24,7 +24,7 @@ class RouterShardingModel implements IModel
      * sharding router:
      * 1, once being set and it can not be changed
      * cuz we will merge the router value into the global unique id
-     * 2, If not specifiled, you should set the global id as the default router
+     * 2, If not specified, you should set the global id as the default router
      *
      * @see #genUUID($data)
     */
@@ -126,7 +126,7 @@ class RouterShardingModel implements IModel
     }
 
     /**
-     * execute the specifield query string
+     * execute the specified query string
      *
      * @param   String $_query
      * @param   $opt
@@ -163,7 +163,7 @@ class RouterShardingModel implements IModel
     }
 
     /**
-     * Get a vector from the specifiel table
+     * Get a vector from the specified table
      *
      * @param   $_fields    query fields array
      * @param   $_where
@@ -312,28 +312,7 @@ class RouterShardingModel implements IModel
     }
 
     /**
-     * Quick way to fetch small sets from a big data sets
-     *    like do data pagenation.
-     * @Note: the primary key is very important for this function
-     *
-     * @param    $_fields   query fields array
-     * @param    $_where
-     * @param    $_order
-     * @param    $_limit
-     * @fragment supports
-     */
-    public function fastList( 
-        $_fields, 
-        $_where = NULL, 
-        $_order = NULL, 
-        $_limit = NULL,
-        $_group = NULL)
-    {
-        return $this->getList($_fields, $_where, $_order, $_limit, $_group);
-    }
-
-    /**
-     * get a specifiled record from the specifield table
+     * get a specified record from the specified table
      *
      * @param   $_fields
      * @param   $_where
@@ -509,7 +488,7 @@ class RouterShardingModel implements IModel
     {
         /*
          * check and parse the sharding model from the
-         * specifield universal unique identifier
+         * specified universal unique identifier
         */
         $pModel = $this->getShardingModelFromId($id);
         if ( $pModel == false ) {
@@ -520,7 +499,7 @@ class RouterShardingModel implements IModel
     }
 
     /**
-     * Set the value of the specifield field of the speicifled reocords
+     * Set the value of the specified field of the speicifled reocords
      *  in data table $this->table
      *
      * @param   $_field
@@ -548,8 +527,8 @@ class RouterShardingModel implements IModel
     }
 
     /**
-     * Increase the value of the specifield field of 
-     *  the specifiled records in data table $this->table
+     * Increase the value of the specified field of 
+     *  the specified records in data table $this->table
      *
      * @param   $_field
      * @param   $_offset
@@ -589,47 +568,135 @@ class RouterShardingModel implements IModel
     }
 
     /**
-     * reduce the value of the specifield field of the speicifled records
+     * decrease the value of the specified field of the speicifled records
      *  in data table $this->table
      *
      * @param   $_field
      * @param   $_offset
      * @param   $_where
     */
-    public function reduce($_field, $_offset, $_where)
+    public function decrease($_field, $_offset, $_where)
     {
         $shardingModels = $this->__getQueryShardingModels($_where);
         if ( count($shardingModels) == 1 ) {
             $pModel = $shardingModels[0]['model'];
-            return $pModel->reduce($_field, $_offset, $shardingModels[0]['where']);
+            return $pModel->decrease($_field, $_offset, $shardingModels[0]['where']);
         }
 
         $ret = false;
         foreach ( $shardingModels as $sharding ) {
             $pModel = $sharding['model'];
-            $ret    = $pModel->reduce($_field, $_offset, $sharding['where']) || $ret;
+            $ret    = $pModel->decrease($_field, $_offset, $sharding['where']) || $ret;
         }
 
         return $ret;
     }
 
     /**
-     * reduce by primary_key
+     * decrease by primary_key
      *
      * @see #getById($_field, $id)
     */
-    public function reduceById($_field, $_offset, $id)
+    public function decreaseById($_field, $_offset, $id)
     {
         $pModel = $this->getShardingModelFromId($id);
         if ( $pModel == false ) {
             return false;
         }
 
-        return $pModel->reduceById($_field, $_offset, $id);
+        return $pModel->decreaseById($_field, $_offset, $id);
     }
 
     /**
-     * Delete the specifield records
+     * expand the value of specified array fields
+     *
+     * @param   $_field
+     * @param   $val
+     * @param   $_where
+     * @param   $flag
+    */
+    public function expand($_field, $val, $_where, $flag=ADD_TAIL)
+    {
+        $shardingModels = $this->__getQueryShardingModels($_where);
+        if ( count($shardingModels) == 1 ) {
+            $pModel = $shardingModels[0]['model'];
+            return $pModel->expand(
+                $_field, $val, $shardingModels[0]['where'], $flag
+            );
+        }
+
+        $ret = false;
+        foreach ( $shardingModels as $sharding ) {
+            $pModel = $sharding['model'];
+            $ret = $pModel->expand(
+                $_field, $val, $sharding['where'], $flag
+            ) || $ret;
+        }
+
+        return $ret;
+    }
+
+    /**
+     * expand by primary key
+     *
+     * @see #getById($_field, $id)
+    */
+    public function expandById($_field, $val, $id, $flag=ADD_TAIL)
+    {
+        $pModel = $this->getShardingModelFromId($id);
+        if ( $pModel == false ) {
+            return false;
+        }
+
+        return $pModel->expandById($_field, $val, $id, $flag);
+    }
+
+    /**
+     * reduce the value of specified array fields
+     *
+     * @param   $_field
+     * @param   $val
+     * @param   $_where
+     * @param   $flag
+    */
+    public function reduce($_field, $val, $_where)
+    {
+        $shardingModels = $this->__getQueryShardingModels($_where);
+        if ( count($shardingModels) == 1 ) {
+            $pModel = $shardingModels[0]['model'];
+            return $pModel->reduce(
+                $_field, $val, $shardingModels[0]['where']
+            );
+        }
+
+        $ret = false;
+        foreach ( $shardingModels as $sharding ) {
+            $pModel = $sharding['model'];
+            $ret = $pModel->reduce(
+                $_field, $val, $sharding['where']
+            ) || $ret;
+        }
+
+        return $ret;
+    }
+
+    /**
+     * reduce by primary key
+     *
+     * @see #getById($_field, $id)
+    */
+    public function reduceById($_field, $val, $id)
+    {
+        $pModel = $this->getShardingModelFromId($id);
+        if ( $pModel == false ) {
+            return false;
+        }
+
+        return $pModel->reduceById($_field, $val, $id);
+    }
+
+    /**
+     * Delete the specified records
      *
      * @param   $_where
      * @param   $frag_recur
@@ -945,7 +1012,7 @@ class RouterShardingModel implements IModel
     }
 
     /**
-     * group the specifield data by the sharding hash value.
+     * group the specified data by the sharding hash value.
      *
      * @param   $data
      * @param   $genUid wether to generate and append the UID
@@ -981,7 +1048,7 @@ class RouterShardingModel implements IModel
     }
 
     /**
-     * get the sharding from the specifield universal unique identifier
+     * get the sharding from the specified universal unique identifier
      *
      * @param   $id
      * @param   $willQuery will query be executed through the model

@@ -21,8 +21,9 @@ class C_Model implements IModel
 
     protected $db   = NULL;
     protected $_srw = false;            //separate read/write
-    protected $_mapping = false;        //enable the mapping?
-    protected $_fields_mapping = NULL;  //field name mapping
+    protected $fields = array();        //table fields setting mapping
+    protected $separator = ',';         //array field default separator
+    protected $_debug = false;
     protected $_onDuplicateKey = NULL;  //on duplicate key handler
 
     /**
@@ -42,13 +43,6 @@ class C_Model implements IModel
     protected $isFragment = false;
     protected $modelPool  = array();
 
-    protected $_debug = false;
-
-    //callback method quote
-/*    protected   $_del_callback    = NULL;
-    protected   $_add_callback      = NULL;
-    protected   $_upt_callback      = NULL;*/
-
     public function __construct()
     {
         //TODO:
@@ -56,8 +50,7 @@ class C_Model implements IModel
          * Add $this->table for the main table of the current model
          * Add $this->primary_key for the main key of the table
          *
-         * Set $this->_mapping
-         * Set $this->_fields_mapping
+         * Set $this->fields
         */
 
     }
@@ -127,17 +120,6 @@ class C_Model implements IModel
     public function getPrimaryKey()
     {
         return isset($this->primary_key) ? $this->primary_key : NULL;
-    }
-
-    /*
-     * Set the current fields mapping status
-     *  Enable the fields mapping by invoke setMapping(true)
-     *
-     * @param   $_mapping
-    */
-    protected function setMapping( $_mapping )
-    {
-        $this->_mapping = $_mapping;
     }
 
     /**
@@ -312,7 +294,7 @@ class C_Model implements IModel
     }
 
     /**
-     * execute the specifield query string
+     * execute the specified query string
      *
      * @param   $_sql
      * @param   $opt
@@ -340,7 +322,7 @@ class C_Model implements IModel
     }
 
     /**
-     * Get a vector from the specifiel table
+     * Get a vector from the specified table
      *
      * @param   $_fields    query fields array
      * @param   $_where
@@ -457,66 +439,7 @@ class C_Model implements IModel
     }
 
     /**
-     * Quick way to fetch small sets from a big data sets like do data pagenation.
-     * @Note: the primary key is very important for this function
-     *
-     * @param   $_fields    query fields array
-     * @param   $_where
-     * @param   $_order
-     * @param   $_limit
-     * @fragment supports
-     */
-    public function fastList(
-        $_fields,
-        $_where = NULL,
-        $_order = NULL,
-        $_limit = NULL,
-        $_group = NULL)
-    {
-        if ( is_array( $_where ) ) $_where  = $this->getSqlWhere($_where);
-        if ( is_array( $_group ) ) $_group  = implode(',', $_group);
-        if ( is_array( $_order ) ) $_order  = $this->getSqlOrder($_order);
-        if ( $_limit != NULL     ) $_limit  = $this->getSqlLimit($_limit);
-
-        //apply the where and the order and the limit
-        //    to search the primary key only
-        //@Note: this is the key point of this method (cause it is fast)
-        $_subquery    = 'select ' . $this->primary_key . ' from ' . $this->table;
-        if ( $_where != NULL ) $_subquery .= ' where ' . $_where;
-        if ( $_group != NULL ) $_subquery .= ' group by ' . $_group;
-        if ( $_order != NULL ) $_subquery .= ' order by ' . $_order;
-        if ( $_limit != NULL ) $_subquery .= ' limit ' . $_limit;
-
-        //if the limit is NULL we can just take the subquery as the
-        //    value of the in condition, or we need to submit the subquery
-        //(@Note: drop this way cause the in subquery is terrible for mysql)
-
-        //and to the get the primary key token imploded with ','
-        //@Note: fuck the unsupport of the limit in subquery of mysql
-        $ret = $this->db->getList($_subquery, MYSQLI_ASSOC, $this->_srw);
-        if ( $ret == false ) {
-            return false;
-        }
-
-        //implode the primary key with ','
-        $idstr  = self::implode($ret, $this->primary_key, ',');
-
-        //make the main query and contains the sub query
-        if ( $this->isFragment == false || $this->fragments == NULL ) {
-            if ( is_array( $_fields) ) $_fields = $this->getSqlFields($_fields);
-
-            $_sql = "select {$_fields} from {$this->table} where {$this->primary_key} in({$idstr})";
-            if ( $_order != NULL ) $_sql .= ' order by '. $_order;
-
-            return $this->db->getList($_sql, MYSQLI_ASSOC, $this->_srw);
-        }
-
-        //invoke the getList to offer the fragment support
-        return $this->getList($_fields, "{$this->primary_key} in({$idstr})", $_order, NULL, NULL);
-    }
-
-    /**
-     * get a specifiled record from the specifield table
+     * get a specified record from the specified table
      *
      * @param   $Id
      * @param   $_fields
@@ -848,7 +771,7 @@ class C_Model implements IModel
     }
 
     /**
-     * Set the value of the specifield field of the speicifled reocords
+     * Set the value of the specified field of the specified reocords
      *      in data table $this->table
      *
      * @param   $_field
@@ -889,8 +812,8 @@ class C_Model implements IModel
     }
 
     /**
-     * Increase the value of the specifield field of
-     *      the specifiled records in data table $this->table
+     * Increase the value of the specified field of
+     *      the specified records in data table $this->table
      *
      * @param   $_field
      * @param   $_offset
@@ -933,14 +856,14 @@ class C_Model implements IModel
     }
 
     /**
-     * reduce the value of the specifield field of the speicifled records
+     * decrease the value of the specified field of the specified records
      *  in data table $this->table
      *
      * @param   $_field
      * @param   $_offset
      * @param   $where
     */
-    public function reduce( $_field, $_offset, $where )
+    public function decrease( $_field, $_offset, $where )
     {
         $data = array();
         if ( is_array($_field) ) {
@@ -965,9 +888,9 @@ class C_Model implements IModel
     }
 
     //reduce by primary_key
-    public function reduceById( $_field, $_offset, $id )
+    public function decreaseById( $_field, $_offset, $id )
     {
-        return $this->reduce(
+        return $this->decrease(
             $_field,
             $_offset,
             array($this->primary_key => "={$id}")
@@ -975,7 +898,106 @@ class C_Model implements IModel
     }
 
     /**
-     * Delete the specifield records
+     * expand the value of specified array fields
+     *
+     * @param   $_field
+     * @param   $val
+     * @param   $where
+     * @param   $flag
+     * @param   bool
+    */
+    public function expand($_field, $val, $where, $flag=ADD_TAIL)
+    {
+        //stdlize the data
+        $data = array();
+        if ( is_array($_field) ) {
+            foreach ( $_field as $key => $val ) {
+                $lflag = $flag;
+                if ( is_array($val) ) {
+                    if ( isset($val['flag']) ) $lflag = $val['flag'];
+                    $val = $val['value'];
+                }
+
+                $value = $lflag == ADD_HEAD 
+                    ? "concat('{$this->separator}{$value}', $key)" 
+                    : "concat({$key}, '{$this->separator}{$value}')";
+                $data[$key] = array(
+                    'value' => $value,
+                    'quote' => false
+                );
+            }
+        } else {
+            $value = $lflag == ADD_HEAD 
+                ? "concat('{$this->separator}{$val}', $key)" 
+                : "concat({$key}, '{$this->separator}{$val}')";
+            $data[$_field]  = array(
+                'value' => $value,
+                'quote' => false
+            );
+        }
+
+        //backup the original where condition
+        $_where = $where;
+
+        if ( is_array($_where) ) $_where = $this->getSqlWhere($_where);
+        return $this->db->update($this->table, $data, $_where, false, true);
+    }
+
+    # expand by primary key
+    public function expandById($_field, $val, $id, $flag=ADD_TAIL)
+    {
+        return $this->expand(
+            $_field,
+            $val,
+            $flag,
+            array($this->primary_key => "={$id}")
+        );
+    }
+
+    /**
+     * reduce the value of specified array fields
+     *
+     * @param   $_field
+     * @param   $val
+     * @param   $where
+    */
+    public function reduce($_field, $val, $where)
+    {
+        //stdlize the data
+        $data = array();
+        if ( is_array($_field) ) {
+            foreach ( $_field as $key => $val ) {
+                $data[$key] = array(
+                    'value' => "replace({$key}, '{$this->separator}{$val}', '')",
+                    'quote' => false
+                );
+            }
+        } else {
+            $data[$_field]  = array(
+                'value' => "replace({$key}, '{$this->separator}{$val}', '')",
+                'quote' => false
+            );
+        }
+
+        //backup the original where condition
+        $_where = $where;
+
+        if ( is_array($_where) ) $_where = $this->getSqlWhere($_where);
+        return $this->db->update($this->table, $data, $_where, false, true);
+    }
+
+    # reduce by primary key
+    public function reduceById($_field, $val, $id)
+    {
+        return $this->reduce(
+            $_field,
+            $val,
+            array($this->primary_key => "={$id}")
+        );
+    }
+
+    /**
+     * Delete the specified records
      *
      * @param   $_where
      * @param   $frag_recur
@@ -1247,7 +1269,7 @@ class C_Model implements IModel
         return DbFactory::create($key, $conf);
     }
 
-    //implode the array->fields with a specifiled glue
+    //implode the array->fields with a specified glue
     public static function implode(&$arr, $field, $glue)
     {
         $idret = array();

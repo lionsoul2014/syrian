@@ -19,6 +19,9 @@ interface IModel
     const QUERY_OPT     = 2;
     const UPDATE_OPT    = 3;
 
+    const ADD_HEAD = 0;
+    const ADD_TAIL = 1;
+
     /**
      * get the last active C_Model object
      *
@@ -56,19 +59,6 @@ interface IModel
      * @fragment supports
     */
     public function getList($_fields, $_where=NULL, $_order=NULL, $_limit=NULL, $_group=NULL);
-
-    /**
-     * Quick way to fetch small sets from a big data sets
-     *    like do data pagenation.
-     * @Note: the primary key is very important for this function
-     *
-     * @param    $_fields   query fields array
-     * @param    $_where
-     * @param    $_order
-     * @param    $_limit
-     * @fragment supports
-     */
-    public function fastList($_fields, $_where=NULL, $_order=NULL, $_limit=NULL, $_group=NULL);
 
     /**
      * get a specifiled record from the specifield table

@@ -753,7 +753,7 @@ class ElasticSearchModel implements IModel
     }
 
     /**
-     * get the next batch of results of the specifield iterator
+     * get the next batch of results of the specified iterator
      *
      * @param   $iterator
      * @return  Mixed(false or Array)
@@ -826,7 +826,7 @@ class ElasticSearchModel implements IModel
     }
 
     /**
-     * execute the specifield query command
+     * execute the specified query command
      *
      * @param   $_query
      * @param   $opt code
@@ -873,7 +873,7 @@ class ElasticSearchModel implements IModel
     }
 
     /**
-     * Get a vector from the specifiel source
+     * Get a vector from the specified source
      *
      * @param   $_fields    query fields array
      * @param   $_where
@@ -936,21 +936,6 @@ class ElasticSearchModel implements IModel
         return $this->getQuerySets(
             $json, $_fields===false ? false : true
         );
-    }
-
-    /**
-     * Quick way to fetch small sets from a big data sets
-     *    like do data pagenation.
-     * @Note: the primary key is very important for this function
-     *
-     * @param    $_fields   query fields array
-     * @param    $_where
-     * @param    $_order
-     * @param    $_limit
-     */
-    public function fastList($_fields, $_where=NULL, $_order=NULL, $_limit=NULL, $_group=NULL)
-    {
-        return $this->getList($_fields, $_where, $_order, $_limit, $_group);
     }
 
     /**
@@ -1057,7 +1042,7 @@ class ElasticSearchModel implements IModel
     }
 
     /**
-     * get a specifiled record from the specifield table
+     * get a specified record from the specified table
      *
      * @param   $Id
      * @param   $_fields
@@ -1122,7 +1107,7 @@ class ElasticSearchModel implements IModel
     }
 
     /**
-     * get the specifield record by primary key
+     * get the specified record by primary key
      *
      * @param   $_fields
      * @param   $id
@@ -1418,7 +1403,7 @@ class ElasticSearchModel implements IModel
     }
 
     /**
-     * Set the value of the specifield field of the speicifled reocords
+     * Set the value of the specified field of the specified reocords
      *  in data source
      *
      * @param   $_field
@@ -1440,8 +1425,8 @@ class ElasticSearchModel implements IModel
     }
 
     /**
-     * Increase the value of the specifield field of 
-     *  the specifiled records in data source
+     * Increase the value of the specified field of 
+     *  the specified records in data source
      *
      * @param   $_field
      * @param   $_offset
@@ -1453,7 +1438,7 @@ class ElasticSearchModel implements IModel
     }
 
     /**
-     * increase the value of the specifield field by primary_key
+     * increase the value of the specified field by primary_key
      * 
      * @param   $_field
      * @param   $_offset
@@ -1513,7 +1498,7 @@ class ElasticSearchModel implements IModel
     }
 
     /**
-     * reduce the value of the specifiled field of the speicifled records
+     * decrease the value of the specified field of the specified records
      *  in data source
      *
      * @param   $_field
@@ -1521,12 +1506,12 @@ class ElasticSearchModel implements IModel
      * @param   $_where
      * @return  Mixed
     */
-    public function reduce($_field, $_offset, $_where)
+    public function decrease($_field, $_offset, $_where)
     {
     }
 
     /**
-     * reduce the value of the specifiled field by primary_key
+     * decrease the value of the specified field by primary_key
      * 
      * @param   $_field
      * @param   $_offset
@@ -1534,7 +1519,7 @@ class ElasticSearchModel implements IModel
      * @Note    the fields_increase.groovy script must be compile
      *  and loaded by elasticsearch, recommend to use the elasticsearch-jcseg
     */
-    public function reduceById($_field, $_offset, $id)
+    public function decreaseById($_field, $_offset, $id)
     {
         //pro-process the field
         $fields = array();
@@ -1554,7 +1539,7 @@ class ElasticSearchModel implements IModel
             'file'   => 'fields_increase',
             'lang'   => 'groovy',
             'params' => array(
-                'act'    => 'reduce',
+                'act'    => 'decrease',
                 'fields' => $fields,
                 'values' => $values
             )
@@ -1587,7 +1572,7 @@ class ElasticSearchModel implements IModel
     }
 
     /**
-     * Delete the specifield records
+     * Delete the specified records
      * @Note: query delete is not support by default for elasticsearch.
      * 1, query the first {$this->deleteTraffic} records and get the totals records and 
      *  send the batch delete DSL to the _bulk terminal
@@ -1972,7 +1957,7 @@ EOF;
     }
     
     /**
-     * initialize the current model from the specifiled mapping
+     * initialize the current model from the specified mapping
      * configuration that defined in conf/db/hosts.conf.php
      *
      * @param   $section
@@ -2068,7 +2053,7 @@ EOF;
     }
 
     /**
-     * string slash function, slash the specifield sub-string
+     * string slash function, slash the specified sub-string
      *
      * @param   $str
      * @return  String
