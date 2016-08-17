@@ -21,7 +21,7 @@ class C_Model implements IModel
 
     protected $db   = NULL;
     protected $_srw = false;            //separate read/write
-    protected $fields = array();        //table fields setting mapping
+    protected $fields = null;           //table fields setting mapping
     protected $separator = ',';         //array field default separator
     protected $_debug = false;
     protected $_onDuplicateKey = NULL;  //on duplicate key handler
@@ -110,6 +110,16 @@ class C_Model implements IModel
     public function getTableName()
     {
         return isset($this->table) ? $this->table : NULL;
+    }
+
+    /**
+     * get the fields settting array
+     *
+     * @return  Mixed (Array or null)
+    */
+    public function getFields()
+    {
+        return $this->fields;
     }
 
     /**
@@ -234,14 +244,32 @@ class C_Model implements IModel
      *  don't forget to add the field alias ( AS ALIAS)
      *
      * @param   $_fields
+     * @param   $a_fields
+     * @return  string
     */
-    protected function getSqlFields( &$_fields )
+    protected function getSqlFields($_fields, &$a_fields=null)
     {
+        if ( $this->fields != null ) {
+            $a_fields = array();
+            foreach ( $_fields as $f ) {
+                if ( ! isset($this->fields[$f]) ) {
+                    continue;
+                }
+
+                $attr = $this->fields[$f];
+                switch ( $attr['type'] ) {
+                case 'array':
+                    $a_fields[] = $f;
+                    break;
+                }
+            }
+        }
+
         return implode(',', $_fields);
     }
 
     //get the sql style order
-    protected function getSqlOrder( &$_order )
+    protected function getSqlOrder($_order)
     {
         $ret = array();
         foreach ($_order as $key => $val ) {
@@ -341,12 +369,8 @@ class C_Model implements IModel
         $isFragment = ($this->isFragment && $this->fragments != NULL);
         if ( $isFragment ) {
             //pre-process the fields
-            if ( is_string($_fields) ) {
-                $_fields = explode(',', $_fields);
-            }
+            if ( is_string($_fields) ) $_fields = explode(',', $_fields);
             $fieldsMap = array_flip($_fields);
-
-            //intercept the fragment fields
             $sQueries = array();
             foreach ( $this->fragments as $fragment ) {
                 $item = array();
@@ -377,11 +401,14 @@ class C_Model implements IModel
             }
         }
 
-        if ( is_array( $_fields) ) $_fields = $this->getSqlFields($_fields);
+        $a_fields = null;
         if ( is_array( $_where ) ) $_where  = $this->getSqlWhere($_where);
         if ( is_array( $_group ) ) $_group  = implode(',', $_group);
         if ( is_array( $_order ) ) $_order  = $this->getSqlOrder($_order);
         if ( $_limit != NULL     ) $_limit  = $this->getSqlLimit($_limit);
+        if ( is_array( $_fields) ) {
+            $_fields = $this->getSqlFields($_fields, $a_fields);
+        }
 
         $_sql = 'select ' . $_fields . ' from ' . $this->table;
         if ( $_where != NULL ) $_sql .= ' where ' . $_where;
@@ -391,6 +418,28 @@ class C_Model implements IModel
 
         $ret = $this->db->getList($_sql, MYSQLI_ASSOC, $this->_srw);
         if ( $ret == false ) return false;
+
+        /*
+         * @Note added at 2016/08/17
+         * check and automatically convert the array fields to array
+         * for array fields support of DMBS model
+        */
+        if ( $a_fields != null ) {
+            foreach ( $ret as $key => $val ) {
+                foreach ( $a_fields as $f ) {
+                    $value = $val[$f];
+                    if ( strlen($value) < 2 ) {
+                        $val[$f] = array();
+                    } else {
+                        $val[$f] = explode($this->separator, $value);
+                        array_shift($val[$f]);
+                    }
+                }
+
+                $ret[$key] = $val;
+            }
+        }
+
         if ( ! $isFragment || empty($sQueries) ) {
             return $ret;
         }
@@ -398,7 +447,7 @@ class C_Model implements IModel
 
         //--------------------------------
         //do and merge the fragment query results
-        $idstring = self::implode($ret, $this->primary_key, ',');
+        $idstr = self::implode($ret, $this->primary_key, ',');
         foreach ( $sQueries as $Query ) {
             $fields = $Query['fields'];
             $sModel = $Query['model'];
@@ -410,7 +459,7 @@ class C_Model implements IModel
             }
 
             $fields = array_keys($fields);
-            $subret = $sModel->getList($fields, array($priKey => "in({$idstring})"));
+            $subret = $sModel->getList($fields, array($priKey => "in({$idstr})"));
             if ( $subret == false ) {
                 continue;
             }
@@ -487,12 +536,32 @@ class C_Model implements IModel
             }
         }
 
-        if ( is_array( $_fields )  ) $_fields = $this->getSqlFields($_fields);
-        if ( is_array( $_where ) )   $_where  = $this->getSqlWhere($_where);
+        $a_fields = null;
+        if ( is_array($_where)  ) $_where = $this->getSqlWhere($_where);
+        if ( is_array($_fields) ) {
+            $_fields = $this->getSqlFields($_fields, $a_fields);
+        }
 
         $sql = 'select '.$_fields.' from ' . $this->table . ' where ' . $_where;
         $ret = $this->db->getOneRow($sql, MYSQLI_ASSOC, $this->_srw);
         if ( $ret == false ) return false;
+
+        /*
+         * @Note added at 2016/08/17
+         * @see  #getList
+        */
+        if ( $a_fields != null ) {
+            foreach ( $a_fields as $f ) {
+                $value = $ret[$f];
+                if ( strlen($value) < 2 ) {
+                    $ret[$f] = array();
+                } else {
+                    $ret[$f] = explode($this->separator, $value);
+                    array_shift($ret[$f]);
+                }
+            }
+        }
+
         if ( ! $isFragment || empty($sQueries) ) {
             return $ret;
         }
@@ -561,6 +630,15 @@ class C_Model implements IModel
         if ( $this->autoPrimaryKey == true
             && ! isset($data[$this->primary_key]) ) {
             $data[$this->primary_key] = $this->genUUID($data);
+        }
+
+        /*
+         * @Note added at 2016/08/17
+         * for array fields support
+         * check and convert the array fields to string
+        */
+        if ( $this->fields != null ) {
+            $this->stdDataType($data);
         }
 
         /*
@@ -651,20 +729,15 @@ class C_Model implements IModel
     */
     public function batchAdd($data, $onDuplicateKey=NULL)
     {
-        /*
-         * check and append the auto generate primary_key value
-         * @Note: added at 2016.02.02
-        */
-        if ( $this->autoPrimaryKey == true ) {
-            foreach ( $data as $key => $val ) {
-                if ( isset($val[$this->primary_key]) ) {
-                    continue;
-                }
-
+        foreach ( $data as $key => $val ) {
+            if ( $this->autoPrimaryKey == true 
+                && ! isset($val[$this->primary_key]) ) {
                 //generate the univeral unique identifier
                 $val[$this->primary_key] = $this->genUUID($val);
-                $data[$key] = $val;
             }
+
+            if ( $this->fields != null ) $this->stdDataType($val);
+            $data[$key] = $val;
         }
 
         $onDK = $onDuplicateKey ? $onDuplicateKey : $this->_onDuplicateKey;
@@ -687,7 +760,7 @@ class C_Model implements IModel
             //intercept the fragments data
             $sData  = array();
             foreach ( $this->fragments as $fragment ) {
-                $item   = array();
+                $item = array();
                 foreach ( $fragment['fields'] as $field ) {
                     if ( isset($data[$field]) ) {
                         $item[$field] = &$data[$field];
@@ -906,7 +979,7 @@ class C_Model implements IModel
      * @param   $flag
      * @param   bool
     */
-    public function expand($_field, $val, $where, $flag=ADD_TAIL)
+    public function expand($_field, $val, $where, $flag=IModel::ADD_TAIL)
     {
         //stdlize the data
         $data = array();
@@ -918,7 +991,7 @@ class C_Model implements IModel
                     $val = $val['value'];
                 }
 
-                $value = $lflag == ADD_HEAD 
+                $value = $lflag == IModel::ADD_HEAD 
                     ? "concat('{$this->separator}{$value}', $key)" 
                     : "concat({$key}, '{$this->separator}{$value}')";
                 $data[$key] = array(
@@ -927,9 +1000,9 @@ class C_Model implements IModel
                 );
             }
         } else {
-            $value = $lflag == ADD_HEAD 
-                ? "concat('{$this->separator}{$val}', $key)" 
-                : "concat({$key}, '{$this->separator}{$val}')";
+            $value = $flag == IModel::ADD_HEAD 
+                ? "concat('{$this->separator}{$val}', $_field)" 
+                : "concat({$_field}, '{$this->separator}{$val}')";
             $data[$_field]  = array(
                 'value' => $value,
                 'quote' => false
@@ -944,13 +1017,13 @@ class C_Model implements IModel
     }
 
     # expand by primary key
-    public function expandById($_field, $val, $id, $flag=ADD_TAIL)
+    public function expandById($_field, $val, $id, $flag=IModel::ADD_TAIL)
     {
         return $this->expand(
             $_field,
             $val,
-            $flag,
-            array($this->primary_key => "={$id}")
+            array($this->primary_key => "={$id}"),
+            $flag
         );
     }
 
@@ -1178,6 +1251,35 @@ class C_Model implements IModel
     }
 
     /**
+     * standardlize the data type according to the define
+     * of the model fields quote by $this->fields
+     *
+     * @param   $data
+    */
+    protected function stdDataType(&$data)
+    {
+        foreach ( $this->fields as $key => $attr ) {
+            if ( ! isset($data[$key]) ) {
+                continue;
+            }
+
+            $value = &$data[$key];
+            switch ( $attr['type'] ) {
+            case 'array':
+                if ( is_array($value) ) {
+                    $value = $this->separator . implode($this->separator, $value);
+                } else if ( strlen($value) > 0 
+                    && $value != '0' ) {
+                    $value = "{$this->separator}{$value}";
+                } else {
+                    $value = '0';
+                }
+                break;
+            }
+        }
+    }
+
+    /**
      * generate a universal unique identifier
      *
      * @param   $data   original data
@@ -1270,7 +1372,7 @@ class C_Model implements IModel
     }
 
     //implode the array->fields with a specified glue
-    public static function implode(&$arr, $field, $glue)
+    public static function implode($arr, $field, $glue)
     {
         $idret = array();
         foreach ( $arr as $val ) {
@@ -1281,13 +1383,12 @@ class C_Model implements IModel
     }
 
     //mapping arr->field with arr
-    public static function makeIndex(&$arr, $field)
+    public static function makeIndex($arr, $field)
     {
         $mapping = array();
         foreach ( $arr as $val ) {
             $key = $val[$field];
-            $mapping["{$key}"] = &$val;
-            unset($val);
+            $mapping[$key] = $val;
         }
 
         return $mapping;

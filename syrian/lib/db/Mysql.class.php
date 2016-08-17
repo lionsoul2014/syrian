@@ -310,7 +310,7 @@ class Mysql implements Idb
                 $rval = $val;
             }
 
-            $values[] = "{$key}={$qstr}" . ($this->_escape ? $rval : addslashes($rval)) . $qstr;
+            $values[] = "{$key}={$qstr}" . ($slashes ? addslashes($rval) : $rval) . $qstr;
         }
         
         if ( ! empty($values) ) {
