@@ -779,8 +779,17 @@ class C_Model implements IModel
             }
         }
 
-        //backup the original where condition
+        # backup the original where condition
         $_where = $where;
+
+        /*
+         * @Note added at 2016/08/17
+         * for array fields support
+         * check and convert the array fields to string
+        */
+        if ( $this->fields != null ) {
+            $this->stdDataType($data);
+        }
 
         //check and intercept the fragments execute
         //    for not fragment or empty interceptions
