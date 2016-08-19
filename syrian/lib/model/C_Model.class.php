@@ -1413,7 +1413,7 @@ class C_Model implements IModel
     */
     private static function isStringQuoted($str, $sIdx=0, $eIdx=-1)
     {
-        if ( $str == false || strlen($str) < 1 ) {
+        if ( $str === false || strlen($str) < 1 ) {
             return true;
         }
 
