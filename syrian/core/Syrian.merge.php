@@ -933,9 +933,12 @@ function set_query_args($key, $val, $src=null)
         $src = $_SERVER['QUERY_STRING'];
     }
 
-    return preg_replace(
-        "/([\?#&]?){$key}=[^&#]*([&#]?)/", "\$1{$key}={$val}\$2", $src
-    );
+    $len = strlen($src);
+    if ( preg_match("/([\?#&]?){$key}=[^&#]*([&#]?)/", $src, $m) == false ) {
+        return $len > 0 ? "{$src}&{$key}={$val}" : "{$src}{$key}={$val}";
+    }
+
+    return str_replace($m[0], "{$m[1]}{$key}={$val}{$m[2]}", $src);
 }
 
 /**
