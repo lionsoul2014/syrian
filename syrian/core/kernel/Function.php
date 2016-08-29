@@ -15,7 +15,7 @@
  * @param   $val
  * @return  Mixed
 */
-function _G($key, $val=NULL)
+function _G($key, $val=null)
 {
     static $_GRE = array();
     
@@ -27,8 +27,8 @@ function _G($key, $val=NULL)
         return true;
     }
 
-    if ( $val === NULL ) {
-        return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
+    if ( $val === null ) {
+        return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : null;
     }
 
     $_GRE["{$key}"] = &$val;
@@ -41,7 +41,7 @@ function _G($key, $val=NULL)
  *
  * @see #_G
 */
-function E($key, $val=NULL)
+function E($key, $val=null)
 {
     static $_GRE = array();
     
@@ -53,8 +53,8 @@ function E($key, $val=NULL)
         return true;
     }
 
-    if ( $val === NULL ) {
-        return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : NULL;
+    if ( $val === null ) {
+        return isset($_GRE["{$key}"]) ? $_GRE["{$key}"] : null;
     }
 
     $_GRE["{$key}"] = &$val;
@@ -71,8 +71,8 @@ function _cli_initialize()
     //1. parse and define the SCRIPT_FILENAME
     $script_name = array_shift($argv);
     $_SERVER['SCRIPT_FILENAME'] = $script_name;
-    $_SERVER['REQUEST_URI']     = NULL;
-    $_SERVER['QUERY_STRING']    = NULL;
+    $_SERVER['REQUEST_URI']     = null;
+    $_SERVER['QUERY_STRING']    = null;
 
     if ( count($argv) < 1 ) return;
 
@@ -201,7 +201,7 @@ function config($config_path, $_inc=false, $cache=true)
         $keys = explode('.', substr($config_path, $sIdx + 1));
     } else {
         $path = str_replace('.', '/', $config_path);
-        $keys = NULL;
+        $keys = null;
     }
 
     //check and load the configure
@@ -229,7 +229,7 @@ function config($config_path, $_inc=false, $cache=true)
         throw new Exception("config#Unable to load configure with path {$config_path}");
     }
 
-    if ( $keys == NULL ) {
+    if ( $keys == null ) {
         return $_loadedConf[$path];
     }
 
@@ -269,7 +269,7 @@ function model($model_path, $cache=true)
         $path  = str_replace('.', '/', substr($model_path, 0, $sIdx + 1));
         $model = substr($model_path, $sIdx + 1);
     } else {
-        $path  = NULL;
+        $path  = null;
         $model = $model_path;
     }
     
@@ -314,7 +314,7 @@ function model($model_path, $cache=true)
  * Usage: 
  * helper('ServiceExecutor#StreamAccess', array('a', 'b'));
 */
-function helper($helper_path, $args=NULL, $_inc=false, $cache=true)
+function helper($helper_path, $args=null, $_inc=false, $cache=true)
 {
     static $_clsLoaded    = array();
     static $_loadedHelper = array();
@@ -324,7 +324,7 @@ function helper($helper_path, $args=NULL, $_inc=false, $cache=true)
         $method  = substr($helper_path, $sIdx + 1);
     } else {
         $package = str_replace('.', '/', $helper_path);
-        $method  = NULL;
+        $method  = null;
     }
 
     if ( $cache == true && isset($_loadedHelper[$package]) ) {
@@ -335,7 +335,7 @@ function helper($helper_path, $args=NULL, $_inc=false, $cache=true)
             $path   = str_replace('.', '/', substr($package, 0, $sIdx + 1));
             $helper = substr($package, $sIdx + 1);
         } else {
-            $path   = NULL;
+            $path   = null;
             $helper = $package;
         }
 
@@ -354,7 +354,7 @@ function helper($helper_path, $args=NULL, $_inc=false, $cache=true)
 
                 $found = true;
                 $class = "{$helper}Helper";
-                $helperObj = new $class(NULL);
+                $helperObj = new $class(null);
                 if ( $cache == true ) {
                     $_loadedHelper[$package] = $helperObj;
                 }
@@ -371,7 +371,7 @@ function helper($helper_path, $args=NULL, $_inc=false, $cache=true)
     }
 
     unset($package);
-    if ( $method == NULL ) {
+    if ( $method == null ) {
         return $helperObj;
     }
 
@@ -403,7 +403,7 @@ function abort($http_code)
 function build_view($type='html')
 {
     $e_name = "{$type}_view_obj";
-    if ( ($viewObj = E($e_name)) == NULL ) {
+    if ( ($viewObj = E($e_name)) == null ) {
         import('view.ViewFactory');
         $conf = $type == 'html' ? array(
             'cache_time' => 0,
@@ -431,7 +431,7 @@ function build_view($type='html')
 function view($tpl, $vars=null, $sanitize=false, $timer=0)
 {
     $viewObj = build_view();
-    if ( $timer > 0 )    $viewObj->setCacheTime($timer);
+    $viewObj->setCacheTime($timer);
     if ( $vars != null ) $viewObj->load($vars);
 
     return $viewObj->getContent($tpl, $sanitize);
@@ -546,7 +546,7 @@ function view_page(
  * @param   $args
  * @param   $exit exit the current request
 */
-function redirect($uri, $args=NULL, $exit=true)
+function redirect($uri, $args=null, $exit=true)
 {
     if ( is_array($args) ) {
         $arr = array();
@@ -572,7 +572,7 @@ function redirect($uri, $args=NULL, $exit=true)
  *
  * @param   $uri (the relative request uri only with the path part)
  * @param   $separator and default to '/' it could be '.' or '-'
- * @return  Mixed (Object or NULL)
+ * @return  Mixed (Object or null)
  * {
  *  uri    : "",        //the original uri string
  *  path   : "",        //the original path
@@ -582,7 +582,7 @@ function redirect($uri, $args=NULL, $exit=true)
  *  page   : "",        //page name
  * }
 */
-function parse_uri($uri, $separator='/', $default=NULL)
+function parse_uri($uri, $separator='/', $default=null)
 {
     /*
      * move the arguments to get the path
@@ -594,7 +594,7 @@ function parse_uri($uri, $separator='/', $default=NULL)
         $path = $uri;
     }
 
-    if ( strlen($path) < 1 ) return NULL;
+    if ( strlen($path) < 1 ) return null;
     if ( $path[0] == '/'   ) $path = substr($path, 1);
 
     //-----------------------------------------------
@@ -602,10 +602,10 @@ function parse_uri($uri, $separator='/', $default=NULL)
     $uriBean = new StdClass();
     $uriBean->uri     = $uri;
     $uriBean->path    = $path;
-    $uriBean->parts   = NULL;
-    $uriBean->package = NULL;
-    $uriBean->module  = NULL;
-    $uriBean->page    = NULL;
+    $uriBean->parts   = null;
+    $uriBean->package = null;
+    $uriBean->module  = null;
+    $uriBean->page    = null;
 
     if ( strlen($path) >= 1 ) {
         $parts  = explode($separator, $path);
@@ -633,7 +633,7 @@ function parse_uri($uri, $separator='/', $default=NULL)
         unset($parts, $length);
     }
 
-    if ( $uriBean->module == NULL ) {
+    if ( $uriBean->module == null ) {
         if ( is_string($default) ) {
             $uriBean->module = $default;
         } else if ( is_array($default) 
@@ -642,7 +642,7 @@ function parse_uri($uri, $separator='/', $default=NULL)
         }
     }
 
-    if ( $uriBean->page == NULL ) {
+    if ( $uriBean->page == null ) {
         if ( is_array($default) 
             && isset($default[1]) ) {
             $uriBean->page = $default[1];
@@ -667,7 +667,7 @@ function parse_uri($uri, $separator='/', $default=NULL)
  * @see     #parse_uri
 */
 function controller(
-    $uri, $input, $output, $res_preload_callback=NULL, &$ctrl=NULL)
+    $uri, $input, $output, $res_preload_callback=null, &$ctrl=null)
 {
     /*
      * check and parse the uri if it is a request uri string
@@ -679,7 +679,7 @@ function controller(
      * get and check the existence of the controller main file
     */
     $_ctrl_file = SR_CTRLPATH;
-    if ( $uri->package != NULL ) $_ctrl_file .= "{$uri->package}/";
+    if ( $uri->package != null ) $_ctrl_file .= "{$uri->package}/";
     $_ctrl_file .= "{$uri->module}/main.php";
 
     if ( ! file_exists($_ctrl_file) ) {
@@ -689,7 +689,7 @@ function controller(
     /*
      * check and invoke the request dynamic resource pre load callback
     */
-    if ( $res_preload_callback != NULL ) {
+    if ( $res_preload_callback != null ) {
         $res_preload_callback($uri);
     }
 
@@ -727,9 +727,9 @@ function controller(
 */
 function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
 {
-    if ( $executor == NULL ) {
+    if ( $executor == null ) {
         import('service.LocalExecutor');
-        $executor = new LocalExecutor(NULL);
+        $executor = new LocalExecutor(null);
     }
 
     return $executor->execute(

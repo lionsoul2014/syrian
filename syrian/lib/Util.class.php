@@ -46,12 +46,12 @@ class Util
 
     /**
      * common method to get the access internet address
-     *        of the access client
+     *  of the access client
      *
-     * @param     $convert
-     * @return     mixed(int or string)
+     * @param   $convert
+     * @return  mixed(int or string)
      */
-    public static function getIpAddress( $convert = false ) 
+    public static function getIpAddress($convert=false) 
     {
         $ip = ""; 
         foreach ( array('HTTP_CLIENT_IP', 
@@ -67,7 +67,7 @@ class Util
         }
 
         if ( ($comma=strpos($ip, ',')) !== false ) $ip = substr($ip, 0, $comma);
-        if ( $convert ) $ip = sprintf("%u", ip2long($ip));
+        if ( $convert ) $ip = intval(sprintf("%u", ip2long($ip)));
 
         return $ip;
     }

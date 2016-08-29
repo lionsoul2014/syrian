@@ -13,31 +13,47 @@
 class FileSession implements ISession
 {
     private $_partitions    = 1000;
-    private $_save_path     = NULL;
+    private $_save_path     = null;
     private $_ttl           = 0;
     private $_ext           = '.ses';
-    private $_sessid        = NULL;
-    private $_R8C           = NULL;
-    private $_session_name  = NULL;
+    private $_sessid        = null;
+    private $_R8C           = null;
+    private $_session_name  = null;
 
     //valud of session_id's hash value
     private $_hval  = -1;
+
+    /**
+     * @added at 2016/08/29
+     * cookie expired strategy
+     * 1, request: expired time means the intervals bettween the requests
+     * 2, global : expired time means the global intervals and once set 
+     *  and can not be changed
+    */
+    private $_expire_strategy = 'request';
+    private $_cookie_extra    = 0;
+    private $_cookie_domain   = '';
     
     /**
      * construct method to initialize the class
      *
      * @param   $conf
      */
-    public function __construct( &$conf )
+    public function __construct($conf)
     {
-        if ( isset( $conf['save_path'] ) ) 
+        if ( isset($conf['save_path']) ) 
             $this->_save_path = $conf['save_path'];
-        if ( isset( $conf['ttl'] ) )
+        if ( isset($conf['ttl']) )
             $this->_ttl = $conf['ttl'];
-        if ( isset( $conf['partitions'] ) )
+        if ( isset($conf['partitions']) )
             $this->_partitions = $conf['partitions'];
-        if ( isset( $conf['file_ext'] ) )
+        if ( isset($conf['file_ext']) )
             $this->_ext = $conf['file_ext'];
+        if ( isset($conf['expire_strategy']) )
+            $this->_expire_strategy = $conf['expire_strategy'];
+        if ( isset($conf['cookie_extra']) ) {
+            $this->_cookie_extra = $conf['cookie_extra'];
+        }
 
         //set use user level session
         session_module_name('user');
@@ -50,52 +66,68 @@ class FileSession implements ISession
             array($this, '_gc')
         );
 
-        $_more = 86400;
-        if ( isset( $conf['more_for_cookie'] ) ) {
-            $_more = $conf['more_for_cookie'];
-        }
-        
-
-        if ( isset($conf['session_name']) && $conf['session_name'] ) {
-            $this->_session_name = $conf['session_name']; 
-            session_name($this->_session_name);
+        if ( isset($conf['session_name']) ) {
+            session_name($conf['session_name']);
         }
 
-        $cookie_domain = '';
-        if ( isset($conf['cookie_domain']) ) $cookie_domain = $conf['cookie_domain'];
-        else if ( isset($conf['domain_strategy']) ) {
+        if ( isset($conf['cookie_domain']) ) {
+            $this->_cookie_domain = $conf['cookie_domain'];
+        } else if ( isset($conf['domain_strategy']) ) {
             $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
             switch ( $conf['domain_strategy'] ) {
-            case 'cur_host': $cookie_domain = $host; break;
+            case 'cur_host': $this->cookie_domain = $host; break;
             case 'all_sub_host':
                 $pnum = 0;
                 $hostLen = min(strlen($host), 255);
-                for ( $i = 0; $i < $hostLen; $i++ ) {if ( $host[$i] == '.' ) $pnum++;}
+                for ( $i = 0; $i < $hostLen; $i++ ) {
+                    if ( $host[$i] == '.' ) $pnum++;
+                }
                 
                 //define the sub host ($pnum could be 0 like localhost)
-                if ( $pnum == 0 ) $cookie_domain = $host;
-                else if ( $pnum == 1 ) $cookie_domain = ".{$host}";
-                else $cookie_domain = substr($host, strpos($host, '.'));
+                if ( $pnum == 0 ) $this->_cookie_domain = $host;
+                else if ( $pnum == 1 ) $this->_cookie_domain = ".{$host}";
+                else $this->_cookie_domain = substr($host, strpos($host, '.'));
                 break;
             }
         }
 
         //set the session id cookies lifetime
-        session_set_cookie_params($this->_ttl + $_more, '/', $cookie_domain);
+        if ( $this->_expire_strategy == 'global' ) {
+            session_set_cookie_params(
+                $this->_ttl + $this->cookie_extra, '/', $this->_cookie_domain
+            );
+        }
     }
 
     //start the session
     public function start()
     {
-        if ( $this->_sessid != NULL ) {
-            if ( $this->_R8C == NULL ) $_sessid = $this->_sessid;
-            else $_sessid = $this->_sessid.'---'.$this->_R8C;
+        if ( $this->_sessid != null ) {
+            if ( $this->_R8C == null ) $_sessid = $this->_sessid;
+            else $_sessid = "{$this->_sessid}---{$this->_R8C}";
 
             //set the session id
             session_id($_sessid);
         }
 
         session_start();
+
+        /*
+         * check the expire_strategy and extend the 
+         * cookies life time as needed
+        */
+        if ( $this->_expire_strategy == 'request' ) {
+            $r8cVal = $this->_R8C;
+            setcookie(
+                session_name(),
+                $r8cVal == null ? $this->_sessid : "{$this->_sessid}---{$r8cVal}", 
+                time() + $this->_ttl + $this->_cookie_extra,
+                '/',
+                $this->_cookie_domain,
+                false,
+                true
+            );
+        }
     }
 
     /**
@@ -108,7 +140,7 @@ class FileSession implements ISession
         session_unset();    
 
         //2. destroy the session file or stored data
-        if ( $this->_sessid != NULL ) {
+        if ( $this->_sessid != null ) {
             $this->_destroy($this->_sessid);
         }
         
@@ -141,7 +173,7 @@ class FileSession implements ISession
     function _open( $_save_path, $_sessname )
     {
         //use the default _save_path without user define save_path
-        if ( $this->_save_path == NULL ) $this->_save_path = $_save_path;
+        if ( $this->_save_path == null ) $this->_save_path = $_save_path;
         return true;
     }
 
@@ -169,7 +201,7 @@ class FileSession implements ISession
         }
         
         //set the global session id when it is null
-        if ( $this->_sessid == NULL ) $this->_sessid = $_sessid;
+        if ( $this->_sessid == null ) $this->_sessid = $_sessid;
 
         //take the _hval as the partitions number
         if ( $this->_hval == -1 ) {
@@ -275,7 +307,7 @@ class FileSession implements ISession
     //get the value mapping with the specifield key
     public function get( $key )
     {
-        if ( ! isset($_SESSION[$key]) ) return NULL;
+        if ( ! isset($_SESSION[$key]) ) return null;
         return $_SESSION[$key];
     }
 

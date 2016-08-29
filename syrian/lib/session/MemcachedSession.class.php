@@ -6,20 +6,12 @@
  *        and take the '---' as the delimiter
  *
  * @author dongyado<dongydao@gmail.com>
+ * @author chenxin<chenxin619315@gmail.com>
 */
-
- //----------------------------------------------------------
 
 class MemcachedSession implements ISession
 {
-    private $_ttl           = 0;
-    private $_prefix        = '';
-    private $_sessid        = NULL;
-    private $_R8C           = NULL;
-    private $_session_name  = NULL;
-    private $_mem           = NULL;
-    private $_hash          = Memcached::HASH_DEFAULT;
-    public static $_hash_opts = array(
+    private static $_hash_opts = array(
         'default'   => Memcached::HASH_DEFAULT,
         'md5'       => Memcached::HASH_MD5,
         'crc'       => Memcached::HASH_CRC,
@@ -30,6 +22,16 @@ class MemcachedSession implements ISession
         'hsieh'     => Memcached::HASH_HSIEH,
         'murmur'    => Memcached::HASH_MURMUR
     );
+
+    private $_ttl     = 0;
+    private $_sessid  = null;
+    private $_R8C     = null;
+    private $_mem     = null;
+
+    //@see ./FileSession
+    private $_expire_strategy = 'request';
+    private $_cookie_extra    = 0;
+    private $_cookie_domain   = '';
 
 
     /**
@@ -51,48 +53,45 @@ class MemcachedSession implements ISession
      *  
      * @param   $conf
      */
-    public function __construct( &$conf )
+    public function __construct($conf)
     {
-        if (!isset($conf['servers']) || empty($conf['servers'])){
+        if ( ! isset($conf['servers']) || empty($conf['servers']) ) {
            throw new Exception('Memcached server should not be empty'); 
+        }
+
+        if ( isset($conf['ttl']) ) $this->_ttl = $conf['ttl'];
+        if ( isset($conf['expire_strategy']) ) 
+            $this->_expire_strategy = $conf['expire_strategy'];
+        if ( isset($conf['cookie_extra']) ) {
+            $this->_cookie_extra = $conf['cookie_extra'];
         }
             
         $this->_mem = new Memcached();
 
         // hash distribute strategy, 
         // default: Memcached::DISTRIBUTION_MODULA
-        if ( isset($conf['hash_strategy']) 
-            && $conf['hash_strategy'] == 'consistent' ) {
-            $this->_mem->setOption(Memcached::OPT_DISTRIBUTION,
-                     Memcached::DISTRIBUTION_CONSISTENT); 
-            $this->_mem->setOPtion(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
+        if ( isset($conf['hash_strategy']) ) {
+            switch ( $conf['hash_strategy'] ) {
+            case 'consistent':
+                $this->_mem->setOption(Memcached::OPT_DISTRIBUTION,
+                    Memcached::DISTRIBUTION_CONSISTENT); 
+                $this->_mem->setOPtion(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
+                break;
+            }
         }
 
-        if ( isset($conf['hash']) 
-            && $conf['hash'] != 'default' 
-            && array_keys(self::$_hash_opts, $conf['hash']) ) {
-            $this->_hash = self::$_hash_opts[$conf['hash']];
-            $this->_mem->setOption(Memcached::OPT_HASH, $this->_hash); 
+        if ( isset($conf['hash']) ) {
+            $hash = self::$_hash_opts[$conf['hash']];
+            $this->_mem->setOption(Memcached::OPT_HASH, $hash); 
         }
-
 
         if ( isset($conf['prefix']) ) {
-            $this->_prefix = $conf['prefix'];
-            $this->_mem->setOption(Memcached::OPT_PREFIX_KEY, $this->_prefix);
+            $this->_mem->setOption(Memcached::OPT_PREFIX_KEY, $conf['prefix']);
         }
-
 
         $servers = $this->_mem->getServerList();
         if ( empty($servers) ) {
             $this->_mem->addServers($conf['servers']);
-        } else {
-           //throw new  Exception('Use Old Memcached server'); 
-        }
-
-
-        if ( isset($conf['ttl']) 
-            && ($ttl = intval($conf['ttl'])) > 0 ) {
-            $this->_ttl = $ttl;
         }
 
         //set use user level session
@@ -106,62 +105,78 @@ class MemcachedSession implements ISession
             array($this, '_gc')
         );
 
-        $_more = 86400;
-        if ( isset( $conf['more_for_cookie'] ) ) {
-            $_more = $conf['more_for_cookie'];
+        if ( isset($conf['session_name']) ) {
+            session_name($conf['session_name']);
         }
 
-        if ( isset($conf['session_name']) && $conf['session_name'] ) {
-            $this->_session_name = $conf['session_name']; 
-            session_name($this->_session_name);
-        }
-
-        $cookie_domain = '';
-        if ( isset($conf['cookie_domain']) ) $cookie_domain = $conf['cookie_domain'];
-        else if ( isset($conf['domain_strategy']) ) {
+        if ( isset($conf['cookie_domain']) ) {
+            $this->_cookie_domain = $conf['cookie_domain'];
+        } else if ( isset($conf['domain_strategy']) ) {
             $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
-            switch ( $conf['domain_strategy'] )
-            {
-            case 'cur_host': $cookie_domain = $host; break;
+            switch ( $conf['domain_strategy'] ) {
+            case 'cur_host': $this->_cookie_domain = $host; break;
             case 'all_sub_host':
                 $pnum = 0;
                 $hostLen = min(strlen($host), 255);
-                for ( $i = 0; $i < $hostLen; $i++ ) {if ( $host[$i] == '.' ) $pnum++;}
+                for ( $i = 0; $i < $hostLen; $i++ ) {
+                    if ( $host[$i] == '.' ) $pnum++;
+                }
                 
                 //define the sub host ($pnum could be 0 like localhost)
-                if ( $pnum == 0 ) $cookie_domain = $host;
-                else if ( $pnum == 1 ) $cookie_domain = ".{$host}";
-                else $cookie_domain = substr($host, strpos($host, '.'));
+                if ( $pnum == 0 ) $this->_cookie_domain = $host;
+                else if ( $pnum == 1 ) $this->_cookie_domain = ".{$host}";
+                else $this->_cookie_domain = substr($host, strpos($host, '.'));
                 break;
             }
         }
 
-        //set the session id cookies lifetime
-        session_set_cookie_params($this->_ttl + $_more, '/', $cookie_domain);
+        if ( $this->_expire_strategy == 'global' ) {
+            session_set_cookie_params(
+                $this->_ttl + $this->_cookie_extra, '/', $this->_cookie_domain
+            );
+        }
     }
 
     //start the session
     public function start()
     {
-        if ( $this->_sessid != NULL ) {
-            if ( $this->_R8C == NULL ) $_sessid = $this->_sessid;
-            else $_sessid = $this->_sessid.'---'.$this->_R8C;
+        if ( $this->_sessid != null ) {
+            if ( $this->_R8C == null ) $_sessid = $this->_sessid;
+            else $_sessid = "{$this->_sessid}---{$this->_R8C}";
 
             //set the session id
             session_id($_sessid);
         }
 
         session_start();
+
+        /*
+         * check the expire_strategy and extend the 
+         * cookies life time as needed
+        */
+        if ( $this->_expire_strategy == 'request' ) {
+            $r8cVal = $this->_R8C;
+            setcookie(
+                session_name(),
+                $r8cVal == null ? $this->_sessid : "{$this->_sessid}---{$r8cVal}", 
+                time() + $this->_ttl + $this->_cookie_extra,
+                '/',
+                $this->_cookie_domain,
+                false,
+                true
+            );
+        }
     }
 
     //destroy the currrent session
     public function destroy()
     {
         //1. clear the session data
-        $_SESSION = array();
+        //$_SESSION = array();
+        session_unset();    
 
         //2. destroy the session file or stored data
-        if ( $this->_sessid != NULL ) {
+        if ( $this->_sessid != null ) {
             $this->_destroy($this->_sessid);
         }
         
@@ -220,7 +235,7 @@ class MemcachedSession implements ISession
         }
         
         //set the global session id when it is null
-        if ( $this->_sessid == NULL ) $this->_sessid = $_sessid;
+        if ( $this->_sessid == null ) $this->_sessid = $_sessid;
 
         $ret = $this->_mem->get($_sessid);
         return $ret == false ? '' : $ret;
@@ -283,7 +298,7 @@ class MemcachedSession implements ISession
     //get the value mapping with the specifield key
     public function get( $key )
     {
-        if ( ! isset($_SESSION[$key]) ) return NULL;
+        if ( ! isset($_SESSION[$key]) ) return null;
         return $_SESSION[$key];
     }
 

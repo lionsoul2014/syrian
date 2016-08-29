@@ -92,7 +92,8 @@ class StringUtil
      * @param array $reserve  unprintable characters reserved, value: array(9, 10, 13...)
      * @return bool|string
      */
-    public static function filterUnprintableChars($string, $encode = 'UTF-8', $reserve = array())
+    public static function filterUnprintableChars(
+        $string, $encode = 'UTF-8', $reserve = array())
     {
         if ( $string == NULL ) return false;
 
@@ -321,9 +322,10 @@ class StringUtil
     /**
      * generate a universal unique identifier
      *
+     * @param   $factor factor id
      * @return  String
     */
-    public static function genGlobalUid($b32=true)
+    public static function genGlobalUid($factor=null)
     {
         /*
          * 1, create a guid
@@ -344,20 +346,38 @@ class StringUtil
             $msec = substr($msec, $sIdx + 1);
         }
 
-        return $b32 ? sprintf(
-            "%08x%08x%0s%04x%04x%04x",
+        if ( $factor == null ) {
+            $format = "%08x%08x%0s%08x%04x";
+            $factor = mt_rand(0, 0x7fffffff);
+            $random = mt_rand(0, 0xffff);
+        } else if ( is_integer($factor) ) {
+            if ( $factor <= 0 ) {
+                $format = "%08x%08x%0s%08x%04x";
+                $factor = mt_rand(0, 0x7fffffff);
+                $random = mt_rand(0, 0xffff);
+            } if ( $factor <= 0xffffffff ) {
+                $format = "%08x%08x%0s%08x%04x";
+                $random = mt_rand(0, 0xffff);
+            } else if ( $factor <= pow(2, 40) - 1 ) {
+                $format = "%08x%08x%0s%010x%02x";
+                $random = mt_rand(0, 0xff);
+            } else {
+                $format = "%08x%08x%0s%012x";
+                $random = 0;
+            }
+        } else {
+            $format = "%08x%08x%0s%0s%04x";
+            $factor = substr(md5($factor), 0, 8);
+            $random = mt_rand(0, 0xffff);
+        }
+
+        return sprintf(
+            $format,
             $tsec,
             $msec,
             $prefix,
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
-        ) : sprintf(
-            "%08x%08x%0s%04x%04x",
-            $tsec,
-            $msec,
-            $prefix,
-            mt_rand(0, 0xffff)
+            $factor,
+            $random
         );
     }
 
