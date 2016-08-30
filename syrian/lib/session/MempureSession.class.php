@@ -127,15 +127,20 @@ class MempureSession implements ISession
 
     public function start()
     {
-        if ( $this->_sessid != null ) {
-
-        }
+        if ( $this->_sessid != null ) {}
 
         /*
-         * try to fetch the session id from the GPC data
+         * try to fetch the session id from the GP data
         */
         else if ( isset($_REQUEST[$this->_session_name]) ) {
             $this->_sessid = $_REQUEST[$this->_session_name];
+        }
+
+        /**
+         * try to fetch the session id from the cookie data
+        */
+        else if ( isset($_COOKIE[$this->_session_name]) ) {
+            $this->_sessid = $_COOKIE[$this->_session_name];
         }
 
         /*
@@ -156,11 +161,14 @@ class MempureSession implements ISession
                 if ( $jsArr == false ) $jsArr = array();
                 if ( count($jsArr) < $this->_reuse_strategy['max_num'] ) {
                     $this->_sessid = StringUtil::genGlobalUid($ipaddr);
-                    $jsArr[] = $this->_sessid;
-                    $cache->set(json_encode($jsArr));
+                    $jsArr[$this->_sessid] = 1;
                 } else {
-                    $this->_sessid = $jsArr[0];
+                    $this->_sessid = key($jsArr);
+                    unset($jsArr[$this->_sessid]);
+                    $jsArr[$this->_sessid] = 1;
                 }
+
+                $cache->set(json_encode($jsArr));
             }
 
             $this->_expire_strategy = 'request';
