@@ -817,6 +817,15 @@ class C_Model implements IModel
             if ( is_array($_where) ) $_where = $this->getSqlWhere($_where);
             $_sql  = "select {$this->primary_key} from {$this->table} where {$_where}";
             $ret   = $this->db->getList($_sql, MYSQLI_ASSOC, false);
+
+            /*
+             * @added at 2016/09/07
+             * if there is nothing match this and we should just return false here
+            */
+            if ( $ret == false ) {
+                return false;
+            }
+
             $idstr = 'in(' . self::implode($ret, $this->primary_key, ',') . ')';
         }
 
