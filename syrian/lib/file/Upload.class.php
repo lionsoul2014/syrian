@@ -12,26 +12,26 @@
  
 class Upload
 {
-    const MICROTIME_ALG        = 0;
+    const MICROTIME_ALG     = 0;
     const UNIQID_ALG        = 1;
     const UNIQID_MD5_ALG    = 2;
-    const DEFAULT_ALG        = 3;
+    const DEFAULT_ALG       = 3;
 
-    private            $algorithm    = Upload::DEFAULT_ALG;
-    private            $_upl_dir;
+    private         $algorithm = Upload::DEFAULT_ALG;
+    private         $_upl_dir;
     private         $_refu_ext;
     private         $_acce_ext;
     
-    private         $_errno     = 0;
-    public static     $_letters     = '0ab1c2de3f4ghi5jk6lmn7opq8rstuv9wxyz';
-    private static     $_length     = 36;
+    private         $_errno   = 0;
+    public static   $_letters = '0ab1c2de3f4ghi5jk6lmn7opq8rstuv9wxyz';
+    private static  $_length  = 36;
     private         $_ext;
     
     /**
      * the construct method
      * 
-     * @param     $_upl_dir    end with '/'
-     * @param    $_size
+     * @param   $_upl_dir    end with '/'
+     * @param   $_size
     */
     public function __construct( $_upl_dir, $_size = 8388608 )
     {
@@ -39,7 +39,9 @@ class Upload
         $this->_upl_dir = $_upl_dir;
 
         //set the upload max filesize
-        if( is_numeric($_size) ) @ini_set('upload_max_filesize', intval($_size));
+        if ( is_numeric($_size) ) {
+            @ini_set('upload_max_filesize', intval($_size));
+        }
     }
     
     /**
@@ -76,13 +78,12 @@ class Upload
     /**
      * handling the files from the speicified file input
      * 
-     * @param     $input        name for file input
-     * @param    $prefix        name prefix
+     * @param   $input  name for file input
+     * @param   $prefix name prefix
      */
     public function upload( $input, $prefix="")
     {
-        if ( ! isset($_FILES[$input]) ) 
-        {
+        if ( ! isset($_FILES[$input]) ) {
             return false;
         }
 
@@ -93,14 +94,15 @@ class Upload
         //$type = $_FILES[''.$input.'']['type'];
 
         $files = array();
-        $_size = count( $_local );
+        $_size = count($_local);
 
         //---------------------------------------------
         //check the file size and make the upload path
-        if ( $_size > 0 )    self::createPath($this->_upl_dir);
+        if ( $_size > 0 ) {
+            self::createPath($this->_upl_dir);
+        }
 
-        foreach( $_local as $key => $val )
-        {
+        foreach( $_local as $key => $val ) {
             //get the error code number
             $this->_errno = $_error[$key];    
             if ( $this->_errno != 0 ) continue;
@@ -110,10 +112,9 @@ class Upload
             if ( $this->_errno != 0 ) continue;
 
             if (  ! is_uploaded_file($_temp[$key]) ) continue;
-            $_file     = $this->createName($_local[$key], $prefix);
-            $opt     = move_uploaded_file($_temp[$key], $this->_upl_dir.$_file);
-            if( $opt == true ) 
-            {
+            $_file = $this->createName($_local[$key], $prefix);
+            $opt   = move_uploaded_file($_temp[$key], $this->_upl_dir.$_file);
+            if( $opt == true ) {
                 $files[$key] = $_file;
             }
         }
@@ -124,28 +125,27 @@ class Upload
     /**
      * create 16bytes unique name for the  the new upload file
      *
-     * @param    $oname
-     * @param     $prefix
-     * @return     string
+     * @param   $oname
+     * @param   $prefix
+     * @return  string
      */
     private function createName( $oname, $prefix )
     {
-        $fname    = $oname;
-        switch ( $this->algorithm )
-        {
+        $fname = $oname;
+        switch ( $this->algorithm ) {
         case Upload::MICROTIME_ALG:
-            $parts     = explode(' ', microtime());
-            $fname    = $parts[1].substr($parts[0], 2, 2);
+            $parts = explode(' ', microtime());
+            $fname = $parts[1].substr($parts[0], 2, 2);
             break;
         case Upload::UNIQID_ALG:
-            $fname    = uniqid($prefix, true);
+            $fname = uniqid($prefix, true);
             break;
         case Upload::UNIQID_MD5_ALG:
-            $fname    = md5(uniqid($prefix, true));
+            $fname = md5(uniqid($prefix, true));
             break;
         case Upload::DEFAULT_ALG:
             $prefix = $prefix.self::$_letters[mt_rand()%self::$_length];
-            $fname    = md5(uniqid($prefix, true));
+            $fname  = md5(uniqid($prefix, true));
             break;
         }
 
@@ -162,8 +162,7 @@ class Upload
         $_arr = explode('.', $_name);
         $_size = count( $_arr );
         if ( $_size < 2 ) $this->_errno = -3;            //ilegal file extension
-        else
-        {
+        else {
             $_ext = $_arr[$_size - 1];
             //refused file extension
             if( stripos( $this->_refu_ext, $_ext ) !== FALSE ) $this->_errno = -1;
@@ -193,22 +192,18 @@ class Upload
         $dirArray = array();
         $baseDir = '';
 
-        while ($path != '.' && $path != '..' ) 
-        {
-            if ( file_exists($path) ) 
-            {
+        while ($path != '.' && $path != '..' ) {
+            if ( file_exists($path) ) {
                 $baseDir = $path;
                 break;     
             }
 
-            $dirArray[]    = basename($path);   //basename part
-            $path         = dirname($path); 
+            $dirArray[] = basename($path);   //basename part
+            $path = dirname($path); 
         }
 
-        for ( $i = count($dirArray) - 1; $i >= 0; $i-- )
-        {
-            if ( strpos($dirArray[$i], '.') !== FALSE ) 
-            {
+        for ( $i = count($dirArray) - 1; $i >= 0; $i-- ) {
+            if ( strpos($dirArray[$i], '.') !== FALSE ) {
                 break;
             }
 
@@ -216,5 +211,6 @@ class Upload
             $baseDir = $baseDir . '/' .$dirArray[$i];
         }
     }
+
 }
 ?>

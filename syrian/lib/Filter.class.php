@@ -112,8 +112,8 @@ class Filter
         //clear up the onEvent of html node.
         $_rules = array(
             '/<script[^>]*?>.*?<\/script\s*>/i',
-            '/<([^>]*?)on[a-zA-Z]+\s*=\s*".*?"([^>]*?)>/i',
-            '/<([^>]*?)on[a-zA-Z]+\s*=\s*\'.*?\'([^>]*?)>/i'
+            '/<([^>]*?)\s+on[a-zA-Z]+\s*=\s*".*?"([^>]*?)>/i',
+            '/<([^>]*?)\s+on[a-zA-Z]+\s*=\s*\'.*?\'([^>]*?)>/i'
         );
 
         return preg_replace($_rules, array('', '<$1$2>'), $_val);
