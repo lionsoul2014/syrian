@@ -282,8 +282,14 @@ class Util
             curl_setopt($curl, CURLOPT_HTTPHEADER, $_header);
         }
 
+        $ret_info = false;
         //check and apply the setting
         if ( $setting != NULL ) {
+            if ( isset($setting['return_info']) ) {
+                $ret_info = true;
+                unset($setting['return_info']);
+            }
+
             foreach ( $setting as $key => $val ) {
                 curl_setopt($curl, $key, $val);
             }
@@ -294,6 +300,11 @@ class Util
         curl_close($curl);
 
         if( intval( $info["http_code"] ) == 200 ) {
+            if ( $ret_info ) return array(
+                'data' => $ret,
+                'info' => $info
+            );
+
             return $ret;
         }
 
@@ -336,8 +347,14 @@ class Util
             curl_setopt($curl, CURLOPT_HTTPHEADER, $_header);
         }
 
+        $ret_info = false;
         //check and apply the setting
         if ( $setting != NULL ) {
+            if ( isset($setting['return_info']) ) {
+                $ret_info = true;
+                unset($setting['return_info']);
+            }
+
             foreach ( $setting as $key => $val ) {
                 curl_setopt($curl, $key, $val);
             }
@@ -348,6 +365,11 @@ class Util
         curl_close($curl);
 
         if ( intval($info['http_code']) == 200 ) {
+            if ( $ret_info ) return array(
+                'data' => $ret,
+                'info' => $info
+            );
+                
             return $ret;
         }
 
