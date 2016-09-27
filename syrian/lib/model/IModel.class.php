@@ -135,7 +135,7 @@ interface IModel
     public function increaseById($_field, $_offset, $id);
 
     /**
-     * reduce the value of the specifield field of the speicifled records
+     * decrease the value of the specifield field of the speicifled records
      *  in data source
      *
      * @param   $_field
@@ -143,10 +143,10 @@ interface IModel
      * @param   $_where
      * @return  Mixed
     */
-    public function reduce($_field, $_offset, $_where);
+    public function decrease($_field, $_offset, $_where);
 
-    //reduce by primary_key
-    public function reduceById($_field, $_offset, $id);
+    //decrease by primary_key
+    public function decreaseById($_field, $_offset, $id);
 
     /**
      * Delete the specifield records
