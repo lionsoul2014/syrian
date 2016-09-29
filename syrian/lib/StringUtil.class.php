@@ -159,6 +159,16 @@ class StringUtil
         return implode('', $buffer);
     }
 
+    public static function esIndexFilter($str)
+    {
+        $str = strip_tags($str);
+        $str = preg_replace('/&[a-zA-Z]+;/', ' ', $str);
+        $str = preg_replace('/\s{2,}/', ' ', $str);
+        $str = str_replace(array("\n", "\t", "\r", "\\"), ' ', $str);
+        $str = self::filterUnprintableChars($str, 'utf-8');
+        return $str;
+    }
+
     /**
      * string slash function, slash the specifield sub-string
      *

@@ -83,6 +83,8 @@ class ElasticSearchModel implements IModel
      * debug control mask
     */
     protected   $_debug     = false;
+    protected   $lastErrno  = 0;
+    protected   $lastError  = null;
 
     //----------------------------------------------
 
@@ -114,7 +116,7 @@ class ElasticSearchModel implements IModel
         }
 
         //1, check the existence of the index first
-        $exists  = $this->_request('GET', NULL, $this->index);
+        $exists  = $this->_request('GET', NULL, $this->index, null, false, false);
         if ( $exists == false ) {   //hoops, something went wrong
             return false;
         }
@@ -1747,6 +1749,16 @@ class ElasticSearchModel implements IModel
         return $this;
     }
 
+    public function getLastErrno()
+    {
+        return $this->lastErrno;
+    }
+
+    public function getLastError()
+    {
+        return $this->lastError;
+    }
+
     /**
      * data types standardization
      * @Note: make sure this->fields is not NULL before you invoke this method
@@ -1851,11 +1863,14 @@ class ElasticSearchModel implements IModel
      *
      * @param   $method (uppercase)
      * @param   $dsl
-     * @param   $type
-     * @param   $id
+     * @param   $uri
+     * @param   $args
+     * @param   $_assoc
+     * @param   $chk_error
      * @return  Mixed(Object or false)
     */
-    protected function _request( $method, $dsl, $uri, $args=NULL, $_assoc=false)
+    protected function _request(
+        $method, $dsl, $uri, $args=NULL, $_assoc=false, $chk_error=true)
     {
         if ( ! isset(self::$methods[$method]) ) {
             throw new Exception("Unknow http request method {$method}");
@@ -1913,6 +1928,27 @@ EOF;
 
         $json = json_decode($ret, $_assoc);
         if ( $json == NULL ) {
+            return false;
+        }
+
+        /*
+         * check and do the error analysis and record
+         * @Note added at 2016/09/29
+        */
+        $has_error = $chk_error && ($_assoc 
+            ? isset($json['error']) : isset($json->error));
+        if ( $has_error ) {
+            if ( $_assoc ) {
+                $jError = $json['error'];
+                $this->lastErrno = $json['status'];
+                $this->lastError = isset($jError['caused_by']['reason'])
+                    ? $jError['caused_by']['reason'] : $jError['reason'];
+            } else {
+                $jError = $json->error;
+                $this->lastErrno = $json->status;
+                $this->lastError = isset($jError->caused_by->reason)
+                    ? $jError->caused_by->reason : $jError->reason;
+            }
             return false;
         }
 
