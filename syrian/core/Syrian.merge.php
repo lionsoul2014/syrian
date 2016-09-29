@@ -514,6 +514,7 @@ function view_report($err_code, $err_msg=null)
  * @param   $total
  * @param   $pagesize
  * @param   $pageno
+ * @param   $baseUrl
  * @param   $name
  * @param   $style
  * @param   $left
@@ -524,7 +525,8 @@ defined('PAGE_STD_STYLE')   or  define('PAGE_STD_STYLE',  0);
 defined('PAGE_SHOP_STYLE')  or  define('PAGE_SHOP_STYLE', 1);
 
 function view_page(
-    $total, $pagesize, $pageno, $name='pageno', $style=1, $left=2, $offset=2 )
+    $total, $pagesize, $pageno, 
+    $qstr=null, $name='pageno', $style=1, $left=2, $offset=2 )
 {
     static $symbol = null;
 
@@ -533,12 +535,16 @@ function view_page(
         $viewObj->assoc('page', $symbol);
     }
 
-    if ( ! isset($_SERVER['QUERY_STRING']) 
-        || strlen($_SERVER['QUERY_STRING']) <= 1 ) {
+    if ( $qstr == null 
+        && isset($_SERVER['QUERY_STRING']) ) {
+        $qstr = $_SERVER['QUERY_STRING'];
+    }
+
+    if ( $qstr == null || strlen($qstr) <= 1 ) {
         $url = "?{$name}=";
     } else {
         $pattern = "/(&?){$name}=[^&]*&?/";
-        $url = preg_replace($pattern, '$1', $_SERVER['QUERY_STRING']);
+        $url = preg_replace($pattern, '$1', $qstr);
         if ( ($len = strlen($url)) < 1 ) {
             $url = "?{$name}=";
         } else if ( $url[$len-1] =='&' ) {
@@ -926,19 +932,59 @@ function json_decode_array($str)
  * @param   $src
  * @return  string
 */
-function set_query_args($key, $val, $src=null)
+function set_query_args($key, $val=null, $src=null)
 {
     if ( $src == null ) {
         if ( ! isset($_SERVER['QUERY_STRING']) ) return null;
         $src = $_SERVER['QUERY_STRING'];
     }
 
-    $len = strlen($src);
-    if ( preg_match("/([\?#&]?){$key}=[^&#]*([&#]?)/", $src, $m) == false ) {
-        return $len > 0 ? "{$src}&{$key}={$val}" : "{$src}{$key}={$val}";
+    if ( ! is_array($key) ) {
+        $keys = array($key => $val);
+    } else {
+        $keys = $key;
     }
 
-    return str_replace($m[0], "{$m[1]}{$key}={$val}{$m[2]}", $src);
+    foreach ( $keys as $k => $v ) {
+        $len = strlen($src);
+        if ( preg_match("/([\?#&]?){$k}=[^&#]*([&#]?)/", $src, $m) != 1 ) {
+            $src = $len > 0 ? "{$src}&{$k}={$v}" : "{$src}{$k}={$v}";
+        } else {
+            $src = str_replace($m[0], "{$m[1]}{$k}={$v}{$m[2]}", $src);
+        }
+    }
+
+    return $src;
+}
+
+/**
+ * remove the specifield key from the specifield query string
+ *
+ * @param   $key
+ * @param   $src
+ * @return  string
+*/
+function clear_query_args($key, $src=null)
+{
+    if ( $src == null ) {
+        if ( ! isset($_SERVER['QUERY_STRING']) ) return null;
+        $src = $_SERVER['QUERY_STRING'];
+    }
+
+    if ( ! is_array($key) ) {
+        $keys = array($key);
+    } else {
+        $keys = $key;
+    }
+
+    foreach ( $keys as $k ) {
+        $src = preg_replace("/([\?#&]?){$k}=[^&#]*([&#]?)/", "$1$2", $src);
+    }
+
+    $src = preg_replace('/&{2,}/', '&', $src);
+    $src = preg_replace('/^&|&$/', '',  $src);
+
+    return $src;
 }
 
 /**
