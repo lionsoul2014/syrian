@@ -10,6 +10,64 @@
 class StringUtil
 {
     /**
+     * get the bytes of the specified char
+     *
+     * @param   $char
+     * @param   $charset (utf8,gbk,gb2312 support)
+     * @return  integer
+    */
+    public static function getCharBytes($char, $charset='UTF8')
+    {
+        $ord_val = ord($char);
+        if ( strncmp($charset, 'GB', 2) == 0 ) {
+            return $ord_val > 127 ? 2 : 1;
+        }
+
+        # default it to utf8 charset
+        if ( ($ord_val & 0x80) == 0 ) {
+            return 1;
+        }
+
+        $bytes = 1;
+        $ord_val <<= 1;
+        for ( ; ($ord_val & 0x80) != 0; $ord_val <<= 1 ) {
+            $bytes++;
+        }
+
+        return $bytes;
+    }
+
+    /**
+     * do the string max bytes substr
+     *
+     * @param   $str
+     * @param   $offset
+     * @param   $bytes
+     * @param   $charset
+     * @return  string
+    */
+    public static function bytes_substr($str, $offset, $bytes, $charset='UTF8')
+    {
+        $buffer  = array();
+        $length  = strlen($str);
+        $l_bytes = 0;
+        $charset = strtoupper($charset);
+
+        for ( $i = $offset; $i < $length; ) {
+            $byte_v = self::getCharBytes($str[$i], $charset);
+            if ( $l_bytes + $byte_v > $bytes ) {
+                break;
+            }
+
+            $buffer[] = $byte_v > 1 ? substr($str, $i, $byte_v) : $str[$i];
+            $i += $byte_v;
+            $l_bytes += $byte_v;
+        }
+
+        return implode('', $buffer);
+    }
+
+    /**
      * json encoder: convert the array to json string
      * and the original string will not be encoded like the json_encode do
      *
@@ -167,6 +225,15 @@ class StringUtil
         $str = str_replace(array("\n", "\t", "\r", "\\"), ' ', $str);
         $str = self::filterUnprintableChars($str, 'utf-8');
         return $str;
+    }
+
+    public static function summaryFilter($str, $bytes, $charset='UTF8')
+    {
+        $str = strip_tags($str);
+        $str = preg_replace('/&[a-zA-Z]+;/', ' ', $str);
+        $str = preg_replace('/\s{2,}/', ' ', $str);
+        $str = str_replace(array("\n", "\t", "\r", "\\"), ' ', $str);
+        return self::bytes_substr($str,0,$bytes,$charset);
     }
 
     /**
