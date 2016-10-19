@@ -714,7 +714,7 @@ function controller(
     $_ctrl_file .= "{$uri->module}/main.php";
 
     if ( ! file_exists($_ctrl_file) ) {
-        throw new Exception("Unable to locate the controller with request uri {$uri->uri}");
+        throw new Exception("Unable to locate the controller with request uri {$uri->uri}", 404);
     }
 
     /*
@@ -733,7 +733,7 @@ function controller(
     */
     $_class = ucfirst($uri->module) . 'Controller';
     if ( ! class_exists($_class) ) {
-        throw new Exception("Undefined class {$_class} with request uri {$uri->uri}");
+        throw new Exception("Undefined class {$_class} with request uri {$uri->uri}", 404);
     }
 
     $ctrl = new $_class();
