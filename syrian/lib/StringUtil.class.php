@@ -458,5 +458,31 @@ class StringUtil
         );
     }
 
+    /**
+     * clear the html tags except the need to kept sets
+     *
+     * @param   $str
+     * @param   $tags like array('img', 'a')
+     * @return  String
+    */
+    public static function clearHtml($str, $tags=null)
+    {
+        if ( $tags == null ) {
+            return strip_tags($str);
+        }
+
+        $olen = strlen($str);
+        $tstr = is_array($tags) ? implode('|', $tags) : $tags;
+        $str  = preg_replace('/<(\/?(' . $tstr . ')[^>]*)>/i', '{~[$1]~}', $str);
+        $alen = strlen($str);
+        $str  = strip_tags($str);
+
+        if ( $alen == $olen ) {
+            return $str;
+        }
+
+        return preg_replace('/\{~\[(.*?)\]~\}/', '<$1>', $str);
+    }
+
 }
 ?>
