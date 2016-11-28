@@ -132,6 +132,37 @@ function build_session($key='File', $gen=false, $sessid=null)
 }
 
 /**
+ * quick way to start and handler the mempure session
+ * As a totally rewrite session implements and this has no
+ * conflicts with the original php internal session
+ *
+ * @param   $key
+ * @param   $val
+ * @return  Mixed(The value mapping with the key or the session Object)
+*/
+function pure_session($key, $val=null)
+{
+    $e_name = 'pure_session_start';
+    if ( ($sessObj = E($e_name)) == null ) {
+        import('session.SessionFactory');
+        $config  = config("session#Mempure");
+        $sessObj = SessionFactory::create(
+            $config['key'], $config['conf']
+        );
+
+        $sessObj->start();
+        E($e_name, $sessObj);
+    }
+
+    if ( $val === null ) {
+        return $sessObj->get($key);
+    }
+
+    $sessObj->set($key, $val);
+    return $sessObj;
+}
+
+/**
  * application layer dynamic request resource pre-load
  * main for #controller function, cuz:
  * import('core.Cli_Controller') will cause the singal not working
