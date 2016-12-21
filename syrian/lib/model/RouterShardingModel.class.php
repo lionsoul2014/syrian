@@ -814,7 +814,8 @@ class RouterShardingModel implements IModel
             return false;
         }
 
-        $sIdx  = self::__hash($data[$this->router]) % count($this->shardings);
+        $routerVal =  self::__hash($data[$this->router]);
+        $sIdx  = $routerVal  % count($this->shardings);
         $mpath = $this->shardings[$sIdx];
         $mObj  = model($mpath);
         $this->resetModelAttr($mObj);
@@ -1131,7 +1132,7 @@ class RouterShardingModel implements IModel
             $msec,
             $prefix, 
             $routerVal,
-            mt_rand(0, 0xffff) | $embed
+            ((mt_rand(0, 0x3fff) ) << 1) | $embed // fix the last right bit probably is 1 even the routerval is randomed
         );
     }
 
@@ -1157,7 +1158,10 @@ class RouterShardingModel implements IModel
             $hval = intval($str);
         } else {
             for ( $i = 0; $i < $len; $i++ ) {
-                $hval = (int) ($hval * 1331 + (ord($str[$i]) % 127));
+                //$hval =  (int)($hval * 1331 + (ord($str[$i]) % 127));
+                // prevent int overflow
+                // @note fixed at 2016-12-20
+                $hval = (((int)($hval * 1331) & 0x7FFFFFFF) + ord($str[$i]) % 127) & 0x7FFFFFFF;
             }
         }
         
