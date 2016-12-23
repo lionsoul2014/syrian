@@ -489,7 +489,6 @@ class ElasticSearchModel implements IModel
         $filter = NULL;
         if ( $_filter != NULL ) {
             $filter = $this->parseSQLCompatibleQuery($_filter);
-            var_dump($filter);
         }
 
         /*
