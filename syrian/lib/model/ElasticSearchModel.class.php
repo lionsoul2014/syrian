@@ -413,6 +413,8 @@ class ElasticSearchModel implements IModel
             );
         }
 
+
+
         //regroup the query
         //1, merge the query and the query_and branch
         if ( $query_and != NULL  ) {
@@ -487,6 +489,7 @@ class ElasticSearchModel implements IModel
         $filter = NULL;
         if ( $_filter != NULL ) {
             $filter = $this->parseSQLCompatibleQuery($_filter);
+            var_dump($filter);
         }
 
         /*
@@ -494,7 +497,7 @@ class ElasticSearchModel implements IModel
         */
         $query = NULL;
         if ( $_query == NULL ) {
-            $filter = array(
+            $query = array(
                 'match_all' => array()
             );
         } else if ( isset($_query['field']) && isset($_query['query']) ) {
@@ -1054,6 +1057,7 @@ class ElasticSearchModel implements IModel
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $_DSL = $this->getQueryDSL($_where, NULL, 1);
+
         $json = $this->_request('POST', $_DSL, "{$this->index}/{$this->type}/_search", $_src, true);
         if ( $json == false ) {
             return false;
