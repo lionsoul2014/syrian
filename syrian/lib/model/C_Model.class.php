@@ -856,7 +856,7 @@ class C_Model implements IModel
     {
         return $this->update(
             $data,
-            array($this->primary_key => "={$id}"),
+            array($this->primary_key => "='{$id}'"),
             $affected_rows
         );
     }
@@ -1153,7 +1153,7 @@ class C_Model implements IModel
     public function deleteById( $id )
     {
         return $this->delete(
-            array($this->primary_key => "={$id}")
+            array($this->primary_key => "='{$id}'")
         );
     }
 
