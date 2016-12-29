@@ -607,7 +607,7 @@ class C_Model implements IModel
     {
         return $this->get(
             $_fields,
-            array($this->primary_key => "={$id}")
+            array($this->primary_key => "='{$id}'")
         );
     }
 
@@ -856,7 +856,7 @@ class C_Model implements IModel
     {
         return $this->update(
             $data,
-            array($this->primary_key => "={$id}"),
+            array($this->primary_key => "='{$id}'"),
             $affected_rows
         );
     }
@@ -897,7 +897,7 @@ class C_Model implements IModel
         $data = array($_field => $_val);
         return $this->update(
             $data,
-            array($this->primary_key => "={$id}"),
+            array($this->primary_key => "='{$id}'"),
             $affected_rows
         );
     }
@@ -942,7 +942,7 @@ class C_Model implements IModel
         return $this->increase(
             $_field,
             $_offset,
-            array($this->primary_key => "={$id}")
+            array($this->primary_key => "='{$id}'")
         );
     }
 
@@ -984,7 +984,7 @@ class C_Model implements IModel
         return $this->decrease(
             $_field,
             $_offset,
-            array($this->primary_key => "={$id}")
+            array($this->primary_key => "='{$id}'")
         );
     }
 
@@ -1040,7 +1040,7 @@ class C_Model implements IModel
         return $this->expand(
             $_field,
             $val,
-            array($this->primary_key => "={$id}"),
+            array($this->primary_key => "='{$id}'"),
             $flag
         );
     }
@@ -1083,7 +1083,7 @@ class C_Model implements IModel
         return $this->reduce(
             $_field,
             $val,
-            array($this->primary_key => "={$id}")
+            array($this->primary_key => "='{$id}'")
         );
     }
 
@@ -1153,7 +1153,7 @@ class C_Model implements IModel
     public function deleteById( $id )
     {
         return $this->delete(
-            array($this->primary_key => "={$id}")
+            array($this->primary_key => "='{$id}'")
         );
     }
 
