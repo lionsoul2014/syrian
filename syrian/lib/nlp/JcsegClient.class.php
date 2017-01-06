@@ -1,206 +1,189 @@
 <?php
 /**
- * Jcseg client
+ * http client for Jcseg NLP framework
  *
- * @author will<pan.kai@icloud.com>
- * @author dongyado<dongyado@gmail.com>
- *
- * @note adapted to jcseg-server new api at 2016-12-23
- */
+ * @since   2.0.1
+ * @author  chenxin<chenxin619315@gmail.com>
+*/
+
+//-----------------------------------
+
 class JcsegClient
 {
-    private $host;
-    private $port;
+    /**
+     * server exchange protocol
+    */
+    private $protocol = 'http';
 
-    private $timeout;
+    /**
+     * jcseg server host
+     * an ip address, domain name or whatever
+    */
+    private $host = 'localhost';
 
-    private static $EXTRACTOR_KEYWORDS_URL     = '/extractor/keywords';
-    private static $EXTRACTOR_KEYPHRASE_URL    = '/extractor/keyphrase';
-    private static $EXTRACTOR_KEYSENTENCE_URL  = '/extractor/sentence';
-    private static $EXTRACTOR_SUMMARY_URL      = '/extractor/summary';
-    private static $TOKENIZER_INSTANCE_URL     = '/tokenizer/';
-    private static $SENTENCE_SPLIT_URL         = '/sentence/split';
+    /**
+     * the server port and default to 1990
+    */
+    private $port = 1990;
 
-    public function __construct($host, $port, $timeout = 20) {
-        $this->host    = $host;
-        $this->port    = $port;
-        $this->timeout = $timeout;
+    /**
+     * default request timeout in seconds
+    */
+    private $timeout = 15;
+
+    /**
+     * construct method to initialize the instance
+     *
+     * @param   $conf - whatever you need
+     * array(
+     *  protocol => http,
+     *  host => localhost,
+     *  port => 1990
+     * )
+    */
+    public function __construct($conf)
+    {
+        if ( isset($conf['protocol']) ) $this->protocol = $conf['protocol'];
+        if ( isset($conf['timeout'])  ) $this->timeout  = $conf['timeout'];
+        if ( isset($conf['host']) ) $this->host = $conf['host'];
+        if ( isset($conf['port']) ) $this->port = $conf['port'];
     }
 
     /**
-     * get key words
-     * @param $text
-     * @param $number
-     * @param string $autoFilter
-     * @return bool
-     * @throws Exception
-     */
-    public  function getKeyWords($text, $number, $autoFilter = 'false') {
-        $url = 'http://'.$this->host.':'. $this->port.self::$EXTRACTOR_KEYWORDS_URL."?number={$number}&autoFilter={$autoFilter}";
-
-        import('Util');
-
-        $postfields = array(
-            'text'  => $text
-        );
-
-        $json = Util::httpPost($url, $postfields, NULL, array(CURLOPT_TIMEOUT => $this->timeout));
-        if($json == false) {
-            throw new Exception("Server {$this->host} Exception Error");
+     * do the final http request and parse the server response
+     * And this is the core part of all the orther direct function interface
+     *
+     * @param   $uri with the query string maybe
+     * @param   $param post arguments string or Array
+     * @return  Mixed Array for succeed or false for failed
+    */
+    protected function _do_request($uri, $param=null)
+    {
+        $curl = curl_init();
+        if( $this->protocol == 'https' ) {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, FALSE);
         }
 
-        $json = json_decode($json, true);
-        if($json['code'] != 0) {
+        $postfields = NULL;
+        if ( is_string($param) ) $postfields = $param;
+        else if ( $param != null ) {
+            $args = array();
+            foreach ( $param as $key => $val) {
+                $args[] = "{$key}=".urlencode($val);
+            }
+
+            $postfields = implode('&', $args);
+            unset($args);
+        }
+
+        $url = "{$this->protocol}://{$this->host}:{$this->port}{$uri}";
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HEADER, 0);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $postfields);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, 
+            array('User-Agent: Jcseg client 2.0.1/@lang:php/@date:2016-12-30')
+        );
+        curl_setopt($curl, CURLOPT_TIMEOUT, $this->timeout);
+
+        $ret  = curl_exec($curl);
+        $info = curl_getinfo($curl);
+        curl_close($curl);
+
+        /*
+         * http status 200 and the response string is a valid json string
+         * and the json->code is 0 (means for succeed).
+         * check http://git.oschina.net/lionsoul/jcseg or https://github.com/lionsoul2014/jcseg
+         * for more documentation
+        */
+        if ( intval($info['http_code']) == 200 
+            && ($json = json_decode($ret)) != null && $json->code === 0 ) {
+            return $json->data;
+        }
+
+        return false;
+    }
+
+
+    //---------------------interface-------------------
+
+    /**
+     * do the tokenize for the specifield string or maybe a string Array
+     * @Note: string Array not implemented
+     *
+     * @param   $text the text to tokenize
+     * @param   $instance the tokenizer instance name define in the jcseg-server.properties
+     * @return  Mixed json array for success or false for failed
+    */
+    public function tokenize($text, $inst_name='master')
+    {
+        $json = $this->_do_request("/tokenizer/{$inst_name}", "text={$text}");
+        if ( $json == false ) {
             return false;
         }
 
-        return $json['data']['keywords'];
+        return $json->list;
     }
 
     /**
-     * get key phrase
-     * @param $text
-     * @param $number
-     * @param int $maxCombineLength
-     * @param int $autoMinLength
-     * @return bool
-     * @throws Exception
-     */
-    public function getKeyPhrase($text, $number, $maxCombineLength = 4, $autoMinLength = 4) {
-        $url  = 'http://'.$this->host.':'. $this->port.self::$EXTRACTOR_KEYPHRASE_URL."?number={$number}";
-        $url .= "&maxCombineLength={$maxCombineLength}&autoMinLength={$autoMinLength}";
-
-        import('Util');
-
-        $postfields = array(
-            'text'  => $text
+     * extract the summary of the specifield string
+     *
+     * @param   $text
+     * @return  Mixed string or false for failed
+    */
+    public function summary($text, $length=64)
+    {
+        $json = $this->_do_request(
+            "/extractor/summary?length=${length}", "text={$text}"
         );
-
-        $json = Util::httpPost($url, $postfields, NULL, array(CURLOPT_TIMEOUT => $this->timeout));
-        if($json == false) {
-            throw new Exception("Server {$this->host} Exception Error");
-        }
-
-        $json = json_decode($json, true);
-        if($json['code'] != 0) {
+        if ( $json == false ) {
             return false;
         }
 
-        return $json['data']['keyphrase'];
+        return $json->summary;
     }
 
     /**
-     * get key sentence
-     * @param $text
-     * @param $number
-     * @return bool|Exception
-     */
-    public function getKeySentence($text, $number) {
-        $url = 'http://'.$this->host.':'. $this->port.self::$EXTRACTOR_KEYSENTENCE_URL."?number={$number}";
-
-        import('Util');
-
-        $postfields = array(
-            'text'  => $text
+     * key sentence extract for the specifield string
+     *
+     * @param   $text
+     * @param   $number number of sentence to extract
+     * @return  Mixed json Array or false for failed
+    */
+    public function keySentence($text, $number=5)
+    {
+        $json = $this->_do_request(
+            "/extractor/sentence?number=${number}", "text={$text}"
         );
-
-        $json = Util::httpPost($url, $postfields, NULL, array(CURLOPT_TIMEOUT => $this->timeout));
-        if($json == false) {
-            return new Exception("Server {$this->host} Exception Error");
-        }
-
-        $json = json_decode($json, true);
-        if($json['code'] != 0) {
+        if ( $json == false ) {
             return false;
         }
 
-        return $json['data']['sentence'];
+        return $json->sentence;;
     }
 
     /**
-     * get sentence
-     * @param $text
-     * @return bool|Exception
-     */
-    public function getSentence($text) {
-        $url = 'http://'.$this->host.':'. $this->port.self::$SENTENCE_SPLIT_URL;
-
-        import('Util');
-        $postfields = array(
-            'text' => $text
+     * keywords extract for the specifield string
+     *
+     * @param   $text
+     * @param   $number number of sentence to extract
+     * @return  Mixed json Array or false for failed
+    */
+    public function keywords($text, $number=10, $autoFilter=false)
+    {
+        $fstr = $autoFilter ? 'true' : 'false';
+        $json = $this->_do_request(
+            "/extractor/keywords?number=${number}&autoFilter={$fstr}",
+            "text={$text}"
         );
-
-        $json = Util::httpPost($url, $postfields, NULL, array(CURLOPT_TIMEOUT => $this->timeout));
-        if($json == false) {
-            return new Exception("Server {$this->host} Exception Error");
-        }
-
-        $json = json_decode($json, true);
-        if($json['code'] != 0) {
+        if ( $json == false ) {
             return false;
         }
 
-        return $json['data']['sentence'];
+        return $json->keywords;;
     }
 
-    /**
-     * get summary
-     * @param $text
-     * @param $length
-     * @return bool
-     * @throws Exception
-     */
-    public function getSummary($text, $length) {
-        $url = 'http://'.$this->host.':'. $this->port.self::$EXTRACTOR_SUMMARY_URL."?length={$length}";
-
-        import('Util');
-
-        $postfields = array(
-            'text'  => $text
-        );
-
-        $json = Util::httpPost($url, $postfields, NULL, array(CURLOPT_TIMEOUT => $this->timeout));
-        if($json == false) {
-            throw new Exception("Server {$this->host} Exception Error");
-        }
-
-        $json = json_decode($json, true);
-        if($json['code'] != 0) {
-            return false;
-        }
-
-        return $json['data']['summary'];
-    }
-
-    /**
-     * tokenize
-     * @param $text
-     * @param string $tokenizer_instance
-     * @param string $ret_pinyin
-     * @param string $ret_pos
-     * @return bool
-     * @throws Exception
-     */
-    public function tokenize($text, $tokenizer_instance = 'extractor', $ret_pinyin = 'false', $ret_pos = 'false') {
-        $url  = 'http://'.$this->host.':'. $this->port.self::$TOKENIZER_INSTANCE_URL.$tokenizer_instance;
-        $url .= "?ret_pinyin={$ret_pinyin}&ret_pos={$ret_pos}";
-
-        import('Util');
-
-        $postfields = array(
-            'text'  => $text
-        );
-
-        $json = Util::httpPost($url, $postfields, NULL, array(CURLOPT_TIMEOUT => $this->timeout));
-        if($json == false) {
-            throw new Exception("Server {$this->host} Exception Error");
-        }
-
-        $json = json_decode($json, true);
-        if($json['code'] != 0) {
-            return false;
-        }
-
-        return $json['data']['list'];
-    }
 }
+?>
