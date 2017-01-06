@@ -665,7 +665,8 @@ class C_Model implements IModel
         foreach ( $this->fragments as $fragment ) {
             $item = array();
             foreach ( $fragment['fields'] as $field ) {
-                if ( isset($data[$field]) ) {
+                //if ( isset($data[$field]) ) {
+                if ( array_key_exists($field, $data) ) {
                     $item[$field] = &$data[$field];
                     unset($data[$field]);
                 }
@@ -687,6 +688,7 @@ class C_Model implements IModel
 
             unset($item);
         }
+        
 
         //1. insert the basic info
         $insertedId = $this->db->insert($this->table, $data, $onDK, $affected_rows);
@@ -762,7 +764,8 @@ class C_Model implements IModel
             foreach ( $this->fragments as $fragment ) {
                 $item = array();
                 foreach ( $fragment['fields'] as $field ) {
-                    if ( isset($data[$field]) ) {
+                    //if ( isset($data[$field]) ) {
+                    if ( array_key_exists($field, $data) ) {
                         $item[$field] = &$data[$field];
                         unset($data[$field]);
                     }
