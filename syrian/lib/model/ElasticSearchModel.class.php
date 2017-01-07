@@ -115,29 +115,32 @@ class ElasticSearchModel implements IModel
             throw new Exception("model fields not setting");
         }
 
-        //1, check the existence of the index first
-        $exists  = $this->_request('GET', NULL, $this->index, null, false, false);
-        if ( $exists == false ) {   //hoops, something went wrong
-            return false;
-        }
-
-        //2, create the index or make sure the index is created
-        if ( isset($exists->error) 
-            && $exists->error->type == 'index_not_found_exception' ) {
-            $created = $this->_request('PUT', NULL, $this->index);
-            if ( $created == false ) {
+        $settingMode = isset($setting['mappings']);
+        if ( $settingMode == false ) {
+            //1, check the existence of the index first
+            $exists  = $this->_request('GET', NULL, $this->index, null, false, false);
+            if ( $exists == false ) {   //hoops, something went wrong
                 return false;
             }
 
-            //check the error status
-            if ( isset($created->error) ) {
-                return false;
-            }
+            //2, create the index or make sure the index is created
+            if ( isset($exists->error) 
+                && $exists->error->type == 'index_not_found_exception' ) {
+                $created = $this->_request('PUT', NULL, $this->index);
+                if ( $created == false ) {
+                    return false;
+                }
 
-            //check the acknowledged status
-            if ( ! isset($created->acknowledged) 
-                || $created->acknowledged == false ) {
-                return false;
+                //check the error status
+                if ( isset($created->error) ) {
+                    return false;
+                }
+
+                //check the acknowledged status
+                if ( ! isset($created->acknowledged) 
+                    || $created->acknowledged == false ) {
+                    return false;
+                }
             }
         }
 
@@ -146,10 +149,24 @@ class ElasticSearchModel implements IModel
          * 2, create the type mapping
          * convert the fields to elasticsearch DSL
         */
-        $workload = $setting == NULL ? array() : $setting;
-        $workload['properties'] = $this->fields;
+        $workload = $setting == null ? array() : $setting;
+        $_handler = null;
+        if ( $settingMode ) {
+            if ( ! isset($workload['mappings'][$this->type]) ) {
+                throw new Exception(
+                    "mapper exception: Missing mappings[{$this->type}]"
+                );
+            }
+
+            $_handler = "{$this->index}/";
+            $workload['mappings'][$this->type]['properties'] = $this->fields;
+        } else {
+            $_handler = "{$this->index}/{$this->type}/_mapping";
+            $workload['properties'] = $this->fields;
+        }
+
         $DSL = json_encode($workload);
-        $ret = $this->_request('PUT', $DSL, "{$this->index}/{$this->type}/_mapping");
+        $ret = $this->_request('PUT', $DSL, $_handler);
         if ( $ret == false ) {
             return false;
         }
@@ -503,6 +520,16 @@ class ElasticSearchModel implements IModel
             $qdata = isset($_query['option']) ? $_query['option'] : array();
             $qdata['query'] = $_query['query'];
             switch ( $_query['type'] ) {
+            case 'term':
+                $query = array(
+                    'term' => array($_query['field'] => $_query['query'])
+                );
+                break;
+            case 'terms':
+                $query = array(
+                    'terms' => array($_query['field'] => $_query['query'])
+                );
+                break;
             case 'match':
                 $query = array(
                     'match' => array($_query['field'] => $qdata)
@@ -567,7 +594,7 @@ class ElasticSearchModel implements IModel
          * default to use the constant_score filter
          * and this will make the elasticsearch works like the traditional database
         */
-        $boolQuery = array();
+        $boolQuery = isset($_query['setting']) ? $_query['setting'] : array();
         if ( $query  != NULL ) $boolQuery['must']   = $query;
         if ( $filter != NULL ) $boolQuery['filter'] = $filter;
         $queryDSL = array(
