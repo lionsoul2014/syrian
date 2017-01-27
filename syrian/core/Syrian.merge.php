@@ -1005,6 +1005,26 @@ function get_query_args($key, $src=null)
     return preg_match($pattern, $src, $m) == 1 ? $m[1] : null;
 }
 
+/**
+ * get the raw data from the http post request
+ *
+ * @param   String
+*/
+function get_post_raw_data()
+{
+    return file_get_contents("php://input");
+}
+
+/**
+ * get the raw data from the http post request and convert it to json format
+ *
+ * @param   String
+*/
+function get_post_raw_data_json($assoc=false)
+{
+    return json_decode(file_get_contents("php://input"), $assoc);
+}
+
 class Helper
 {
     /**
