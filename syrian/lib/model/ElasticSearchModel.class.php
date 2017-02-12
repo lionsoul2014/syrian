@@ -513,9 +513,11 @@ class ElasticSearchModel implements IModel
         */
         $query = NULL;
         if ( $_query == NULL ) {
-            $query = array(
-                'match_all' => array()
-            );
+            if ( $filter == NULL ) {
+                $query = array(
+                    'match_all' => new StdClass()
+                );
+            }
         } else if ( isset($_query['field']) && isset($_query['query']) ) {
             $qdata = isset($_query['option']) ? $_query['option'] : array();
             $qdata['query'] = $_query['query'];
@@ -2082,6 +2084,8 @@ EOF;
             $type = gettype($val);
             switch ( $type[0] ) {
             case 'o':   //object
+                $val = '{}';
+                break;
             case 'r':   //resource
                 continue;
                 break;
