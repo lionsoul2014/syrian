@@ -1,0 +1,41 @@
+<html>
+<head>
+    <title>扫码登陆</title>
+    <style>
+    body {background:#333333;}
+    .img-box {margin-top:100px;text-align:center;}
+    .img-box img {width:282px;height:282px;}
+    </style>
+</head>
+<body>
+<div class="img-box"><img src="<?=${qrcode_src}?>"/></div>
+<script language="javascript" src="/static/js/common/jquery.1.11.js"></script>
+<script language="javascript" src="/static/js/common/JTE.js"></script>
+<script language="javascript">
+function do_connect()
+{
+    $.get('/login/connect?uuid=<?=${uuid}?>', null, 
+    function(ret){
+        var json = std_json(ret);
+        if ( json == null || json.errno != 0 ) {
+            setTimeout(function(){
+                do_connect();
+            }, 1000);
+        }
+
+        var data = json.data;
+        var code = data.code || 0;
+        if ( code == 0 ) {  //the ready status
+            do_connect();
+        } else if ( code == 1 ) {   //scan but not confirm
+            do_connect();
+        } else if ( code == 2 ) {   //scan and confirm
+            console.log(data.data);
+        }
+    });
+}
+
+do_connect();
+</script>
+</body>
+</html>

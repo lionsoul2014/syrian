@@ -3,6 +3,81 @@
  *
  * @author    chenxin<chenxin619315@gmail.com>
  */
+;String.prototype.inc=function(s){return this.indexOf(s)>-1?true:false;}
+;String.prototype.trim = function() {return this.replace(/^\s+|\s+$/g, '');}
+;String.prototype.clear_space = function() {return this.replace(/\s+/g, '');}
+;String.prototype.clear_excess_space = function() {return this.trim().replace(/\s+/g, ' ');}
+;String.prototype.clear_html_space = function(){return this.replace(/>\s+</g, '><');}
+;function count_obj_keys(obj) {
+    var count = 0;
+    for ( var k in obj ) {
+        if ( obj.hasOwnProperty(k) ) count++;
+    }
+    return count;
+}
+;String.prototype.utf8Bytes = function () {
+    var bytes = 0; 
+    for ( var i = 0 ; i < this.length; i++ ) {
+        var u = this.charCodeAt(i);
+        if ( u < 0x0000007F ) {
+            bytes += 1;
+        } else if ( u < 0x000007FF ) {
+            bytes += 2;
+        } else if ( u < 0x0000FFFF ) {
+            bytes += 3;
+        } else if ( u < 0x001FFFFF ) {
+            bytes += 4;
+        } else if ( u < 0x03FFFFFF ) {
+            bytes += 5;
+        } else {
+            bytes += 6;
+        }
+    }
+    return bytes; 
+}
+;String.prototype.utf8_bytes_substr = function(offset, bytes) {
+    var l = 0, c, str = [];
+    for ( var i = offset; i < this.length; i++ ) {
+        c = this.charAt(i);
+        l += c.utf8Bytes();
+        if ( l > bytes ) break;
+        str.push(c);
+    }
+
+    return str.join('');
+}
+;function std_json(ret)
+{
+    if ( typeof(ret) === 'string' ) {
+        var json = null;
+        try {json = eval('('+ret+')');}
+        catch ( err ) {}
+    } else {
+        json = ret;
+    }
+
+    return json;
+}
+;function clear_duplicate(src, dst)
+{
+    for ( k in src ) {
+        if ( ! src.hasOwnProperty(k) ) continue;
+        if ( dst[k] && dst[k] == src[k] ) {
+            delete src[k];
+        }
+    }
+    return src;
+}
+;function object_extend(src, dst)
+{
+    for ( k in dst ) {
+        if ( ! dst.hasOwnProperty(k) ) continue;
+        if ( src[k] ) {
+            src[k] = dst[k];
+        }
+    }
+    return src;
+}
 
 var JTE    = function()
 {

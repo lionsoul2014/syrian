@@ -1,0 +1,24 @@
+<html>
+<head>
+    <title>登陆确认</title>
+    <style>
+    body {background:#333333;color:#EEE;}
+    .main {margin-top:30px;}
+    .tip-box {text-align:center;}
+    .submit-box {text-align:center;padding:10px 0;}
+    .submit-box .button {margin:auto;display:block;width:180px;height:30px;line-height:30px;font-size:14px;background:#9BD71D;color:#FFF;border-radius:3px;cursor:pointer;text-decoration:none;}
+    </style>
+</head>
+<body>
+<div class="main">
+<?if(${expired}){?>
+    <div class="tip-box">该二维码已经过期，请重新扫描登录二维码！</div>
+<?} else {?>
+    <div class="tip-box">授权登陆Syrian框架系统</div>
+    <div class="submit-box"><a class="button" href="/login/success?uuid=<?=${uuid}?>">确认登陆</a></div>
+<?}?>
+</div>
+<script language="javascript" src="/static/js/common/jquery.1.11.js"></script>
+<script language="javascript" src="/static/js/common/JTE.js"></script>
+</body>
+</html>
