@@ -463,6 +463,23 @@ function view($tpl, $vars=null, $sanitize=false, $timer=0)
 }
 
 /**
+ * check and execute the specified script
+ *
+ * @param   $tpl
+ * @param   $param
+ * @return  Mixed
+*/
+function script($file, $argv=null)
+{
+    $scrip_file = SR_SCRIPTPATH.$file;
+    if ( ! file_exists($scrip_file) ) {
+        return null;
+    }
+
+    return include($scrip_file);
+}
+
+/**
  * assign a variable into the current may comming global view
  *
  * @param   $key could be an Array
