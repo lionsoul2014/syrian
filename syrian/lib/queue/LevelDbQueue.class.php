@@ -115,7 +115,7 @@ class LevelDbQueue implements IQueue
         if ( $iterator->valid() ) {
             $value = $iterator->current();
 
-            return $value;
+            return array($iterator->key() => $value);
         }
 
         return NULL;
@@ -135,7 +135,7 @@ class LevelDbQueue implements IQueue
             $value = $iterator->current();
             $this->delete($iterator->key());
 
-            return $value;
+            return array($iterator->key() => $value);
         }
 
         return NULL;
@@ -155,7 +155,7 @@ class LevelDbQueue implements IQueue
             $value = $iterator->current();
             $this->delete($iterator->key());
 
-            return $value;
+            return array($iterator->key() => $value);
         }
 
         return NULL;
@@ -169,7 +169,7 @@ class LevelDbQueue implements IQueue
         if ( $iterator->valid() ) {
             $value = $iterator->current();
 
-            return $value;
+            return array($iterator->key() => $value);
         }
 
         return NULL;
