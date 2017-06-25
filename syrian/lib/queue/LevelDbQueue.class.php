@@ -13,8 +13,7 @@ class LevelDbQueue implements IQueue
 
     private $_leveldb = NULL;
 
-    private static $_iterator = NULL;
-    private static $_batch    = NULL;
+    private static $_batch = NULL;
 
     public function __construct(&$conf)
     {
@@ -98,83 +97,105 @@ class LevelDbQueue implements IQueue
      *
      * @return LevelDBIterator
      */
-    public function getIterator()
+    public function newIterator()
     {
-        if ( is_null(self::$_iterator) ) {
-            self::$_iterator = new LevelDBIterator($this->_leveldb);
-        }
-
-        return self::$_iterator;
+        return new LevelDBIterator($this->_leveldb);
     }
 
-    public function first()
+    /**
+     * get first element
+     *
+     * @param null $iterator
+     * @return array|null
+     */
+    public function first($iterator = NULL)
     {
-        $iterator = $this->getIterator();
+        if ( $iterator == NULL ) {
+            return NULL;
+        }
+
         $iterator->rewind();
 
         if ( $iterator->valid() ) {
-            $value = $iterator->current();
-
-            return array($iterator->key() => $value);
+            return array($iterator->key() => $iterator->current());
         }
 
         return NULL;
     }
 
     /**
-     * shifts the first value of the queue off and returns it
+     * shifts the first element of the queue off and returns it
      *
-     * @return mixed|null
+     * @param null $iterator
+     * @return array|null
      */
-    public function shift()
+    public function shift($iterator = NULL)
     {
-        $iterator = $this->getIterator();
+        if ( $iterator == NULL ) {
+            return NULL;
+        }
+
         $iterator->rewind();
 
         if ( $iterator->valid() ) {
-            $value = $iterator->current();
             $this->delete($iterator->key());
 
-            return array($iterator->key() => $value);
+            return array($iterator->key() => $iterator->current());
         }
 
         return NULL;
     }
 
     /**
-     * shifts the last value of the queue off and returns it
+     * shifts the last element of the queue off and returns it
      *
-     * @return mixed|null
+     * @param null $iterator
+     * @return array|null
      */
-    public function pop()
+    public function pop($iterator = NULL)
     {
-        $iterator = $this->getIterator();
+        if ( $iterator == NULL ) {
+            return NULL;
+        }
+
         $iterator->last();
 
         if ( $iterator->valid() ) {
-            $value = $iterator->current();
             $this->delete($iterator->key());
 
-            return array($iterator->key() => $value);
+            return array($iterator->key() => $iterator->current());
         }
 
         return NULL;
     }
 
-    public function last()
+    /**
+     * get last element
+     *
+     * @param null $iterator
+     * @return array|null
+     */
+    public function last($iterator = NULL)
     {
-        $iterator = $this->getIterator();
+        if ( $iterator == NULL ) {
+            return NULL;
+        }
+
         $iterator->last();
 
         if ( $iterator->valid() ) {
-            $value = $iterator->current();
-
-            return array($iterator->key() => $value);
+            return array($iterator->key() => $iterator->current());
         }
 
         return NULL;
     }
 
+    /**
+     * delete the specified record
+     *
+     * @param $key
+     * @return mixed
+     */
     public function delete($key)
     {
         return $this->_leveldb->delete($key, $this->writeoptions);
@@ -183,31 +204,22 @@ class LevelDbQueue implements IQueue
     /**
      * through the data
      *
-     * @param bool|false $reverse
-     * @return array
+     * @param null $iterator
+     * @return array|null
      */
-    public function loop($reverse = false)
+    public function loop($iterator = NULL)
     {
-        $iterator = $this->getIterator();
+        if ( $iterator == NULL ) {
+            return NULL;
+        }
+
+        $iterator->rewind();
 
         $data = array();
+        while ( $iterator->valid() ) {
+            $data[$iterator->key()] = $iterator->current();
 
-        // loop in iterator style
-        if ( $reverse === false ) {
-            $iterator->rewind();
-            while( $iterator->valid() ) {
-                $data[$iterator->key()] = $iterator->current();
-
-                $iterator->next();
-            }
-        }
-        else {
-            $iterator->last();
-            while( $iterator->valid() ) {
-                $data[$iterator->key()] = $iterator->current();
-
-                $iterator->prev();
-            }
+            $iterator->next();
         }
 
         return $data;

@@ -14,8 +14,6 @@ interface IQueue
     public function shift();
     public function pop();
     public function last();
-    public function loop($reverse = false);
-    public function getIterator();
     public function close();
 }
 
