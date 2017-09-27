@@ -872,6 +872,71 @@ class ElasticSearchModel implements IModel
     }
 
     /**
+     * directly DSL query support implementaion
+     *
+     * @param   $_fields
+     * @param   $dsl
+     * @return  Mixed
+    */
+    public function query($_fields, $dsl, &$total=0)
+    {
+        $_src = $this->getQueryFieldArgs($_fields);
+        $json = $this->_request('POST', $dsl, "{$this->index}/{$this->type}/_search", $_src, true);
+        if ( $json == false ) {
+            return false;
+        }
+
+        /*
+         * api return:
+         * {
+         *  "took": 3,
+         *  "timed_out": false,
+         *  "_shards": {
+         *      "total": 5,
+         *      "successful": 5,
+         *      "failed": 0
+         *  },
+         *  "hits": {
+         *      "total": 7,
+         *      "max_score": null,
+         *      "hits": [{
+         *          "_index": "stream",
+         *          "_type": "main",
+         *          "_id": "141097",
+         *          "_score": null,
+         *          "_source": {
+         *              "pubtime": 1461895200,
+         *              "cate_id": 35,
+         *              "user_id": 251360,
+         *              "ack_code": "GJ7PZTIV"
+         *          },
+         *          "sort": [
+         *              141097
+         *          ]
+         *      }]
+         *  }
+         * }
+         */
+
+        if ( ! isset($json['hits']) ) {
+            return false;
+        }
+
+        # check and set the total record variables;
+        if ( isset($json['hits']['total']) ) {
+            $total = $json['hits']['total'];
+        }
+
+        if ( empty($json['hits']['hits']) ) {
+            return false;
+        }
+
+        return $this->getQuerySets(
+            $json, $_fields===false ? false : true
+        );
+    }
+
+    /**
      * get the total count
      *
      * @param   $_where
