@@ -170,9 +170,9 @@ class Utf8String
         }
 
         return ( 
-            ($u > 32 && $u  < 48 ) || 
-            ($u > 57 && $u  < 65 ) || 
-            ($u > 90 && $u  < 97 ) || 
+            ($u >  32 && $u  < 48 ) || 
+            ($u >  57 && $u  < 65 ) || 
+            ($u >  90 && $u  < 97 ) || 
             ($u > 122 && $u < 127)
         );
     }
@@ -282,6 +282,30 @@ class Utf8String
         );
 
         return ($c || $j || $c);
+    }
+
+    /**
+     * clear all the punctuations of the specified string
+     *
+     * @param   $str
+     * @return  String
+    */
+    public static function clearPunctuation($str)
+    {
+        $str_len = strlen($str);
+        $buffer  = array();
+
+        for ( $i = 0; $i < $str_len; $i += $bytes ) {
+            $bytes = self::charBytes($str, $i);
+            $ucode = self::unicode($str, $i, $bytes);
+            if ( self::isPunctuation($ucode) ) {
+                continue;
+            }
+
+            $buffer[] = substr($str, $i, $bytes);
+        }
+
+        return implode('', $buffer);
     }
 
 }
