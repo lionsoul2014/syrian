@@ -876,9 +876,10 @@ class ElasticSearchModel implements IModel
      *
      * @param   $_fields
      * @param   $dsl
+     * @param   $format auto format the query result
      * @return  Mixed
     */
-    public function query($_fields, $dsl, &$total=0)
+    public function query($_fields, $dsl, $format=true)
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $json = $this->_request('POST', $dsl, "{$this->index}/{$this->type}/_search", $_src, true);
@@ -931,9 +932,9 @@ class ElasticSearchModel implements IModel
             return false;
         }
 
-        return $this->getQuerySets(
+        return $format ? $this->getQuerySets(
             $json, $_fields===false ? false : true
-        );
+        ) : $json['hits'];
     }
 
     /**
@@ -1150,7 +1151,6 @@ class ElasticSearchModel implements IModel
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $_DSL = $this->getQueryDSL($_where, NULL, 1);
-
         $json = $this->_request('POST', $_DSL, "{$this->index}/{$this->type}/_search", $_src, true);
         if ( $json == false ) {
             return false;
