@@ -11,13 +11,6 @@ import('service.Service');
 
 class TestService extends Service
 {
-    /**
-     * construct method
-    */
-    public function __construct()
-    {
-        parent::__construct();
-    }
 
     /**
      * hello handler
