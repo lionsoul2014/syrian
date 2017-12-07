@@ -122,7 +122,7 @@ class Filter
     private static function check( &$_val, $_model, &$_errno )
     {
         //1. data type check
-        if ( $_val == NULL && ( $_model[0] & OP_NULL ) != 0 ) return '';
+        if ( $_val == NULL ) return '';
         
         $_errno = 0;
         if ( is_integer($_model[0]) ) {
