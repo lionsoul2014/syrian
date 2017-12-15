@@ -1330,7 +1330,6 @@ class ElasticSearchModel implements IModel
 
             //do the data types conversion
             $this->stdDataTypes($val);
-
             $workload[] = self::array2Json($val);
         }
 
@@ -2010,11 +2009,10 @@ class ElasticSearchModel implements IModel
 
         if ( $this->_debug ) {
             $output = <<<EOF
-
-    url: {$baseUrl}
-    method: {$method}
-    DSL: {$dsl}
-    return: {$ret}\n
+url: {$baseUrl}
+method: {$method}
+DSL: {$dsl}
+return: {$ret}\n
 EOF;
             echo $output;
         }
@@ -2091,7 +2089,7 @@ EOF;
     
     /**
      * initialize the current model from the specified mapping
-     * configuration that defined in conf/db/hosts.conf.php
+     * configuration that defined in config/database.conf.php
      *
      * @param   $section
      * @return  ElasticSearchModel

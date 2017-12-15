@@ -2,10 +2,14 @@
 /**
  * model common interface
  *
- * Normal implementation    : C_Model           -Done
- * Sharding implementation  : ShardingModel     -Done
- * Memecached implementation: MemcachedModel
- * Mongo implementation     : MongoModel
+ * All implemented child class: 
+ * 
+ * Normal implementation        : C_Model               -Done
+ * Sharding implementation      : ShardingModel         -Done
+ * Elasticsearch implementation : ElasticsearchModel    -Done
+ * Spark implementation         : SparkModel            -Ing
+ * Memecached implementation    : MemcachedModel
+ * Mongo implementation         : MongoModel
  *
  * @author  chenxin<chenxin619315@gmail.com>
 */
