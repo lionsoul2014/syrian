@@ -624,6 +624,36 @@ class SparkModel implements IModel
     */
     public function add($data, $onDuplicateKey=null)
     {
+        if ( $this->primary_key == null ) {
+            $id = $this->genUUID($data);
+        } else if ( isset($data[$this->primary_key]) ) {
+            $id = $data[$this->primary_key];
+        } else {
+            throw new Exception("Missing mapping for {$this->primary_key} in the source data");
+        }
+
+        // stdlize the data types
+        // do the data type convertion
+        $this->stdDataTypes($data);
+        $_DSL = json_encode($data);
+        $json = $this->_request('POST', $_DSL, "_index?dbName={$this->database}&id={$id}");
+        if ( $json == false ) {
+            return false;
+        }
+
+        /*
+         * api return:
+         * {
+         *  "_db": "corpus",
+         *  "_id": 1,
+         *  "created": true
+         * }
+        */
+        if ( isset($json->error) ) {
+            return false;
+        }
+
+        return isset($json->_id) ? $json->_id : $id;
     }
 
     /**

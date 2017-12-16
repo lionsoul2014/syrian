@@ -30,38 +30,38 @@ class ElasticSearchModel implements IModel
      *
      * @access  protected
     */
-    protected   $baseUrl = NULL;
+    protected   $baseUrl = null;
 
     /**
      * default elasticsearch data index
      *
      * @access  protected
     */
-    protected   $index = NULL;
+    protected   $index = null;
 
     /**
      * default elasticsearch table/type
     */
-    protected   $type = NULL;
+    protected   $type = null;
 
     /**
      * mapping fields array
      *
      * @access  protected
     */
-    protected   $fields = NULL;
+    protected   $fields = null;
 
     /**
      * Basic setting for the current model
      * the primary key field name
     */
-    protected   $primary_key    = NULL;
+    protected   $primary_key    = null;
 
     /**
      * router field
      * @Note: not implmented for now
     */
-    protected   $router = NULL;
+    protected   $router = null;
 
     /**
      * query update/delete operation batch traffic
@@ -76,7 +76,7 @@ class ElasticSearchModel implements IModel
      *
      * @Note: for es there is no need
     */
-    protected   $fragments  = NULL;
+    protected   $fragments  = null;
     protected   $isFragment = false;
 
     /**
@@ -109,16 +109,16 @@ class ElasticSearchModel implements IModel
      * @param   $setting
      * @return  boolean
     */
-    public function mapping($setting=NULL)
+    public function mapping($setting=null)
     {
-        if ( $this->fields == NULL ) {
+        if ( $this->fields == null ) {
             throw new Exception("model fields not setting");
         }
 
         $settingMode = isset($setting['mappings']);
         if ( $settingMode == false ) {
             //1, check the existence of the index first
-            $exists  = $this->_request('GET', NULL, $this->index, null, false, false);
+            $exists  = $this->_request('GET', null, $this->index, null, false, false);
             if ( $exists == false ) {   //hoops, something went wrong
                 return false;
             }
@@ -126,7 +126,7 @@ class ElasticSearchModel implements IModel
             //2, create the index or make sure the index is created
             if ( isset($exists->error) 
                 && $exists->error->type == 'index_not_found_exception' ) {
-                $created = $this->_request('PUT', NULL, $this->index);
+                $created = $this->_request('PUT', null, $this->index);
                 if ( $created == false ) {
                     return false;
                 }
@@ -197,8 +197,8 @@ class ElasticSearchModel implements IModel
     */
     protected function parseSQLCompatibleQuery($_where)
     {
-        $query_or  = NULL;
-        $query_and = NULL;
+        $query_or  = null;
+        $query_and = null;
         $query     = array(
             'must'      => array(),
             'should'    => array(),
@@ -233,10 +233,10 @@ class ElasticSearchModel implements IModel
 
                 $field  = strtoupper(trim(substr($field, 1)));
                 if ( $field == 'OR' ) {
-                    if ( $query_or == NULL ) $query_or = array();
+                    if ( $query_or == null ) $query_or = array();
                     $query_or[]  = $this->parseSQLCompatibleQuery($value);
                 } else {
-                    if ( $query_and == NULL ) $query_and = array();
+                    if ( $query_and == null ) $query_and = array();
                     $query_and[] = $this->parseSQLCompatibleQuery($value);
                 }
                 break;
@@ -333,7 +333,7 @@ class ElasticSearchModel implements IModel
 
                 $sIdx++;
                 $items = explode(',', substr($value, $sIdx, $eIdx - $sIdx));
-                $limit = NULL;
+                $limit = null;
                 if ( count($items) == 1 ) {
                     $limit = array(
                         'term' => array(
@@ -374,7 +374,7 @@ class ElasticSearchModel implements IModel
                 }
 
                 //started with % ? then directly convert to the term query
-                $limit = NULL;
+                $limit = null;
                 if ( $syntax[0] == '%' ) {
                     $limit = array(
                         'term' => array(
@@ -424,7 +424,7 @@ class ElasticSearchModel implements IModel
         if ( empty($query['must']) ) unset($query['must']);
         if ( empty($query['should']) ) unset($query['should']);
         if ( empty($query['must_not']) ) unset($query['must_not']);
-        if ( $query_and == NULL && $query_or == NULL ) {
+        if ( $query_and == null && $query_or == null ) {
             return array(
                 'bool' => $query
             );
@@ -434,7 +434,7 @@ class ElasticSearchModel implements IModel
 
         //regroup the query
         //1, merge the query and the query_and branch
-        if ( $query_and != NULL  ) {
+        if ( $query_and != null  ) {
             foreach ( $query_and as $val ) {
                 $squery = $val['bool'];
                 if ( ! empty($squery['must']) ) {
@@ -465,7 +465,7 @@ class ElasticSearchModel implements IModel
         }
 
         //2, check and regroup the query_or branch
-        if ( $query_or != NULL ) {
+        if ( $query_or != null ) {
             $query_or[] = $query;
             $query = array(
                 'bool' => array(
@@ -495,7 +495,7 @@ class ElasticSearchModel implements IModel
      * @param   $_query
      * @return  String query DSL
     */
-    protected function getQueryDSL($_filter, $_order, $_limit, $_query=NULL)
+    protected function getQueryDSL($_filter, $_order, $_limit, $_query=null)
     {
         /*
          * filter condition parse
@@ -503,17 +503,17 @@ class ElasticSearchModel implements IModel
          * and default to the match_all elasticsearch query for empty filter
          *  and if there is no complex fulltext query defined
         */
-        $filter = NULL;
-        if ( $_filter != NULL ) {
+        $filter = null;
+        if ( $_filter != null ) {
             $filter = $this->parseSQLCompatibleQuery($_filter);
         }
 
         /*
          * query check and define
         */
-        $query = NULL;
-        if ( $_query == NULL ) {
-            if ( $filter == NULL ) {
+        $query = null;
+        if ( $_query == null ) {
+            if ( $filter == null ) {
                 $query = array(
                     'match_all' => new StdClass()
                 );
@@ -558,8 +558,8 @@ class ElasticSearchModel implements IModel
          *  array(_score => desc)
          * )
         */
-        $sort = NULL;
-        if ( $_order != NULL ) {
+        $sort = null;
+        if ( $_order != null ) {
             $sort = array();
             foreach ( $_order as $field => $order ) {
                 $sort[] = array($field => $order);
@@ -597,14 +597,14 @@ class ElasticSearchModel implements IModel
          * and this will make the elasticsearch works like the traditional database
         */
         $boolQuery = isset($_query['setting']) ? $_query['setting'] : array();
-        if ( $query  != NULL ) $boolQuery['must']   = $query;
-        if ( $filter != NULL ) $boolQuery['filter'] = $filter;
+        if ( $query  != null ) $boolQuery['must']   = $query;
+        if ( $filter != null ) $boolQuery['filter'] = $filter;
         $queryDSL = array(
             'query' => array('bool' => $boolQuery)
         );
 
         //check and define the query sort
-        if ( $sort != NULL ) {
+        if ( $sort != null ) {
             $queryDSL['sort'] = $sort;
         }
 
@@ -624,7 +624,7 @@ class ElasticSearchModel implements IModel
                 'fragment_size' => 86,
                 'no_match_size' => 86,
                 'type'   => 'fvh',
-                'fields' => NULL
+                'fields' => null
             );
 
             foreach ( $_query['highlight'] as $key => $val ) {
@@ -632,7 +632,7 @@ class ElasticSearchModel implements IModel
             }
 
             //check and pre-process the highlight fields
-            if ( $highlight['fields'] == NULL ) {
+            if ( $highlight['fields'] == null ) {
                 $fields = array();
                 if ( is_string($_query['field']) ) {
                     $fields[$_query['field']] = array(
@@ -671,7 +671,7 @@ class ElasticSearchModel implements IModel
          * query fields checking and pro-process
          * @Note: empty fields will cause global _source fetch
         */
-        $field_string = NULL;
+        $field_string = null;
         if ( is_array($_fields) ) {
             $field_string = implode(',', $_fields);
         } else {
@@ -680,7 +680,7 @@ class ElasticSearchModel implements IModel
 
         $args = '_source=true';
         if ( strlen($field_string) > 0 ) {
-            $args = $field_string[0]=='*' ? NULL : "_source={$field_string}";
+            $args = $field_string[0]=='*' ? null : "_source={$field_string}";
         }
 
         return $args;
@@ -732,7 +732,7 @@ class ElasticSearchModel implements IModel
          * Scroll requests have optimizations that make them faster when the sort order is _doc. 
          * If you want to iterate over all documents regardless of the order
         */
-        if ( $_order == NULL ) $_order = array('_doc' => 'asc');
+        if ( $_order == null ) $_order = array('_doc' => 'asc');
 
         $_src = $this->getQueryFieldArgs($_fields);
         $_DSL = $this->getQueryDSL($_where, $_order, array(-1, $size));
@@ -807,7 +807,7 @@ class ElasticSearchModel implements IModel
             'scroll_id' => $iterator['scroll_id']
         ));
 
-        $json = $this->_request('POST', $_DSL, "_search/scroll",  NULL, true);
+        $json = $this->_request('POST', $_DSL, "_search/scroll",  null, true);
         if ( $json == false ) {
             return false;
         }
@@ -944,9 +944,9 @@ class ElasticSearchModel implements IModel
      * @param   $_group
      * @return  int
     */
-    public function totals($_where=NULL, $_group=NULL)
+    public function totals($_where=null, $_group=null)
     {
-        $_DSL = $this->getQueryDSL($_where, NULL, NULL);
+        $_DSL = $this->getQueryDSL($_where, null, null);
         $json = $this->_request('POST', $_DSL, "{$this->index}/{$this->type}/_count");
         if ( $json == false ) {
             return 0;
@@ -983,7 +983,7 @@ class ElasticSearchModel implements IModel
      * if the $_fields == false and the the statistics info 
      *  and the _index,_type,_id data sets will return
     */
-    public function getList($_fields, $_where=NULL, $_order=NULL, $_limit=NULL, $_group=NULL)
+    public function getList($_fields, $_where=null, $_order=null, $_limit=null, $_group=null)
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $_DSL = $this->getQueryDSL($_where, $_order, $_limit);
@@ -1052,7 +1052,7 @@ class ElasticSearchModel implements IModel
      * @param   $_highlight
      * @return  Mixed(Array or false)
     */
-    public function match($_fields, $_filter, $_query, $_order=NULL, $_limit=NULL)
+    public function match($_fields, $_filter, $_query, $_order=null, $_limit=null)
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $_DSL = $this->getQueryDSL($_filter, $_order, $_limit, $_query);
@@ -1150,7 +1150,7 @@ class ElasticSearchModel implements IModel
     public function get($_fields, $_where)
     {
         $_src = $this->getQueryFieldArgs($_fields);
-        $_DSL = $this->getQueryDSL($_where, NULL, 1);
+        $_DSL = $this->getQueryDSL($_where, null, 1);
         $json = $this->_request('POST', $_DSL, "{$this->index}/{$this->type}/_search", $_src, true);
         if ( $json == false ) {
             return false;
@@ -1215,7 +1215,7 @@ class ElasticSearchModel implements IModel
     public function getById($_fields, $id)
     {
         $_src = $this->getQueryFieldArgs($_fields);
-        $json = $this->_request('GET', NULL, "{$this->index}/{$this->type}/{$id}", $_src, true);
+        $json = $this->_request('GET', null, "{$this->index}/{$this->type}/{$id}", $_src, true);
         if ( $json == false ) {
             return false;
         }
@@ -1265,24 +1265,19 @@ class ElasticSearchModel implements IModel
      * @param   $onDuplicateKey
      * @return  Mixed false or row_id
     */
-    public function add($data, $onDuplicateKey=NULL)
+    public function add($data, $onDuplicateKey=null)
     {
-        /*
-         * check or define the auto generated primary_key
-        */
-        $id = NULL;
-        if ( $this->primary_key != NULL ) {
-            if ( ! isset($data[$this->primary_key])) {
-                throw new Exception("Missing mapping for {$this->primary_key} in the source data");
-            }
+        // check or define the auto generated primary_key
+        if ( $this->primary_key == null ) {
+            $id = $this->genUUID($data);
+        } else if ( isset($data[$this->primary_key]) ) {
             $id = $data[$this->primary_key];
         } else {
-            $id = $this->genUUID($data);
+            throw new Exception("Missing mapping for {$this->primary_key} in the source data");
         }
 
-        //do the data types conversion
+        // do the data types convertion
         $this->stdDataTypes($data);
-
         $_DSL = self::array2Json($data);
         $json = $this->_request('PUT', $_DSL, "{$this->index}/{$this->type}/{$id}");
         if ( $json == false ) {
@@ -1313,17 +1308,16 @@ class ElasticSearchModel implements IModel
      *
      * @param   $data
     */
-    public function batchAdd($data, $onDuplicateKey=NULL)
+    public function batchAdd($data, $onDuplicateKey=null)
     {
         $workload = array();
         foreach ( $data as $val ) {
-            if ( $this->primary_key != NULL ) {
-                if ( ! isset($val[$this->primary_key])) {
-                    throw new Exception("Missing mapping for {$this->primary_key} in the source data");
-                }
+            if ( $this->primary_key == null ) {
+                $id = $this->genUUID($val);
+            } else if ( isset($val[$this->primary_key]) ) {
                 $id = $val[$this->primary_key];
             } else {
-                $id = $this->genUUID($val);
+                throw new Exception("Missing mapping for {$this->primary_key} in the source data");
             }
 
             $workload[] = "{\"index\":{\"_index\":\"{$this->index}\",\"_type\":\"{$this->type}\",\"_id\":\"{$id}\"}}";
@@ -1389,7 +1383,7 @@ class ElasticSearchModel implements IModel
     */
     public function update($data, $_where, $affected_rows=true)
     {
-        if ( $_where == NULL ) {
+        if ( $_where == null ) {
             throw new Exception("Empty update condition is not allow");
         }
 
@@ -1463,7 +1457,7 @@ class ElasticSearchModel implements IModel
     public function updateById($data, $id, $affected_rows=true)
     {
         //check and remove the primary key
-        //if ( $this->primary_key != NULL 
+        //if ( $this->primary_key != null 
         //    && isset($data[$this->primary_key]) ) {
         //    unset($data[$this->primary_key]);
         //}
@@ -1683,7 +1677,7 @@ class ElasticSearchModel implements IModel
     */
     public function delete($_where, $frag_recur=true)
     {
-        if ( $_where == NULL ) {
+        if ( $_where == null ) {
             throw new Exception("Empty delete condition is not allow");
         }
 
@@ -1748,7 +1742,7 @@ class ElasticSearchModel implements IModel
     //@frament suports
     public function deleteById($id)
     {
-        $json = $this->_request('DELETE', NULL, "{$this->index}/{$this->type}/{$id}");
+        $json = $this->_request('DELETE', null, "{$this->index}/{$this->type}/{$id}");
         if ( $json == false ) {
             return false;
         }
@@ -1857,7 +1851,7 @@ class ElasticSearchModel implements IModel
 
     /**
      * data types standardization
-     * @Note: make sure this->fields is not NULL before you invoke this method
+     * @Note: make sure this->fields is not null before you invoke this method
      *
      * @param   $data source data
     */
@@ -1966,19 +1960,15 @@ class ElasticSearchModel implements IModel
      * @return  Mixed(Object or false)
     */
     protected function _request(
-        $method, $dsl, $uri, $args=NULL, $_assoc=false, $chk_error=true)
+        $method, $dsl, $uri, $args=null, $_assoc=false, $chk_error=true)
     {
-        if ( ! isset(self::$methods[$method]) ) {
-            throw new Exception("Unknow http request method {$method}");
-        }
+        // if ( ! isset(self::$methods[$method]) ) {
+        //     throw new Exception("Unknow http request method {$method}");
+        // }
 
-        $_header = array(
-            'User-Agent: elasticsearch php client'
-        );
-
-        $qstring = NULL;
+        $qstring = null;
         $baseUrl = "{$this->baseUrl}/{$uri}";
-        if ( $args != NULL ) {
+        if ( $args != null ) {
             if ( is_array($args) ) {
                 $parts = array();
                 foreach ( $args as $key => $val ) {
@@ -1997,9 +1987,11 @@ class ElasticSearchModel implements IModel
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($curl, CURLOPT_URL, $baseUrl);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $_header);
         curl_setopt($curl, CURLOPT_HEADER, 0);
-        if ( $dsl != NULL ) {
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'User-Agent: elasticsearch php client'
+        ));
+        if ( $dsl != null ) {
             curl_setopt($curl, CURLOPT_POSTFIELDS, $dsl);
         }
 
@@ -2022,7 +2014,7 @@ EOF;
         }
 
         $json = json_decode($ret, $_assoc);
-        if ( $json == NULL ) {
+        if ( $json == null ) {
             return false;
         }
 
@@ -2064,7 +2056,7 @@ EOF;
          * check and append the node name to 
          *  guarantee the basic server unique
         */
-        $prefix = NULL;
+        $prefix = null;
         if ( defined('SR_NODE_NAME') ) {
             $prefix = substr(md5(SR_NODE_NAME), 0, 4);
         } else {
@@ -2129,7 +2121,7 @@ EOF;
             case 's':
                 return '"'.self::addslash($data).'"';
             default:
-                return NULL;
+                return null;
             }
         }
 
@@ -2157,7 +2149,7 @@ EOF;
                 break;
             case 'i':   //integer
             case 'd':   //double
-            case 'N':   //NULL
+            case 'N':   //null
                 //leave it unchange
                 break;
             case 's':
