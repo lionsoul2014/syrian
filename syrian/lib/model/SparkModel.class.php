@@ -131,12 +131,10 @@ class SparkModel implements IModel
     */
     protected function parseSQLCompatibleQuery($_where)
     {
-        $query_or  = null;
-        $query_and = null;
-        $query     = array(
-            'must'      => array(),
-            'should'    => array(),
-            'must_not'  => array()
+        $filter = array(
+            'must'     => array(),
+            'should'   => array(),
+            'must_not' => array()
         );
 
         foreach ( $_where as $field => $value ) {
@@ -147,7 +145,7 @@ class SparkModel implements IModel
                 if ( ($len = strlen($value)) < 2 ) {
                     throw new Exception("Invalid query syntax for field '{$field}'");
                 }
-            } else if ($field[0] != '#') {
+            } else {
                 throw new Exception("Invalid query syntax for field '{$field}'");
             }
 
@@ -160,26 +158,11 @@ class SparkModel implements IModel
                 $branch = 'should';
                 $field  = trim(substr($field, 1));
                 break;
-            case '#':   //new branch
-                if ( ! is_array($value) ) {
-                    throw new Exception("Invalid query syntax for field '{$field}'");
-                }
-
-                $field  = strtoupper(trim(substr($field, 1)));
-                if ( $field == 'OR' ) {
-                    if ( $query_or == null ) $query_or = array();
-                    $query_or[]  = $this->parseSQLCompatibleQuery($value);
-                } else {
-                    if ( $query_and == null ) $query_and = array();
-                    $query_and[] = $this->parseSQLCompatibleQuery($value);
-                }
-                break;
             default:
                 $branch = 'must';
                 break;
             }
 
-            //echo 'field: ', $field, ", ", $branch, "\n";
             if ( ! is_string($value) ) {
                 continue;
             }
@@ -187,19 +170,17 @@ class SparkModel implements IModel
             $opcode = strtolower($value[0]);
             switch ( $opcode ) {
             /*
-             * the '=' will be translated to the elasticsearch term query
+             * the '=' will be translated to the spark filter
              * @TODO: field data conversion may need to be actived
             */
             case '=':
                 $query[$branch][] = array(
-                    'term' => array(
-                        //$field => $this->getFieldValue($field, trim(substr($value, 1)))
-                        $field => trim(substr($value, 1))
-                    )
+                    //$field => $this->getFieldValue($field, trim(substr($value, 1)))
+                    $field => trim(substr($value, 1))
                 );
                 break;
             /*
-             * the '>\=', '<\=' will be translated to the elasticsearch range query
+             * the '>\=', '<\=' will be translated to the spark range query
              * @TODO: field data conversion may need to be actived
             */
             case '>':
@@ -231,7 +212,7 @@ class SparkModel implements IModel
                 );
                 break;
             /*
-             * the '!=' will be translated to the elasticsearch bool not term query
+             * the '!=' will be translated to the spark must_not filter
              * @TODO: field data conversion may need to be actived
             */
             case '!':
@@ -240,16 +221,13 @@ class SparkModel implements IModel
                 }
 
                 $query['must_not'][] = array(
-                    'term' => array(
-                        //$field => $this->getFieldValue($field, trim(substr($value, 2)))
-                        $field => trim(substr($value, 2))
-                    )
+                    //$field => $this->getFieldValue($field, trim(substr($value, 2)))
+                    $field => trim(substr($value, 2))
                 );
                 break;
             /*
-             * the 'in(v1,v2...)' or 'not in(v1,v2...)' will be translated to the elasticsearch 
-             * ids(primary key) or terms query
-             * the single in item will be automatically convert to the term query
+             * the 'in(v1,v2...)' or 'not in(v1,v2...)' will be translated to the spark 
+             * must or must not filter
              * @TODO: field data conversion may need to be actived
             */
             case 'i':   //in query
@@ -267,37 +245,15 @@ class SparkModel implements IModel
 
                 $sIdx++;
                 $items = explode(',', substr($value, $sIdx, $eIdx - $sIdx));
-                $limit = null;
-                if ( count($items) == 1 ) {
-                    $limit = array(
-                        'term' => array(
-                            //$field => $this->getFieldValue($field, $items[0])
-                            $field => $items[0]
-                        )
-                    );
-                } else if ($this->primary_key == $field) {
-                    //the default data type for _id is string
-                    $limit = array(
-                        'ids' => array(
-                            'values' => $items
-                        )
-                    );
-                } else {
-                    $limit = array(
-                        'terms' => array(
-                            //$field => $this->getFieldValue($field, $items)
-                            $field => $items
-                        )
-                    );
-                }
-
+                $limit = array(
+                    //$field => $this->getFieldValue($field, $items[0])
+                    $field => $items
+                );
                 $query[$opcode=='n'?'must_not':$branch][] = $limit;
                 break;
             /*
-             * the 'like %value%' will be translated to the elasticsearch term query
-             * or the prefix query for 'like value%'
+             * the 'like %value%' will be translated to the filter
              * cuz the like value wont be analysis in the traditional SQL-style DBMS
-             *
              * @Note: like query only available for string fields so no data type convertion
             */
             case 'l':
@@ -308,110 +264,10 @@ class SparkModel implements IModel
                 }
 
                 //started with % ? then directly convert to the term query
-                $limit = null;
-                if ( $syntax[0] == '%' ) {
-                    $limit = array(
-                        'term' => array(
-                            $field => str_replace('%', '', $syntax)
-                        )
-                    );
-                } else if ($syntax[$length-1] == '%') {
-                    $limit = array(
-                        'prefix' => array(
-                            $field => substr($syntax, 0, $length - 1)
-                        )
-                    );
-                } else {
-                    $limit = array(
-                        'term' => array(
-                            $field => $syntax
-                        )
-                    );
-                }
-
-                $query[$branch][] = $limit;
-                break;
-            }
-        }
-
-        //-------------------------------------------------------------
-        //pre-process the parsed query result
-
-        //regroup the query:
-        //check if there is or query and merge all of them into the should query
-        if ( ! empty($query['should']) ) {
-            $must_len = count($query['must']);
-            if ( $must_len == 1 ) {
-                $query['should'][] = $query['must'][0];
-                unset($query['must']);
-            } else if ( $must_len > 1 ) {
-                $query['should'][] = array(
-                    'bool' => array(
-                        'must' => $query['must']
-                    )
+                $query[$branch][] = array(
+                    $field => str_replace('%', '', $syntax)
                 );
-                unset($query['must']);
-            }
-        }
-
-        //clear the empty sub-query item
-        if ( empty($query['must']) ) unset($query['must']);
-        if ( empty($query['should']) ) unset($query['should']);
-        if ( empty($query['must_not']) ) unset($query['must_not']);
-        if ( $query_and == null && $query_or == null ) {
-            return array(
-                'bool' => $query
-            );
-        }
-
-
-
-        //regroup the query
-        //1, merge the query and the query_and branch
-        if ( $query_and != null  ) {
-            foreach ( $query_and as $val ) {
-                $squery = $val['bool'];
-                if ( ! empty($squery['must']) ) {
-                    if ( ! isset($query['must']) ) $query['must'] = array();
-                    foreach ( $squery['must'] as $must ) {
-                        $query['must'][] = $must;
-                    }
-                }
-
-                if ( ! empty($squery['must_not']) ) {
-                    if ( ! isset($query['must_not']) ) $query['must_not'] = array();
-                    foreach ( $squery['must_not'] as $must_not ) {
-                        $query['must_not'][] = $must_not;
-                    }
-                }
-
-                if ( ! empty($squery['should']) ) {
-                    if ( ! isset($query['should']) ) $query['should'] = array();
-                    foreach ( $squery['should'] as $should ) {
-                        $query['should'][] = $should;
-                    }
-                }
-            }
-
-            $query = array(
-                'bool' => $query
-            );
-        }
-
-        //2, check and regroup the query_or branch
-        if ( $query_or != null ) {
-            $query_or[] = $query;
-            $query = array(
-                'bool' => array(
-                    'should' => $query_or
-                )
-            );
-        }
-
-        //pre-process the parsed query result
-        foreach ( $query as $key => $val ) {
-            if ( empty($val) ) {
-                unset($query[$key]);
+                break;
             }
         }
 
@@ -423,63 +279,35 @@ class SparkModel implements IModel
      * parse the sql compatible syntax, orde, limit to get the final spark query DSL
      *
      * @param   $_where
+     * @param   $_match
      * @param   $_order
      * @param   $_limit
-     * @param   $_query
+     * @param   $_group
      * @return  String query DSL
     */
-    protected function getQueryDSL($_filter, $_order, $_limit, $_query=null)
+    protected function getQueryDSL($_filter, $_match, $_order, $_group, $_limit)
     {
+        $queryDSL = array();
+
         /*
          * filter condition parse
          * default to the sql compatible style syntax parser
-         * and default to the match_all elasticsearch query for empty filter
-         *  and if there is no complex fulltext query defined
+         * and default to the match_all spark query with empty filter
+         * and if there is no complex fulltext query defined
         */
-        $filter = null;
         if ( $_filter != null ) {
-            $filter = $this->parseSQLCompatibleQuery($_filter);
+            $queryDSL['filter'] = $this->parseSQLCompatibleQuery($_filter);
         }
 
         /*
-         * query check and define
+         * query match check and define
         */
-        $query = null;
-        if ( $_query == null ) {
-            if ( $filter == null ) {
-                $query = array(
-                    'match_all' => new StdClass()
-                );
-            }
+        if ( $_match == null ) {
+            // default to with no match
         } else if ( isset($_query['field']) && isset($_query['query']) ) {
-            $qdata = isset($_query['option']) ? $_query['option'] : array();
-            $qdata['query'] = $_query['query'];
-            switch ( $_query['type'] ) {
-            case 'term':
-                $query = array(
-                    'term' => array($_query['field'] => $_query['query'])
-                );
-                break;
-            case 'terms':
-                $query = array(
-                    'terms' => array($_query['field'] => $_query['query'])
-                );
-                break;
-            case 'match':
-                $query = array(
-                    'match' => array($_query['field'] => $qdata)
-                );
-                break;
-            case 'multi_match':
-                $qdata['fields'] = $_query['field'];
-                $query = array('multi_match' => $qdata);
-                break;
-            case 'query_string':
-                $field_name = is_array($_query['field']) ? 'fields' : 'default_field';
-                $qdata[$field_name] = $_query['field'];
-                $query = array('query_string' => $qdata);
-                break;
-            }
+            $queryDSL['match'] = array(
+                $_query['field'] => $_query['query']
+            );
         } else {
             throw new Exception("Missing key 'field' or 'query' for query define");
         }
@@ -491,12 +319,13 @@ class SparkModel implements IModel
          *  array(_score => desc)
          * )
         */
-        $sort = null;
         if ( $_order != null ) {
             $sort = array();
             foreach ( $_order as $field => $order ) {
                 $sort[] = array($field => $order);
             }
+
+            $queryDSL['sort'] = $sort;
         }
 
         /*
@@ -505,6 +334,7 @@ class SparkModel implements IModel
         */
         $from = 0;
         $size = 0;
+        var_dump($_limit);
         if ( is_long($_limit) ) {
             $size = $_limit;
         } else if ( is_string($_limit) ) {
@@ -524,28 +354,73 @@ class SparkModel implements IModel
             }
         }
 
-        /*
-         * define the query array
-         * default to use the constant_score filter
-         * and this will make the elasticsearch works like the traditional database
-        */
-        $boolQuery = isset($_query['setting']) ? $_query['setting'] : array();
-        if ( $query  != null ) $boolQuery['must']   = $query;
-        if ( $filter != null ) $boolQuery['filter'] = $filter;
-        $queryDSL = array(
-            'query' => array('bool' => $boolQuery)
-        );
-
-        //check and define the query sort
-        if ( $sort != null ) {
-            $queryDSL['sort'] = $sort;
-        }
-
-        //check and define the from, size attributes
+        // check and define the from, size attributes
         if ( $from >= 0 ) $queryDSL['from'] = $from;
         if ( $size >  0 ) $queryDSL['size'] = $size;
 
-        return self::array2Json($queryDSL);
+        return json_encode($queryDSL);
+    }
+
+    /**
+     * get the query source fields arguments
+     *
+     * @param   $_fields
+     * @return  String
+    */
+    protected function getQueryFieldArgs($_fields)
+    {
+        if ( $_fields === false ) {
+            return '_source=false';
+        }
+
+        /*
+         * query fields checking and pre-process
+         * @Note: empty fields will cause global _fields fetch
+        */
+        $field_string = null;
+        if ( is_array($_fields) ) {
+            $field_string = implode(',', $_fields);
+        } else {
+            $field_string = trim($_fields);
+        }
+
+        $args = '_source=true';
+        if ( strlen($field_string) > 0 ) {
+            $args = $field_string[0]=='*' ? null : "_source={$field_string}";
+        }
+
+        return $args;
+    }
+
+    /**
+     * build the results from the returned _search query parsed Array
+     *
+     * @param   $json
+     * @param   $srcMode
+     * @return  Array
+    */
+    protected function getQuerySets($json, $srcMode)
+    {
+        $ret = array();
+        if ( $srcMode == true ) {
+            foreach ( $json['hits']['hits'] as $hit ) {
+                $ret[] = $hit['_source'];
+            }
+        } else {
+            $ret['took']  = $json['took'];
+            $ret['total'] = $json['hits']['total'];
+            $ret['data']  = array();
+            foreach ( $json['hits']['hits'] as $hit ) {
+                $ret['data'][] = array(
+                    '_index' => $hit['_index'],
+                    '_type'  => $hit['_type'],
+                    '_id'    => $hit['_id'],
+                    '_score' => $hit['_score']
+                );
+            }
+        }
+
+        return $ret;
     }
 
     
@@ -561,7 +436,7 @@ class SparkModel implements IModel
     }
 
     /**
-     * execute the specifield query command
+     * execute the specified query command
      *
      * @param   $_query
      * @param   $opt code
@@ -571,6 +446,44 @@ class SparkModel implements IModel
     public function execute($_query, $opt=0, $_row=false)
     {
         throw new Exception("Not implemented yet.");
+    }
+
+    /**
+     * directly DSL query support implementaion
+     *
+     * @param   $_fields
+     * @param   $dsl
+     * @param   $format auto format the query result
+     * @return  Mixed
+    */
+    public function query($_fields, $dsl, $format=true)
+    {
+        $_src = $this->getQueryFieldArgs($_fields);
+        $json = $this->_request('POST', $dsl, "_search?{$_src}", null, true);
+        if ( $json == false ) {
+            return false;
+        }
+
+        /*
+         * api return:
+        */
+
+        if ( ! isset($json['hits']) ) {
+            return false;
+        }
+
+        # check and set the total record variables;
+        if ( isset($json['hits']['total']) ) {
+            $total = $json['hits']['total'];
+        }
+
+        if ( empty($json['hits']['hits']) ) {
+            return false;
+        }
+
+        return $format ? $this->getQuerySets(
+            $json, $_fields===false ? false : true
+        ) : $json['hits'];
     }
 
     /**
@@ -586,31 +499,119 @@ class SparkModel implements IModel
     }
 
     /**
-     * Get a vector from the specifiel source
+     * Get a vector from the specified source
      *
      * @param   $_fields    query fields array
      * @param   $_where
      * @param   $_order
      * @param   $_limit
      * @param   $_group
+     * @param   Mixed false for failed or the returning Array
     */
     public function getList($_fields, $_where=null, $_order=null, $_limit=null, $_group=null)
     {
+        $_src = $this->getQueryFieldArgs($_fields);
+        $args = "dbName={$this->database}&{$_src}";
+        $_DSL = $this->getQueryDSL($_where, null, $_order, $_group, $_limit);
+        $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
+        if ( $json == false ) {
+            return false;
+        }
+
+        /*
+         * api return:
+         *
+        */
+
+        if ( ! isset($json['hits']) ) {
+            return false;
+        }
+
+        if ( empty($json['hits']['hits']) ) {
+            return false;
+        }
+ 
+        return $this->getQuerySets(
+            $json, $_fields===false ? false : true
+        );
     }
 
     /**
-     * get a specifiled record from the specifield table
+     * get a specified record from the specified table
      *
      * @param   $Id
      * @param   $_fields
+     * @return  Mixed false for failed or Array
     */
     public function get($_fields, $_where)
     {
+        $_src = $this->getQueryFieldArgs($_fields);
+        $args = "dbName={$this->database}&{$_src}";
+        $_DSL = $this->getQueryDSL($_where, $_order, $_limit);
+        $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
+        if ( $json == false ) {
+            return false;
+        }
+
+        /*
+         * api return:
+         *
+        */
+
+        if ( ! isset($json['hits']) ) {
+            return false;
+        }
+
+        if ( empty($json['hits']['hits']) ) {
+            return false;
+        }
+ 
+        return $this->getQuerySets(
+            $json, $_fields===false ? false : true
+        );
     }
 
-    //get by primary key
+    // get by primary key
     public function getById($_fields, $id)
     {
+        $_src = $this->getQueryFieldArgs($_fields);
+        $args = "dbName={$this->database}&id={$id}&{$_src}";
+        $json = $this->_request('GET', null, "_get?{$args}", null, true);
+        if ( $json == false ) {
+            return false;
+        }
+
+        /*
+         * api return:
+         * {
+         *  "_id": 1,
+         *  "took": 0.00004,
+         *  "found": true,
+         *  "_source": {
+         *      "user_id": 1,
+         *      "condition_input": "view-music",
+         *      "payload": "0",
+         *      "scene_id": 1,
+         *      "id": 1,
+         *      "app_id": 1,
+         *      "content": "我想听 :artist 的 歌"
+         *  }
+         * }
+        */
+
+        if ( isset($json['error']) || $json['found'] == false ) {
+            return false;
+        }
+
+        if ( $_fields == false ) {
+            return array(
+                '_db'    => $json['_db'],
+                '_id'    => $json['_id'],
+                '_score' => 0.0
+            );
+        }
+
+        return $json['_source'];
     }
 
     //-------------------------------------------------------------------------
@@ -620,7 +621,7 @@ class SparkModel implements IModel
      *
      * @param   $data
      * @param   $onDuplicateKey
-     * @return  Mixed false or row_id
+     * @return  Mixed false or the newly added row id
     */
     public function add($data, $onDuplicateKey=null)
     {
@@ -646,6 +647,7 @@ class SparkModel implements IModel
          * {
          *  "_db": "corpus",
          *  "_id": 1,
+         *  "took": 0.001
          *  "created": true
          * }
         */
@@ -660,9 +662,70 @@ class SparkModel implements IModel
      * batch add with no fragments support
      *
      * @param   $data
+     * @return  false for failed or the affected rows
     */
     public function batchAdd($data, $onDuplicateKey=null)
     {
+        $workload = array();
+        foreach ( $data as $val ) {
+            if ( $this->primary_key == null ) {
+                $id = $this->genUUID($val);
+            } else if ( isset($val[$this->primary_key]) ) {
+                $id = $val[$this->primary_key];
+            } else {
+                throw new Exception("Missing mapping for {$this->primary_key} in the source data");
+            }
+
+            $workload[] = "{\"type\":\"index\",\"_db\":\"{$this->database}\",\"_id\":{$id}}";
+            // $workload[] = "{\"delete\":{\"_db\":\"{$this->database}\",\"_id\":\"{$id}\"}}";
+
+            // do the data types conversion
+            $this->stdDataTypes($val);
+            $workload[] = json_encode($val);
+        }
+
+        $_DSL = implode("\n", $workload);
+        $json = $this->_request('POST', $_DSL, '_bulk');
+        if ( $json == false || ! isset($json->items) ) {
+            return false;
+        }
+
+        /*
+         * api return:
+         * {
+         *  "took": 0.01,
+         *  "items": [{
+         *      "index": {
+         *          "_db": "db name",
+         *          "_id": 1,
+         *          "created": true
+         *      }
+         *  }, {
+         *      "delete": {
+         *          "_db": "db name",
+         *          "_id": 1,
+         *          "found": true
+         *      }
+         *  }, {
+         *      "index": {
+         *          "error": {
+         *              "status": 400,
+         *              "type": "type_exception",
+         *              "message": "exception message"
+         *          }
+         *      }
+         *  }]
+         * }
+        */
+
+        $ok_count = 0;
+        foreach ( $json->items as $item ) {
+            if ( isset($item->_id) ) {
+                $ok_count++;
+            }
+        }
+
+        return $ok_count;
     }
 
     /**
@@ -675,15 +738,17 @@ class SparkModel implements IModel
     */
     public function update($data, $_where, $affected_rows=true)
     {
+        throw new Exception("Not implemented yet.");
     }
 
     //update by primary key
     public function updateById($data, $id, $affected_rows=true)
     {
+        throw new Exception("Not implemented yet.");
     }
 
     /**
-     * Set the value of the specifield field of the speicifled reocords
+     * Set the value of the specified field of the speicifled reocords
      *  in data source
      *
      * @param   $_field
@@ -694,17 +759,19 @@ class SparkModel implements IModel
     */
     public function set($_field, $_val, $_where, $affected_rows=true)
     {
+        throw new Exception("Not implemented yet.");
     }
 
     //set by primary key
     //@fragments support
     public function setById($_field, $_val, $id, $affected_rows=true)
     {
+        throw new Exception("Not implemented yet.");
     }
 
     /**
-     * Increase the value of the specifield field of 
-     *  the specifiled records in data source
+     * Increase the value of the specified field of 
+     *  the specified records in data source
      *
      * @param   $_field
      * @param   $_offset
@@ -723,7 +790,7 @@ class SparkModel implements IModel
     }
 
     /**
-     * decrease the value of the specifield field of the speicifled records
+     * decrease the value of the specified field of the speicifled records
      *  in data source
      *
      * @param   $_field
@@ -743,7 +810,7 @@ class SparkModel implements IModel
     }
 
     /**
-     * Delete the specifield records
+     * Delete the specified records
      *
      * @param   $_where
      * @param   $frag_recur
@@ -751,12 +818,14 @@ class SparkModel implements IModel
     */
     public function delete($_where, $frag_recur=true)
     {
+        throw new Exception("Not implemented yet.");
     }
 
     //delete by primary key
     //@frament suports
     public function deleteById($id)
     {
+        throw new Exception("Not implemented yet.");
     }
 
     /**
@@ -856,16 +925,24 @@ class SparkModel implements IModel
             case 'integer':
             case 'short':
             case 'byte':
-                if ( ! is_long($value) )    $value = intval($value);
+                if ( ! is_long($value) ) {
+                    $value = intval($value);
+                }
                 break;
             case 'float':
-                if ( ! is_float($value) )   $value = floatval($value);
+                if ( ! is_float($value) ) {
+                    $value = floatval($value);
+                }
                 break;
             case 'double':
-                if ( ! is_double($value) )  $value = doubleval($value);
+                if ( ! is_double($value) ) {
+                    $value = doubleval($value);
+                }
                 break;
             case 'boolean':
-                if ( ! is_bool($value) ) settype($value, 'boolean');
+                if ( ! is_bool($value) ) {
+                    settype($value, 'boolean');
+                }
                 break;
             }
         }

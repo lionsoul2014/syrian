@@ -668,7 +668,7 @@ class ElasticSearchModel implements IModel
         }
 
         /*
-         * query fields checking and pro-process
+         * query fields checking and pre-process
          * @Note: empty fields will cause global _source fetch
         */
         $field_string = null;
