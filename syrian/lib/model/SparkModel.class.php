@@ -334,7 +334,6 @@ class SparkModel implements IModel
         */
         $from = 0;
         $size = 0;
-        var_dump($_limit);
         if ( is_long($_limit) ) {
             $size = $_limit;
         } else if ( is_string($_limit) ) {
