@@ -121,10 +121,11 @@ class SparkModel implements IModel
      * SQL database, so we design it to use the spark filter always.
      *
      * 01, array(field => '=val')
-     * 02, array(field => '!=val')
-     * 03, array(field => 'in(v1,v2,...)')       //in search
-     * 04, array(field => 'not in(v1,v2,...)')   //in search
-     * 05, array(field => 'like %value%')        //like match
+     * 02, array(field => '>=|<=val')            //range filter
+     * 03, array(field => '!=val')
+     * 04, array(field => 'in(v1,v2,...)')       //in search
+     * 05, array(field => 'not in(v1,v2,...)')   //in search
+     * 06, array(field => 'like %value%')        //like match
      *
      * @param   $_where
      * @return  array(Spark DSL)
@@ -304,9 +305,9 @@ class SparkModel implements IModel
         */
         if ( $_match == null ) {
             // default to with no match
-        } else if ( isset($_query['field']) && isset($_query['query']) ) {
-            $queryDSL['match'] = array(
-                $_query['field'] => $_query['query']
+        } else if ( isset($_match['field']) && isset($_match['query']) ) {
+            $queryDSL['match'][] = array(
+                $_match['field'] => $_match['query']
             );
         } else {
             throw new Exception("Missing key 'field' or 'query' for match define");
@@ -409,11 +410,11 @@ class SparkModel implements IModel
                 $ret[] = $hit['_source'];
             }
         } else {
-            $ret['took']   = $json['took'];
-            $ret['totals'] = $json['totals'];
-            $ret['data']   = array();
+            $ret['took']  = $json['took'];
+            $ret['total'] = $json['total'];
+            $ret['hits']  = array();
             foreach ( $json['hits'] as $hit ) {
-                $ret['data'][] = array(
+                $ret['hits'][] = array(
                     '_db'       => $hit['_db'],
                     '_id'       => $hit['_id'],
                     '_score'    => $hit['_score'],
@@ -473,7 +474,7 @@ class SparkModel implements IModel
          * {
          *  "took": 0.00025,
          *  "scanned": 2,
-         *  "totals": 2,
+         *  "total": 2,
          *  "hits": [
          *      {
          *          "_db": "corpus",
@@ -564,7 +565,7 @@ class SparkModel implements IModel
          * {
          *  "took": 0.00025,
          *  "scanned": 2,
-         *  "totals": 2,
+         *  "total": 2,
          *  "hits": [
          *      {
          *          "_db": "corpus",
@@ -619,6 +620,109 @@ class SparkModel implements IModel
     }
 
     /**
+     * match query interface do the spark complex score match.
+     * for each matched document spark will mark a related scorer by
+     * by the scorer define during mapping setted by scorer.
+     *
+     * @param   $_fields
+     * @param   $_filter SQL compatible query filter
+     * @param   $_match
+     * @param   $_order
+     * @param   $_limit
+     * @param   $_group
+     * @return  Mixed(Array or false)
+    */
+    public function match(
+        $_fields, $_filter, $_match, $_order=null, $_limit=null, $_group=null)
+    {
+        $_src = $this->getQueryFieldArgs($_fields);
+        $args = "dbName={$this->database}&{$_src}";
+        $_DSL = $this->getQueryDSL($_filter, $_match, $_order, $_group, $_limit);
+        $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
+        if ( $json == false ) {
+            return false;
+        }
+
+        /*
+         * api return:
+         * {
+         *  "took": 0.00025,
+         *  "scanned": 2,
+         *  "total": 2,
+         *  "hits": [
+         *      {
+         *          "_db": "corpus",
+         *          "_id": 2,
+         *          "_score": null,
+         *          "_qm_rate": null,
+         *          "_dm_rate": null,
+         *          "_match": {
+         *              "tokens": []
+         *          },
+         *          "_source": {
+         *              "user_id": 1,
+         *              "condition_input": "video-music",
+         *              "payload": "0",
+         *              "scene_id": 2,
+         *              "id": 2,
+         *              "app_id": 2,
+         *              "content": "我想看 :artist 的 电影"
+         *          }
+         *      },
+         *      {
+         *          "_db": "corpus",
+         *          "_id": 1,
+         *          "_score": null,
+         *          "_qm_rate": null,
+         *          "_dm_rate": null,
+         *          "_match": {
+         *              "tokens": []
+         *          },
+         *          "_source": {
+         *              "user_id": 1,
+         *              "condition_input": "view-music",
+         *              "payload": "0",
+         *              "scene_id": 1,
+         *              "id": 1,
+         *              "app_id": 1,
+         *              "content": "我想听 :artist 的 歌"
+         *          }
+         *      }
+         *  ]
+         * }
+        */
+
+        if ( ! isset($json['hits']) || empty($json['hits']) ) {
+            return false;
+        }
+
+        //----------------------------------------------------
+        // pre-process the returning data
+
+        $ret = array(
+            'took'  => $json['took'],
+            'total' => $json['total']
+        );
+
+        if ( $_fields != false ) {
+            $ret['hits'] = $json['hits'];
+        } else {
+            $ret['hits'] = array();
+            foreach ( $json['hits'] as $hit ) {
+                $ret['hits'][] = array(
+                    '_db'       => $hit['_db'],
+                    '_id'       => $hit['_id'],
+                    '_score'    => $hit['_score'],
+                    '_qm_rate'  => $hit['_qm_rate'],
+                    '_dm_rate'  => $hit['_dm_rate']
+                );
+            }
+        }
+
+        return $ret;
+    }
+
+    /**
      * get a specified record from the specified table
      *
      * @param   $Id
@@ -640,7 +744,7 @@ class SparkModel implements IModel
          * {
          *  "took": 0.00025,
          *  "scanned": 2,
-         *  "totals": 2,
+         *  "total": 2,
          *  "hits": [
          *      {
          *          "_db": "corpus",

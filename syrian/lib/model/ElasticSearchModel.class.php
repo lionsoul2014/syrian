@@ -702,10 +702,10 @@ class ElasticSearchModel implements IModel
             }
         } else {
             $ret['took']   = $json['took'];
-            $ret['totals'] = $json['hits']['total'];
-            $ret['data']   = array();
+            $ret['total']  = $json['hits']['total'];
+            $ret['hits']   = array();
             foreach ( $json['hits']['hits'] as $hit ) {
-                $ret['data'][] = array(
+                $ret['hits'][] = array(
                     '_index' => $hit['_index'],
                     '_type'  => $hit['_type'],
                     '_id'    => $hit['_id'],
@@ -1108,34 +1108,25 @@ class ElasticSearchModel implements IModel
         //----------------------------------------------------
         //pre-process the returning data
 
-        $ret = array();
-        if ( $_fields == false ) {
-            $ret['took']  = $json['took'];
-            $ret['total'] = $json['hits']['total'];
-            $ret['data']  = array();
+        $ret = array(
+            'took'  => $json['took'],
+            'total' => $json['hits']['total']
+        );
+
+        if ( $_fields != false ) {
+            $ret['max_score'] = $json['hits']['max_score'];
+            $ret['hits'] = $json['hits']['hits'];
+        } else {
+            $ret['hits'] = array();
             foreach ( $json['hits']['hits'] as $hit ) {
-                $ret['data'][] = array(
+                $ret['hits'][] = array(
                     '_index' => $hit['_index'],
                     '_type'  => $hit['_type'],
                     '_id'    => $hit['_id'],
                     '_score' => $hit['_score']
                 );
             }
-
-            return $ret;
         }
-
-        $ret['took']  = $json['took'];
-        $ret['total'] = $json['hits']['total'];
-        $ret['max_score'] = $json['hits']['max_score'];
-        $ret['hits']  = $json['hits']['hits'];
-        //foreach ( $json['hits']['hits'] as $hit ) {
-        //    //$data[] = array(
-        //    //    '_source'   => $hit['_source'],
-        //    //    'highlight' => $hit['highlight']
-        //    //);
-        //    $ret['hits'][] = $hit;
-        //}
 
         return $ret;
     }
