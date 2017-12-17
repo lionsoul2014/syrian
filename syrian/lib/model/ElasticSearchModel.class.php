@@ -701,9 +701,9 @@ class ElasticSearchModel implements IModel
                 $ret[] = $hit['_source'];
             }
         } else {
-            $ret['took']  = $json['took'];
-            $ret['total'] = $json['hits']['total'];
-            $ret['data']  = array();
+            $ret['took']   = $json['took'];
+            $ret['totals'] = $json['hits']['total'];
+            $ret['data']   = array();
             foreach ( $json['hits']['hits'] as $hit ) {
                 $ret['data'][] = array(
                     '_index' => $hit['_index'],
@@ -1192,17 +1192,13 @@ class ElasticSearchModel implements IModel
             return false;
         }
 
-        if ( $_fields === false ) {
-            $hit = $json['hits']['hits'][0];
-            return array(
-                '_index' => $hit['_index'],
-                '_type'  => $hit['_type'],
-                '_id'    => $hit['_id'],
-                '_score' => $hit['_score']
-            );
-        }
-
-        return $json['hits']['hits'][0]['_source'];
+        $hit = $json['hits']['hits'][0];
+        return $_fields == false ? array(
+            '_index' => $hit['_index'],
+            '_type'  => $hit['_type'],
+            '_id'    => $hit['_id'],
+            '_score' => $hit['_score']
+        ) : $hit['_source'];
     }
 
     /**

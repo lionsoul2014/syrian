@@ -238,7 +238,7 @@ class SparkModel implements IModel
                     throw new Exception("Invalid in query syntax for field '{$field}'");
                 }
 
-                //there must at least 1 char bettween the '(' and the ')'
+                // there must at least 1 char bettween the '(' and the ')'
                 if ( $eIdx - $sIdx < 2 ) {
                     throw new Exception("Invalid in query syntax for field '{$field}'");
                 }
@@ -309,7 +309,7 @@ class SparkModel implements IModel
                 $_query['field'] => $_query['query']
             );
         } else {
-            throw new Exception("Missing key 'field' or 'query' for query define");
+            throw new Exception("Missing key 'field' or 'query' for match define");
         }
 
         /*
@@ -327,6 +327,7 @@ class SparkModel implements IModel
 
             $queryDSL['sort'] = $sort;
         }
+
 
         /*
          * check and define the limit
@@ -353,7 +354,9 @@ class SparkModel implements IModel
             }
         }
 
+        // check and append the group field
         // check and define the from, size attributes
+        if ( $_group != null) $queryDSL['group'] = $_group;
         if ( $from >= 0 ) $queryDSL['from'] = $from;
         if ( $size >  0 ) $queryDSL['size'] = $size;
 
@@ -402,19 +405,20 @@ class SparkModel implements IModel
     {
         $ret = array();
         if ( $srcMode == true ) {
-            foreach ( $json['hits']['hits'] as $hit ) {
+            foreach ( $json['hits'] as $hit ) {
                 $ret[] = $hit['_source'];
             }
         } else {
-            $ret['took']  = $json['took'];
-            $ret['total'] = $json['hits']['total'];
-            $ret['data']  = array();
-            foreach ( $json['hits']['hits'] as $hit ) {
+            $ret['took']   = $json['took'];
+            $ret['totals'] = $json['totals'];
+            $ret['data']   = array();
+            foreach ( $json['hits'] as $hit ) {
                 $ret['data'][] = array(
-                    '_index' => $hit['_index'],
-                    '_type'  => $hit['_type'],
-                    '_id'    => $hit['_id'],
-                    '_score' => $hit['_score']
+                    '_db'       => $hit['_db'],
+                    '_id'       => $hit['_id'],
+                    '_score'    => $hit['_score'],
+                    '_qm_rate'  => $hit['_qm_rate'],
+                    '_dm_rate'  => $hit['_dm_rate']
                 );
             }
         }
@@ -458,25 +462,63 @@ class SparkModel implements IModel
     public function query($_fields, $dsl, $format=true)
     {
         $_src = $this->getQueryFieldArgs($_fields);
-        $json = $this->_request('POST', $dsl, "_search?{$_src}", null, true);
+        $args = "dbName={$this->database}&{$_src}";
+        $json = $this->_request('POST', $dsl, "_search?{$args}", null, true);
         if ( $json == false ) {
             return false;
         }
 
         /*
          * api return:
+         * {
+         *  "took": 0.00025,
+         *  "scanned": 2,
+         *  "totals": 2,
+         *  "hits": [
+         *      {
+         *          "_db": "corpus",
+         *          "_id": 2,
+         *          "_score": null,
+         *          "_qm_rate": null,
+         *          "_dm_rate": null,
+         *          "_match": {
+         *              "tokens": []
+         *          },
+         *          "_source": {
+         *              "user_id": 1,
+         *              "condition_input": "video-music",
+         *              "payload": "0",
+         *              "scene_id": 2,
+         *              "id": 2,
+         *              "app_id": 2,
+         *              "content": "我想看 :artist 的 电影"
+         *          }
+         *      },
+         *      {
+         *          "_db": "corpus",
+         *          "_id": 1,
+         *          "_score": null,
+         *          "_qm_rate": null,
+         *          "_dm_rate": null,
+         *          "_match": {
+         *              "tokens": []
+         *          },
+         *          "_source": {
+         *              "user_id": 1,
+         *              "condition_input": "view-music",
+         *              "payload": "0",
+         *              "scene_id": 1,
+         *              "id": 1,
+         *              "app_id": 1,
+         *              "content": "我想听 :artist 的 歌"
+         *          }
+         *      }
+         *  ]
+         * }
+         *
         */
 
-        if ( ! isset($json['hits']) ) {
-            return false;
-        }
-
-        # check and set the total record variables;
-        if ( isset($json['hits']['total']) ) {
-            $total = $json['hits']['total'];
-        }
-
-        if ( empty($json['hits']['hits']) ) {
+        if ( ! isset($json['hits']) || empty($json['hits']) ) {
             return false;
         }
 
@@ -519,17 +561,58 @@ class SparkModel implements IModel
 
         /*
          * api return:
+         * {
+         *  "took": 0.00025,
+         *  "scanned": 2,
+         *  "totals": 2,
+         *  "hits": [
+         *      {
+         *          "_db": "corpus",
+         *          "_id": 2,
+         *          "_score": null,
+         *          "_qm_rate": null,
+         *          "_dm_rate": null,
+         *          "_match": {
+         *              "tokens": []
+         *          },
+         *          "_source": {
+         *              "user_id": 1,
+         *              "condition_input": "video-music",
+         *              "payload": "0",
+         *              "scene_id": 2,
+         *              "id": 2,
+         *              "app_id": 2,
+         *              "content": "我想看 :artist 的 电影"
+         *          }
+         *      },
+         *      {
+         *          "_db": "corpus",
+         *          "_id": 1,
+         *          "_score": null,
+         *          "_qm_rate": null,
+         *          "_dm_rate": null,
+         *          "_match": {
+         *              "tokens": []
+         *          },
+         *          "_source": {
+         *              "user_id": 1,
+         *              "condition_input": "view-music",
+         *              "payload": "0",
+         *              "scene_id": 1,
+         *              "id": 1,
+         *              "app_id": 1,
+         *              "content": "我想听 :artist 的 歌"
+         *          }
+         *      }
+         *  ]
+         * }
          *
         */
 
-        if ( ! isset($json['hits']) ) {
+        if ( ! isset($json['hits']) || empty($json['hits']) ) {
             return false;
         }
 
-        if ( empty($json['hits']['hits']) ) {
-            return false;
-        }
- 
         return $this->getQuerySets(
             $json, $_fields===false ? false : true
         );
@@ -546,7 +629,7 @@ class SparkModel implements IModel
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&{$_src}";
-        $_DSL = $this->getQueryDSL($_where, $_order, $_limit);
+        $_DSL = $this->getQueryDSL($_where, null, null, null, 10);
         $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
         if ( $json == false ) {
             return false;
@@ -554,20 +637,66 @@ class SparkModel implements IModel
 
         /*
          * api return:
+         * {
+         *  "took": 0.00025,
+         *  "scanned": 2,
+         *  "totals": 2,
+         *  "hits": [
+         *      {
+         *          "_db": "corpus",
+         *          "_id": 2,
+         *          "_score": null,
+         *          "_qm_rate": null,
+         *          "_dm_rate": null,
+         *          "_match": {
+         *              "tokens": []
+         *          },
+         *          "_source": {
+         *              "user_id": 1,
+         *              "condition_input": "video-music",
+         *              "payload": "0",
+         *              "scene_id": 2,
+         *              "id": 2,
+         *              "app_id": 2,
+         *              "content": "我想看 :artist 的 电影"
+         *          }
+         *      },
+         *      {
+         *          "_db": "corpus",
+         *          "_id": 1,
+         *          "_score": null,
+         *          "_qm_rate": null,
+         *          "_dm_rate": null,
+         *          "_match": {
+         *              "tokens": []
+         *          },
+         *          "_source": {
+         *              "user_id": 1,
+         *              "condition_input": "view-music",
+         *              "payload": "0",
+         *              "scene_id": 1,
+         *              "id": 1,
+         *              "app_id": 1,
+         *              "content": "我想听 :artist 的 歌"
+         *          }
+         *      }
+         *  ]
+         * }
          *
         */
 
-        if ( ! isset($json['hits']) ) {
+        if ( ! isset($json['hits']) || empty($json['hits']) ) {
             return false;
         }
 
-        if ( empty($json['hits']['hits']) ) {
-            return false;
-        }
- 
-        return $this->getQuerySets(
-            $json, $_fields===false ? false : true
-        );
+        $hit = $json['hits'][0];
+        return $_fields == false ? array(
+            '_db'       => $hit['_db'],
+            '_id'       => $hit['_id'],
+            '_score'    => $hit['_score'],
+            '_qm_rate'  => $hit['_qm_rate'],
+            '_dm_rate'  => $hit['_dm_rate']
+        ) : $hit['_source'];
     }
 
     // get by primary key
@@ -604,9 +733,11 @@ class SparkModel implements IModel
 
         if ( $_fields == false ) {
             return array(
-                '_db'    => $json['_db'],
-                '_id'    => $json['_id'],
-                '_score' => 0.0
+                '_db'       => $json['_db'],
+                '_id'       => $json['_id'],
+                '_score'    => 0.0,
+                '_qm_rate'  => 1.0,
+                '_dm_rate'  => 1.0
             );
         }
 
