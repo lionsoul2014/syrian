@@ -3,6 +3,10 @@
  * super sebiont spark model implementation.
  * which implemented the common IModel interface.
  * All the spark model instance should extends from this.
+ *
+ * @Note: cuz the unique algorithm can not guarantee
+ *  cluster unique, we suggest u set the primary_key 
+ * and use the source data's unique id.
  * 
  * @author  chenxin<chenxin619315@gmail.com>
 */
@@ -1334,26 +1338,19 @@ EOF;
     }
 
     /**
-     * generate a universal unique identifier
-     * Override it to make amazing things
+     * generate a universal unique 8-bytes numeric id
+     * U may Override it to make amazing things ...
+     *
+     * @Note:
+     * basicaly at the some node this could be unique
+     * under a cluster environment we could not 
+     *  guarantee the generated id is unique.
      *
      * @param   $data   original data
-     * @return  String
+     * @return  long
     */
     protected function genUUID($data)
     {
-        /*
-         * 1, create a guid
-         * check and append the node name to 
-         *  guarantee the basic server unique
-        */
-        $prefix = null;
-        if ( defined('SR_NODE_NAME') ) {
-            $prefix = substr(md5(SR_NODE_NAME), 0, 4);
-        } else {
-            $prefix = sprintf("%04x", mt_rand(0, 0xffff));
-        }
-
         $tArr = explode(' ', microtime());
         $tsec = $tArr[1];
         $msec = $tArr[0];
@@ -1361,12 +1358,16 @@ EOF;
             $msec = substr($msec, $sIdx + 1);
         }
 
-        return sprintf(
-            "%08x%08x%0s%04x", 
-            $tsec, 
-            $msec,
-            $prefix, 
-            mt_rand(0, 0xffff)
+        // return sprintf(
+        //     "%08x%08x%0s%04x", 
+        //     $tsec, 
+        //     $msec,
+        //     $prefix, 
+        //     mt_rand(0, 0xffff)
+        // );
+
+        return (
+            ($tsec << 32) | ($msec << 8) | mt_rand(0, 0xff)
         );
     }
 
