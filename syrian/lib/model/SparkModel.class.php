@@ -310,8 +310,11 @@ class SparkModel implements IModel
         if ( $_match == null ) {
             // default to with no match
         } else if ( isset($_match['field']) && isset($_match['query']) ) {
-            $queryDSL['match'][] = array(
-                $_match['field'] => $_match['query']
+            $queryDSL['match'] = array(
+                'min_score' => isset($_match['min_score']) ? $_match['min_score'] : 0,
+                'query' => array(
+                    array($_match['field'] => $_match['query'])
+                )
             );
         } else {
             throw new Exception("Missing key 'field' or 'query' for match define");
@@ -541,7 +544,23 @@ class SparkModel implements IModel
     */
     public function totals($_where=null, $_group=null)
     {
-        return 0;
+        $_DSL = $this->getQueryDSL($_where, null, null, $_group, null);
+        $json = $this->_request('POST', $_DSL, "_count?dbName={$this->database}");
+        if ( $json == false ) {
+            return false;
+        }
+
+        /*
+         * api return:
+         * {
+         *  "took": 0.00025,
+         *  "scanned": 2,
+         *  "total": 2,
+         * }
+         *
+        */
+
+        return isset($json->total) ? $json->total : 0;
     }
 
     /**
