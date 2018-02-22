@@ -2172,6 +2172,10 @@ EOF;
     */
     public static function addslash($str, $tchar)
     {
+        if ( strlen($str) < 2 ) {
+            return $str;
+        }
+
         $sIdx = strpos($str, $tchar, 1);
         if ( $sIdx === false ) {
             return $str;
