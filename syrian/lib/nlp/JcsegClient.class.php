@@ -119,7 +119,9 @@ class JcsegClient
     */
     public function tokenize($text, $inst_name='master')
     {
-        $json = $this->_do_request("/tokenizer/{$inst_name}", "text={$text}");
+        $json = $this->_do_request(
+            "/tokenizer/{$inst_name}", 'text=' . urlencode($text)
+        );
         if ( $json == false ) {
             return false;
         }
@@ -136,7 +138,7 @@ class JcsegClient
     public function summary($text, $length=64)
     {
         $json = $this->_do_request(
-            "/extractor/summary?length=${length}", "text={$text}"
+            "/extractor/summary?length=${length}", 'text=' . urlencode($text)
         );
         if ( $json == false ) {
             return false;
@@ -155,7 +157,7 @@ class JcsegClient
     public function keySentence($text, $number=5)
     {
         $json = $this->_do_request(
-            "/extractor/sentence?number=${number}", "text={$text}"
+            "/extractor/sentence?number=${number}", 'text=' . urlencode($text)
         );
         if ( $json == false ) {
             return false;
@@ -176,7 +178,7 @@ class JcsegClient
         $fstr = $autoFilter ? 'true' : 'false';
         $json = $this->_do_request(
             "/extractor/keywords?number=${number}&autoFilter={$fstr}",
-            "text={$text}"
+            'text=' . urlencode($text)
         );
         if ( $json == false ) {
             return false;

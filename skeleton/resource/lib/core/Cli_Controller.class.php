@@ -270,6 +270,20 @@ EOF;
     }
 
     /**
+     * dispatch the signal and check the process running status
+     * check and exit the process safely
+     *
+     * @param   $msg Exit message
+    */
+    protected function dispatchSignal()
+    {
+        pcntl_signal_dispatch();
+        if ( $this->process_state == CLI_PROC_EXIT ) {
+            exit(0);
+        }
+    }
+
+    /**
      * check and stop the running process macro
      *
      * @param   $procInfo
@@ -397,7 +411,8 @@ EOF;
      * destruct method
      * auto process info clean
     */
-    public function __destruct() {
+    public function __destruct()
+    {
         if ( $this->cleanProcInfo ) {
             $this->cleanInstanceProcInfo();
         }
