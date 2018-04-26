@@ -1976,7 +1976,8 @@ class ElasticSearchModel implements IModel
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_HEADER, 0);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            'User-Agent: elasticsearch php client'
+            'User-Agent: elasticsearch php client',
+            'Content-Type: application/json'
         ));
         if ( $dsl != null ) {
             curl_setopt($curl, CURLOPT_POSTFIELDS, $dsl);
