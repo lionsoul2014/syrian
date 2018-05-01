@@ -95,7 +95,8 @@ class JcsegClient
         /*
          * http status 200 and the response string is a valid json string
          * and the json->code is 0 (means for succeed).
-         * check http://git.oschina.net/lionsoul/jcseg or https://github.com/lionsoul2014/jcseg
+         * check http://git.oschina.net/lionsoul/jcseg 
+         *  or https://github.com/lionsoul2014/jcseg
          * for more documentation
         */
         if ( intval($info['http_code']) == 200 

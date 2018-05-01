@@ -165,15 +165,27 @@ class Utf8String
     */
     public static function isPunctuation($u)
     {
-        if ( $u > 65280 ) {
-            $u -= 65248;
-        }
+        /// if ( $u > 65280 ) {
+        ///     $u -= 65248;
+        /// }
+
+        if ( $u < 128 ) {
+            return ( 
+                ($u >  31 && $u  < 48 ) ||
+                ($u >  57 && $u  < 65 ) || 
+                ($u >  90 && $u  < 97 ) || 
+                ($u > 122 && $u < 127)
+            );
+        } 
 
         return ( 
-            ($u >  31 && $u  < 48 ) ||
-            ($u >  57 && $u  < 65 ) || 
-            ($u >  90 && $u  < 97 ) || 
-            ($u > 122 && $u < 127)
+            ($u > 65280 && $u < 65296)
+            || ( $u > 65305 && $u < 65312 )
+            || ( $u > 65338 && $u < 65345 )
+            || ( $u > 65370 && $u < 65382 )
+            //CJK symbol and punctuation (added 2013-09-06)
+            //from http://www.unicode.org/charts/PDF/U3000.pdf
+            || ( $u >= 12289 && $u <= 12319 )
         );
     }
 
