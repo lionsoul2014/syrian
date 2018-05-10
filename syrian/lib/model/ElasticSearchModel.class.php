@@ -876,15 +876,20 @@ class ElasticSearchModel implements IModel
      *
      * @param   $_fields
      * @param   $dsl
+     * @param   $ret_hits return the hits or not
      * @param   $format auto format the query result
      * @return  Mixed
     */
-    public function query($_fields, $dsl, $format=true)
+    public function query($_fields, $dsl, $ret_hits=true, $format=true)
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $json = $this->_request('POST', $dsl, "{$this->index}/{$this->type}/_search", $_src, true);
         if ( $json == false ) {
             return false;
+        }
+
+        if ( $ret_hits == false ) {
+            return $json;
         }
 
         /*
