@@ -1055,7 +1055,7 @@ class RouterShardingModel implements IModel
      * @param   $willQuery will query be executed through the model
      * @return  Mixed false or an initialized C_Model instance
     */
-    private function getShardingModelFromId($id, $willQuery=true)
+    public function getShardingModelFromId($id, $willQuery=true)
     {
         /*
          * so, better the length of the primary key should not be 32
