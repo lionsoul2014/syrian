@@ -483,7 +483,7 @@ defined('VIEW_OK')    or define('VIEW_OK',    0);
 defined('VIEW_INFO')  or define('VIEW_INFO',  1);
 defined('VIEW_ERROR') or define('VIEW_ERROR', 2);
 
-function view_report($err_code, $err_msg=null)
+function view_report_register($err_code, $err_msg=null)
 {
     static $symbol  = null;
     //static $errType = array('success', 'info', 'danger');
@@ -516,7 +516,7 @@ function view_report($err_code, $err_msg=null)
 defined('PAGE_STD_STYLE')   or  define('PAGE_STD_STYLE',  0);
 defined('PAGE_SHOP_STYLE')  or  define('PAGE_SHOP_STYLE', 1);
 
-function view_page(
+function view_paging_register(
     $total, $pagesize, $pageno, 
     $qstr=null, $name='pageno', $style=1, $left=2, $offset=2 )
 {
@@ -559,6 +559,60 @@ function view_page(
         'link'   => $url,
         'left'   => $left,
         'offset' => $offset
+    );
+}
+
+
+/**
+ * data scroll page data register
+ *
+ * @param   $total
+ * @param   $n_cursor
+ * @param   $p_cursor
+ * @param   $prevsign
+ * @param   $n_cursor
+ * @param   $nextsign
+ * @param   $qstr
+*/
+function view_scroll_register(
+    $total, $c_cursor, 
+    $p_cursor, $prevsign, 
+    $n_cursor, $nextsign, $qstr=null, $name='cursor')
+{
+    static $symbol = null;
+
+    if ( $symbol == null ) {
+        $viewObj = build_view();
+        $viewObj->assoc('page', $symbol);
+    }
+
+    if ( $qstr == null 
+        && isset($_SERVER['QUERY_STRING']) ) {
+        $qstr = $_SERVER['QUERY_STRING'];
+    }
+
+    if ( $qstr == null || strlen($qstr) <= 1 ) {
+        $url = "?{$name}=";
+    } else {
+        $pattern = "/(&?){$name}=[^&]*&?/";
+        $url = preg_replace($pattern, '$1', $qstr);
+        if ( ($len = strlen($url)) < 1 ) {
+            $url = "?{$name}=";
+        } else if ( $url[$len-1] =='&' ) {
+            $url = "?{$url}{$name}=";
+        } else {
+            $url = "?{$url}&{$name}=";
+        }
+    }
+
+    $symbol = array(
+        'total'     => $total,
+        'c_cursor'  => $c_cursor,
+        'p_cursor'  => $p_cursor,
+        'prevsign'  => $prevsign,
+        'n_cursor'  => $n_cursor,
+        'nextsign'  => $nextsign,
+        'link'      => $url
     );
 }
 
