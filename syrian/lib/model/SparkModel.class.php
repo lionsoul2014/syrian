@@ -273,13 +273,13 @@ class SparkModel implements IModel
                     $field => str_replace('%', '', $syntax)
                 );
                 break;
-            }
             default:
                 $query[$branch][] = array(
                     //$field => $this->getFieldValue($field, trim($value))
                     $field => trim($value)
                 );
                 break;
+            }
         }
 
         return $query;
