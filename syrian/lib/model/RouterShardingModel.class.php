@@ -868,7 +868,7 @@ class RouterShardingModel implements IModel
 
             $shardIdx = self::__hash($sedVal) % count($this->shardings);
             $optimize_code = 1;
-        } else if (strlen($seed) > 3) {
+        } else if ( strlen($seed) > 3 ) {
             $first2 = strtolower(substr($seed, 0, 2));
             if ( strncmp($first2, 'in', 2) != 0 ) {
                 return $this->__getAllShardingModels($where);

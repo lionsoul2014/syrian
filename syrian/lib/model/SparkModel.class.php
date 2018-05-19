@@ -274,6 +274,12 @@ class SparkModel implements IModel
                 );
                 break;
             }
+            default:
+                $query[$branch][] = array(
+                    //$field => $this->getFieldValue($field, trim($value))
+                    $field => trim($value)
+                );
+                break;
         }
 
         return $query;

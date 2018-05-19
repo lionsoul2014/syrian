@@ -397,6 +397,14 @@ class ElasticSearchModel implements IModel
 
                 $query[$branch][] = $limit;
                 break;
+            default:
+                $query[$branch][] = array(
+                    'term' => array(
+                        //$field => $this->getFieldValue($field, trim($value))
+                        $field => trim($value)
+                    )
+                );
+                break;
             }
         }
 

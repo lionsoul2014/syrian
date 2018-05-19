@@ -215,6 +215,12 @@ class C_Model implements IModel
                 $nval = implode(',', $varr);
                 $val  = "{$opt_key}($nval){$parenthesis}";
                 break;
+            default:
+                if ( ! self::isStringQuoted($val, 0, $eIdx) ) {
+                    $nval = trim($val);
+                    $val  = "='{$nval}'{$parenthesis}";
+                }
+                break;
             }
 
             switch ( $field[0] ) {
