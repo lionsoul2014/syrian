@@ -1086,6 +1086,33 @@ class RouterShardingModel implements IModel
     }
 
     /**
+     * get the sharding from a specified string field value
+     * 1, calculate its hash value
+     * 2, return the model with the previous hash value
+     *
+     * @Note this is a runtime solution that means if anything changed
+     *  in the hash function and will affect the logic directly unlike the
+     * the cached hash value store in the global id
+     *
+     * @param   $value
+     * @param   the initialized C_Model instance
+    */
+    public function getShardingModelFromValue($value, $willQuery=true)
+    {
+        $hash = self::__hash($value);
+        $sIdx = $hash % count($this->shardings);
+        $mObj = model($this->shardings[$sIdx]);
+        $this->resetModelAttr($mObj);
+
+        //check and reset the last active model
+        if ( $willQuery ) {
+            $this->lastAcitveModel = $mObj;
+        }
+
+        return $mObj;
+    }
+
+    /**
      * generate a universal unique identifier
      *
      * @param   $data
@@ -1145,7 +1172,7 @@ class RouterShardingModel implements IModel
      * @param   $str
      * @return  Integer hash value
     */
-    private static function __hash($str)
+    public static function __hash($str)
     {
         $hval = 0;
         $len  = strlen($str);
