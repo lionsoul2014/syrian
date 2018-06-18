@@ -9,14 +9,14 @@ interface IList
 {    
     public function setKey($key);
     public function setTtl($ttl);
-    public function get($index);
+    public function get($index, $callback=null);
     public function set($index, $value);
     public function lpush($value);
-    public function lpop();
+    public function lpop($callback);
     public function rpush($value);
-    public function rpop();
+    public function rpop($callback);
     public function size();
-    public function remove ();
+    public function remove();
 }
 
  //----------------------------------------------------
@@ -60,4 +60,3 @@ class ListFactory
         return new $_class($_conf);
     }
 }
-?>
