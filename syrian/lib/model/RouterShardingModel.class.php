@@ -387,7 +387,8 @@ class RouterShardingModel implements IModel
          * 2, must contains the router info insite
          * or all the xxById interface will not work properly
         */
-        if ( $this->guidKey != NULL ) {
+        if ( $this->guidKey != NULL 
+            && ! isset($data[$this->guidKey]) ) {
             $data[$this->guidKey] = $this->genUUID($data, $this->router);
         }
 
@@ -803,6 +804,14 @@ class RouterShardingModel implements IModel
     }
 
     /**
+     * get the router field name
+    */
+    public function getRouter()
+    {
+        return $this->router;
+    }
+
+    /**
      * get the write/insert operation sharding model
      *
      * @param   $data
@@ -1025,7 +1034,8 @@ class RouterShardingModel implements IModel
         $modelSet = array();
         foreach ($data as $val) {
             // Check and append the global unique identifier.
-            if ( $this->guidKey != NULL && $genUid == true ) {
+            if ( $genUid && $this->guidKey != NULL 
+                && ! isset($val[$this->guidKey]) ) {
                 $val[$this->guidKey] = $this->genUUID($val, $this->router);
             }
 
@@ -1119,7 +1129,7 @@ class RouterShardingModel implements IModel
      * @param   $router
      * @return  String
     */
-    protected function genUUID($data, $router)
+    public function genUUID($data, $router=null)
     {
         /*
          * 1, create a guid
@@ -1153,13 +1163,14 @@ class RouterShardingModel implements IModel
             $routerVal = self::__hash($data[$router]);
         }
 
+        // fix the last right bit probably is 1 even the routerval is randomed
         return sprintf(
             "%08x%08x%0s%08x%04x", 
             $tsec, 
             $msec,
             $prefix, 
             $routerVal,
-            ((mt_rand(0, 0x3fff) ) << 1) | $embed // fix the last right bit probably is 1 even the routerval is randomed
+            ((mt_rand(0, 0x3fff) ) << 1) | $embed 
         );
     }
 
