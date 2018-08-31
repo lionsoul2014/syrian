@@ -54,7 +54,9 @@ E('output', $output);
 try {
     $uri = parse_uri($_SERVER['REQUEST_URI'], '/', array('article', 'index'));
     $ret = controller($uri, $input, $output, 'resource_preload_callback');
-    $output->display(is_array($ret) ? json_encode($ret) : $ret);
+    if ( $ret !== null ) {  # return null to disable the auto display
+        $output->display(is_array($ret) ? json_encode($ret) : $ret);
+    }
 } catch ( Exception $e ) {
     if ( SR_CLI_MODE ) echo $e, "\n";
     else {
@@ -63,5 +65,3 @@ try {
 
     //@Note: You may need to do the error log here
 }
-
-?>
