@@ -1342,6 +1342,37 @@ class C_Model implements IModel
         );
     }
 
+    /**
+     * generate a 8-bytes int unique identifier
+     *
+     * @param   $data   original data
+     * @return  String
+    */
+    protected function genUInt64UUID($data)
+    {
+        // +-4Bytes-+-2Bytes-+-2Byte
+        // timestamp + microtime + Node name
+
+        $uuid = 0x00;
+        $tArr = explode(' ', microtime());
+        $tsec = $tArr[1];
+        $msec = $tArr[0];
+        if ( ($sIdx = strpos($msec, '.')) !== false ) {
+            $msec = substr($msec, $sIdx + 1);
+        }
+
+        $msec  = ($msec & 0x0000FFFF);  // only keep 2 bytes
+        $uuid  = ($tsec << 32);         // timestamp
+        $uuid |= ($msec << 16);         // microtime
+        if ( defined('SR_NODE_NAME') ) {
+            $nstr  = substr(md5(SR_NODE_NAME), 0, 4);
+            $uuid |= hexdec($nstr) & 0xFFFF;    // node name serial no
+        } else {
+            $uuid |= mt_rand(0, 0xFFFF);        // ramdom node serial
+        }
+
+        return $uuid;
+    }
 
     /**
      * destruct method for the model

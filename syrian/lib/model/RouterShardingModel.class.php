@@ -37,8 +37,14 @@ class RouterShardingModel implements IModel
      *
      * We suggest you do this
     */
-    protected   $guidKey     = NULL;
-    protected   $primary_key = NULL;
+    protected   $guidKey      = NULL;
+    protected   $primary_key  = NULL;
+
+    /**
+     * UID strategy
+     * optional value: uint64, hex32str
+    */
+    protected   $uid_strategy = 'hex32str';
 
     /**
      * control attributes
@@ -1067,24 +1073,30 @@ class RouterShardingModel implements IModel
     */
     public function getShardingModelFromId($id, $willQuery=true)
     {
-        /*
-         * so, better the length of the primary key should not be 32
-        */
-        if ( strlen($id) == 32 ) {
-            $mask = hexdec(substr($id, 28, 4));
-            if ( ($mask & 0x01) == 1 ) {
-                $routerVal = hexdec(substr($id, 20, 8));
-            } else {
-                $routerVal = self::__hash($id);
-            }
-        } else if ($this->primary_key != NULL) {
-            $routerVal = self::__hash($id);
+        if ( $this->uid_strategy[0] == 'u' ) {  // uint64
+            $sIdx = ($id >> 8) & 0xFF;
         } else {
-            return false;
+
+            /*
+             * so, better the length of the primary key should not be 32
+            */
+            if ( strlen($id) == 32 ) {
+                $mask = hexdec(substr($id, 28, 4));
+                if ( ($mask & 0x01) == 1 ) {
+                    $routerVal = hexdec(substr($id, 20, 8));
+                } else {
+                    $routerVal = self::__hash($id);
+                }
+            } else if ($this->primary_key != NULL) {
+                $routerVal = self::__hash($id);
+            } else {
+                return false;
+            }
+
+            $sIdx = $routerVal % count($this->shardings);
         }
 
-        $sIdx  = $routerVal % count($this->shardings);
-        $mObj  = model($this->shardings[$sIdx]);
+        $mObj = model($this->shardings[$sIdx]);
         $this->resetModelAttr($mObj);
 
         //check and reset the last active model
@@ -1123,13 +1135,29 @@ class RouterShardingModel implements IModel
     }
 
     /**
-     * generate a universal unique identifier
+     * internal function to generate a universal unique identifier
+     *
+     * @param   $data
+     * @param   $router
+     * @return  Mixed
+    */
+    protected function genUUID($data, $router=null)
+    {
+        if ( $this->uid_strategy[0] == 'u' ) {  // uint64
+            return $this->genUInt64UUID($data, $router);
+        } else {    // default to hex 32 string
+            return $this->genHStr32UUID($data, $router);
+        }
+    }
+
+    /**
+     * generate a hex string universal unique identifier
      *
      * @param   $data
      * @param   $router
      * @return  String
     */
-    public function genUUID($data, $router=null)
+    public function genHStr32UUID($data, $router=null)
     {
         /*
          * 1, create a guid
@@ -1172,6 +1200,56 @@ class RouterShardingModel implements IModel
             $routerVal,
             ((mt_rand(0, 0x3fff) ) << 1) | $embed 
         );
+    }
+
+    /**
+     * generate a 8-bytes int unique identifier
+     * the sharding length should be less than 255
+     *
+     * @param   $data   original data
+     * @param   $router
+     * @return  String
+    */
+    protected function genUInt64UUID($data, $router=null)
+    {
+        // +-4Bytes-+-2Bytes-+-1Byte-+-1Byte-+
+        // timestamp + microtime + Node name
+        $sharding_len = count($this->shardings);
+        if ( $sharding_len > 255 ) {
+            throw new Exception("sharding length greater than 255");
+        }
+
+        $uuid = 0x00;
+        $tArr = explode(' ', microtime());
+        $tsec = $tArr[1];
+        $msec = $tArr[0];
+        if ( ($sIdx = strpos($msec, '.')) !== false ) {
+            $msec = substr($msec, $sIdx + 1);
+        }
+
+        $msec  = ($msec & 0x0000FFFF);  // only keep 2 bytes
+        $uuid  = ($tsec << 32);         // timestamp
+        $uuid |= ($msec << 16);         // microtime
+
+        // check and append the node sharding index
+        if ( isset($data[$router]) ) {
+            $routerVal = self::__hash($data[$router]);
+        } else {
+            $routerVal = mt_rand(0, 0x7FFFFF);
+        }
+
+        $sharding_idx = $routerVal % $sharding_len;
+        $uuid |= (($sharding_idx & 0xFF) << 8);
+
+        // check and append the serial no
+        if ( defined('SR_NODE_NAME') ) {
+            $nstr  = substr(md5(SR_NODE_NAME), 0, 2);
+            $uuid |= hexdec($nstr) & 0xFF;  // node name serial no
+        } else {
+            $uuid |= mt_rand(0, 0xFF);      // ramdom node serial
+        }
+
+        return $uuid;
     }
 
 
