@@ -1264,16 +1264,20 @@ class RouterShardingModel implements IModel
     public static function __hash($str)
     {
         $hval = 0;
-        $len  = strlen($str);
-    
+
         /*
          * 4-bytes integer we will directly take
          * its int value as the final hash value.
+         *
+         * @Note Add 8-bytes integer support at 2018/12/25
         */
-        if ( $len <= 11 && is_numeric($str) ) {
+        if ( is_integer($str) ) {
+            $hval = $str;
+        } else if ( strlen($str) <= 19 && is_numeric($str) ) {
             $hval = intval($str);
         } else {
-            for ( $i = 0; $i < $len; $i++ ) {
+            $slen = strlen($str);
+            for ( $i = 0; $i < $slen; $i++ ) {
                 //$hval =  (int)($hval * 1331 + (ord($str[$i]) % 127));
                 // prevent int overflow
                 // @note fixed at 2016-12-20
