@@ -105,8 +105,14 @@ class Mysql implements Idb
         }
 
         //print the query string for debug    
-        if ( $this->_debug ) {
-            echo ($_sidx === 0 ? 'Master' : 'Slave') . "#query: {$_query} <br/>\n" ;
+        if ( $this->_debug !== false ) {
+            if ( is_string($this->_debug) ) {
+                call_user_func(
+                    $this->_debug, 
+                    ($_sidx === 0 ? 'Master' : 'Slave') . "#query: {$_query}");
+            } else {
+                echo ($_sidx === 0 ? 'Master' : 'Slave') . "#query: {$_query}" ;
+            }
         }
 
         /**
