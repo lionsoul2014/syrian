@@ -221,4 +221,15 @@ class RedisList implements IList
         return $this->connect()->del($this->key);
     }
 
+    /**
+     * close the connection
+    */
+    public function close()
+    {
+        if ( $this->redis != null ) {
+            $this->redis->close();
+            $this->redis = null;
+        }
+    }
+
 }

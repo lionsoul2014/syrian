@@ -307,4 +307,15 @@ class RedisMap implements IMap
         return $this->connect()->hDel($this->key, $key);
     }
 
+    /**
+     * close the connection
+    */
+    public function close()
+    {
+        if ( $this->redis != null ) {
+            $this->redis->close();
+            $this->redis = null;
+        }
+    }
+
 }

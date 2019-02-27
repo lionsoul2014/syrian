@@ -25,6 +25,7 @@ interface IMap
 
     public function exists($key);
     public function del($key);
+    public function close();
 }
 
  //----------------------------------------------------

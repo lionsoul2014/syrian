@@ -17,6 +17,7 @@ interface IList
     public function rpop($callback);
     public function size();
     public function remove();
+    public function close();
 }
 
  //----------------------------------------------------
