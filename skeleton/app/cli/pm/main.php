@@ -150,10 +150,8 @@ class PmController extends Cli_Controller
 
         echo "+-New monitor started\n";
         while (true) {
-            if ( $this->process_state == CLI_PROC_EXIT ) {
-                break;
-            }
-
+            /* Check and dispatch the process signal */
+            $this->dispatchSignal();
             foreach ( $trackArr as $key => $cmdObj ) {
                 echo "+Test command \"{$cmdObj->cmd}\" ... ";
                 if ( ! file_exists($cmdObj->pFile) ) {

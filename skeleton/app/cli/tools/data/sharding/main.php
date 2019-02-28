@@ -47,9 +47,7 @@ class ShardingController extends Cli_Controller
 
         $Id = $startPos;
         for ( ; ; ) {
-            if ( $this->process_state == CLI_PROC_EXIT ) {
-                break;
-            }
+            $this->dispatchSignal();
 
             /*
              * check and do the intelligent logic

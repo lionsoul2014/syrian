@@ -22,9 +22,7 @@ class TestController extends Cli_Controller
             echo "|----[complete]\n";
 
             //check and handler the process state change
-            if ( $this->process_state == CLI_PROC_EXIT ) {
-                break;
-            }
+            $this->dispatchSignal();
         }
 
         echo "|--Process exited\n";
