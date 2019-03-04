@@ -35,6 +35,13 @@ class C_Model implements IModel
     protected $autoPrimaryKey = false;
 
     /**
+     * UID strategy
+     * optional value: uint64, hex32str
+    */
+    protected   $uid_strategy = 'hex32str';
+
+
+    /**
      * @Note: this is a core function added at 2015-06-13
      * with this you could sperate the fields of you table
      *     so store them in different section
@@ -1307,12 +1314,28 @@ class C_Model implements IModel
     }
 
     /**
+     * internal function to generate a universal unique identifier
+     *
+     * @param   $data
+     * @param   $router
+     * @return  Mixed
+    */
+    protected function genUUID($data)
+    {
+        if ( $this->uid_strategy[0] == 'u' ) {  // uint64
+            return $this->genUInt64UUID($data);
+        } else {    // default to hex 32 string
+            return $this->genHStr32UUID($data);
+        }
+    }
+
+    /**
      * generate a universal unique identifier
      *
      * @param   $data   original data
      * @return  String
     */
-    protected function genUUID($data)
+    public function genHStr32UUID($data)
     {
         /*
          * 1, create a guid
@@ -1348,7 +1371,7 @@ class C_Model implements IModel
      * @param   $data   original data
      * @return  String
     */
-    protected function genUInt64UUID($data)
+    public function genUInt64UUID($data)
     {
         // +-4Bytes-+-2Bytes-+-2Byte
         // timestamp + microtime + Node name
