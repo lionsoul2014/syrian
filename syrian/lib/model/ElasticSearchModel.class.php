@@ -58,6 +58,12 @@ class ElasticSearchModel implements IModel
     protected   $primary_key    = null;
 
     /**
+     * UID strategy
+     * optional value: uint64, hex32str
+    */
+    protected   $uid_strategy = 'hex32str';
+
+    /**
      * router field
      * @Note: not implmented for now
     */
@@ -2044,13 +2050,28 @@ EOF;
     }
 
     /**
+     * internal function to generate a universal unique identifier
+     *
+     * @param   $data
+     * @param   $router
+     * @return  Mixed
+    */
+    public function genUUID($data)
+    {
+        if ( $this->uid_strategy[0] == 'u' ) {  // uint64
+            return $this->genUInt64UUID($data);
+        } else {    // default to hex 32 string
+            return $this->genHStr32UUID($data);
+        }
+    }
+
+    /**
      * generate a universal unique identifier
-     * Override it to make amazing things
      *
      * @param   $data   original data
      * @return  String
     */
-    protected function genUUID($data)
+    public function genHStr32UUID($data)
     {
         /*
          * 1, create a guid
@@ -2078,6 +2099,38 @@ EOF;
             $prefix, 
             mt_rand(0, 0xffff)
         );
+    }
+
+    /**
+     * generate a 8-bytes int unique identifier
+     *
+     * @param   $data   original data
+     * @return  String
+    */
+    public function genUInt64UUID($data)
+    {
+        // +-4Bytes-+-2Bytes-+-2Byte
+        // timestamp + microtime + Node name
+
+        $uuid = 0x00;
+        $tArr = explode(' ', microtime());
+        $tsec = $tArr[1];
+        $msec = $tArr[0];
+        if ( ($sIdx = strpos($msec, '.')) !== false ) {
+            $msec = substr($msec, $sIdx + 1);
+        }
+
+        $msec  = ($msec & 0x0000FFFF);  // only keep 2 bytes
+        $uuid  = ($tsec << 32);         // timestamp
+        $uuid |= ($msec << 16);         // microtime
+        if ( defined('SR_NODE_NAME') ) {
+            $nstr  = substr(md5(SR_NODE_NAME), 0, 4);
+            $uuid |= hexdec($nstr) & 0xFFFF;    // node name serial no
+        } else {
+            $uuid |= mt_rand(0, 0xFFFF);        // ramdom node serial
+        }
+
+        return $uuid;
     }
     
     /**

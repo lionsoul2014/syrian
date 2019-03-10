@@ -1141,7 +1141,7 @@ class RouterShardingModel implements IModel
      * @param   $router
      * @return  Mixed
     */
-    protected function genUUID($data, $router=null)
+    public function genUUID($data, $router=null)
     {
         if ( $this->uid_strategy[0] == 'u' ) {  // uint64
             return $this->genUInt64UUID($data, $router);

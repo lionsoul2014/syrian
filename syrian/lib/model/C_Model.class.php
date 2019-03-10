@@ -1320,7 +1320,7 @@ class C_Model implements IModel
      * @param   $router
      * @return  Mixed
     */
-    protected function genUUID($data)
+    public function genUUID($data)
     {
         if ( $this->uid_strategy[0] == 'u' ) {  // uint64
             return $this->genUInt64UUID($data);
