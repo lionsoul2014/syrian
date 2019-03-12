@@ -396,6 +396,33 @@ class StringUtil
         );
     }
 
+    public static function genNodeUUID()
+    {
+        $prefix = NULL;
+        if ( defined('SR_NODE_NAME') ) {
+            $prefix = substr(md5(SR_NODE_NAME), 0, 4);
+        } else {
+            $prefix = sprintf("%04x", mt_rand(0, 0xffff));
+        }
+
+        $tArr = explode(' ', microtime());
+        $tsec = $tArr[1];
+        $msec = $tArr[0];
+        if ( ($sIdx = strpos($msec, '.')) !== false ) {
+            $msec = substr($msec, $sIdx + 1);
+        }
+
+        return sprintf(
+            "%08x-%04x-%04s-%04x-%08x%04x",
+            $tsec,
+            $msec,
+            $prefix,
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffffffff),
+            mt_rand(0, 0xffff)
+        );
+    }
+
     /**
      * generate a universal unique identifier
      *

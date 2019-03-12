@@ -42,60 +42,60 @@ if ( ! function_exists('OP_SIZE') )
 
 class Filter
 {
-    private static function isLatin( $_val )
+    public static function isLatin( $_val )
     {
         return (preg_match('/^[a-z0-9_]+$/i', $_val) == 1);
     }
     
-    private static function isUrl( $_val )
+    public static function isUrl( $_val )
     {
         return (filter_var($_val, FILTER_VALIDATE_URL) != false);
     }
     
-    private static function isEmail( $_val )
+    public static function isEmail( $_val )
     {
         return (filter_var($_val, FILTER_VALIDATE_EMAIL) != false);
     }
     
-    private static function isQQ( $_val )
+    public static function isQQ( $_val )
     {
         return (preg_match('/^[1-9][0-9]{4,14}$/', $_val) == 1);
     }
     
-    private static function isDate( $_val )
+    public static function isDate( $_val )
     {
         return ( preg_match('/^[0-9]{4}-(0[1-9]|1[012])-([0][1-9]|[12][0-9]|[3][01])$/', $_val) == 1 );
     }
     
     //not all whitespace
-    private static function isString( $_val )
+    public static function isString( $_val )
     {
         return ($_val != '' && preg_match('/^\s{1,}$/', $_val) == 0);
     }
     
-    private static function isZip( $_val )
+    public static function isZip( $_val )
     {
         return (preg_match('/^[0-9]{6}$/', $_val) == 1);
     }
     
-    private static function isMobile( $_val )
+    public static function isMobile( $_val )
     {
         return (preg_match('/^1[3|5|4|7|8][0-9]{9}$/', $_val) == 1);
     }
     
-    private static function isTel( $_val )
+    public static function isTel( $_val )
     {
         return (preg_match('/^0[1-9][0-9]{1,2}-[0-9]{7,8}$/', $_val) == 1);
     }
     
-    private static function isIdentity( $_val )
+    public static function isIdentity( $_val )
     {
         return (
             preg_match('/^[1-6][0-9]{5}[1|2][0-9]{3}(0[1-9]|10|11|12)([0|1|2][0-9]|30|31)[0-9]{3}[0-9A-Z]$/',
                 $_val) == 1);
     }
 
-    private static function sanitizeHtml( &$_val )
+    public static function sanitizeHtml( &$_val )
     {
         //sanitize regex rules
         $_rules = array(
@@ -106,7 +106,7 @@ class Filter
         return preg_replace($_rules, '', $_val);
     }
     
-    private static function sanitizeScript( &$_val )
+    public static function sanitizeScript( &$_val )
     {
         //clear up the direct script.
         //clear up the onEvent of html node.
@@ -119,7 +119,7 @@ class Filter
         return preg_replace($_rules, array('', '<$1$2>'), $_val);
     }
     
-    private static function check( &$_val, $_model, &$_errno )
+    public static function check( &$_val, $_model, &$_errno )
     {
         //1. data type check
         if ( $_val == NULL ) return '';

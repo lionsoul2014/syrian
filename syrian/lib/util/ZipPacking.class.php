@@ -25,14 +25,18 @@ class ZipPacking
      *
      * @param   $tmpDir
     */
-    public function __construct($tmpDir='/tmp/')
+    public function __construct($tmpDir='/tmp/', $file=null)
     {
-        $this->tmpFile = implode('', array(
-            $tmpDir,
-            microtime(true),
-            mt_rand(0, 0x7FFF),
-            '.zip'
-        ));
+        if ( $file == null ) {
+            $this->tmpFile = implode('', array(
+                $tmpDir,
+                microtime(true),
+                mt_rand(0, 0x7FFF),
+                '.zip'
+            ));
+        } else {
+            $this->tmpFile = $file;
+        }
 
         $this->ziper = new ZipArchive();
         if ( $this->ziper->open(

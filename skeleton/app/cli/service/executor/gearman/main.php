@@ -76,9 +76,7 @@ class GearmanController extends Cli_Controller
         while ($worker->work()) {
             sleep(0);   //so, the singal could work
             //check and aplly the process state change
-            if ( $this->process_state == CLI_PROC_EXIT ) {
-                break;
-            }
+            $this->dispatchSignal();
         }
     }
 
