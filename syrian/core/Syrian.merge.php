@@ -923,7 +923,7 @@ function bkdr_hash($str)
 function build_signature($factors, $timer=null)
 {
     $seeds = '=~!@#$%^&*()_+{}|\;:\',./<>"%%`~?~';
-    $s_len = strlen($seeds);
+    $s_len = 33;
     $random = "0000";
     $hval = 0;
     $slen = 0;
@@ -931,12 +931,16 @@ function build_signature($factors, $timer=null)
     $encrypt = array('^');
     foreach ( $factors as $val ) {
         $encrypt[] = $val;
-
-        $hval = 0;
         $slen = strlen($val);
-        for ( $i = 0; $i < $slen; $i++ ) {
-            $hval = $hval * 131 + ord($val[$i]);
-        }
+
+        // $hval = 0;
+        // for ( $i = 0; $i < $slen; $i++ ) {
+        //     $hval = $hval * 131 + ord($val[$i]);
+        // }
+        $v = "{$val}";
+        $hval = ord($v[0]);
+        $hval = $hval * 131  + ord($v[intval($slen/2)]);
+        $hval = $hval * 1331 + ord($v[$slen-1]);
         $hval = ($hval & 0x7FFFFFFF);
 
         $sIdx = $hval % $s_len;
