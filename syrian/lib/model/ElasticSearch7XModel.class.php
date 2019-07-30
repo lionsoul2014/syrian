@@ -612,21 +612,21 @@ class ElasticSearch7XModel implements IModel
         }
 
         //check and define the from, size attributes
-        if ( $from >= 0 ) $queryDSL['from'] = $from;
-        if ( $size >  0 ) $queryDSL['size'] = $size;
+        if ( $from > 0 ) $queryDSL['from'] = $from;
+        if ( $size > 0 ) $queryDSL['size'] = $size;
 
         //check and define the highlight options
         //rewrite the user define and auto set the fields
         if ( isset($_query['highlight']) ) {
             $highlight = array(
                 'tags_schema' => 'styled',
-                'pre_tags'    => array('<b class="es-jcseg-highlight">'),
+                'pre_tags'    => array('<b class="hit-hl">'),
                 'post_tags'   => array('</b>'),
                 'order'       => 'score',
                 'number_of_fragments' => 1,
                 'fragment_size' => 86,
                 'no_match_size' => 86,
-                'type'   => 'fvh',
+                'type'   => 'plain',
                 'fields' => null
             );
 
@@ -635,7 +635,7 @@ class ElasticSearch7XModel implements IModel
             }
 
             //check and pre-process the highlight fields
-            if ( $highlight['fields'] == null ) {
+            if ( ! isset($highlight['fields']) ) {
                 $fields = array();
                 if ( is_string($_query['field']) ) {
                     $fields[$_query['field']] = array(
