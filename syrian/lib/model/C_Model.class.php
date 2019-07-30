@@ -1371,10 +1371,13 @@ class C_Model implements IModel
      * @param   $data   original data
      * @return  String
     */
+    private static $uint64_seed = 0;
     public function genUInt64UUID($data)
     {
-        // +-4Bytes-+-2Bytes-+-2Byte
-        // timestamp + microtime + Node name
+        // version 1: +-4Bytes-+-2Bytes-+-2Byte
+        // version 2: +-4Bytes-+-3Bytes-+-1Byte
+        // version 3: +-4Bytes-+-2Bytes-+-1byte+-1Byte
+        // timestamp + microtime + Node name + static increase
 
         $uuid = 0x00;
         $tArr = explode(' ', microtime());
@@ -1384,14 +1387,14 @@ class C_Model implements IModel
             $msec = substr($msec, $sIdx + 1);
         }
 
-        $msec  = ($msec & 0x0000FFFF);  // only keep 2 bytes
+        $msec  = ($msec & 0x00FFFFFF);  // keep 3 bytes
         $uuid  = ($tsec << 32);         // timestamp
-        $uuid |= ($msec << 16);         // microtime
+        $uuid |= ($msec << 8);          // microtime
         if ( defined('SR_NODE_NAME') ) {
-            $nstr  = substr(md5(SR_NODE_NAME), 0, 4);
-            $uuid |= hexdec($nstr) & 0xFFFF;    // node name serial no
+            $nstr  = substr(md5(SR_NODE_NAME), 0, 2);
+            $uuid |= hexdec($nstr) & 0xFF;    // node name serial no
         } else {
-            $uuid |= mt_rand(0, 0xFFFF);        // ramdom node serial
+            $uuid |= mt_rand(0, 0xFF);        // ramdom node serial
         }
 
         return $uuid;
