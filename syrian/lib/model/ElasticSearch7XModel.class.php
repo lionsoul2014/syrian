@@ -98,7 +98,6 @@ class ElasticSearch7XModel implements IModel
         //TODO:
         /*
          * Add $this->primary_key for the main key of the table
-         * Set $this->type = elasticsearch type name
          * Set $this->fields = fields mapping
          * Set $this->router = field name
         */
@@ -620,10 +619,10 @@ class ElasticSearch7XModel implements IModel
         //rewrite the user define and auto set the fields
         if ( isset($_query['highlight']) ) {
             $highlight = array(
-                'tag_schema' => 'styled',
-                'pre_tags'   => array('<b class="es-jcseg-highlight">'),
-                'post_tags'  => array('</b>'),
-                'order'      => 'score',
+                'tags_schema' => 'styled',
+                'pre_tags'    => array('<b class="es-jcseg-highlight">'),
+                'post_tags'   => array('</b>'),
+                'order'       => 'score',
                 'number_of_fragments' => 1,
                 'fragment_size' => 86,
                 'no_match_size' => 86,
@@ -640,13 +639,13 @@ class ElasticSearch7XModel implements IModel
                 $fields = array();
                 if ( is_string($_query['field']) ) {
                     $fields[$_query['field']] = array(
-                        'boost' => 1
+                        'type' => 'plain'
                     );
                 } else {
                     foreach ( $_query['field'] as $field_name ) {
                         $field_name = preg_replace('/\^\d+/', '', $field_name);
                         $fields[$field_name] = array(
-                            'boost' => 1
+                            'type' => 'plain'
                         );
                     }
                 }
@@ -1211,7 +1210,7 @@ class ElasticSearch7XModel implements IModel
     public function getById($_fields, $id)
     {
         $_src = $this->getQueryFieldArgs($_fields);
-        $json = $this->_request('GET', null, "{$this->index}/{$id}", $_src, true);
+        $json = $this->_request('GET', null, "{$this->index}/_doc/{$id}", $_src, true);
         if ( $json == false ) {
             return false;
         }
@@ -1316,7 +1315,7 @@ class ElasticSearch7XModel implements IModel
                 throw new Exception("Missing mapping for {$this->primary_key} in the source data");
             }
 
-            $workload[] = "{\"index\":{\"_index\":\"{$this->index}\",\"_type\":\"{$this->type}\",\"_id\":\"{$id}\"}}";
+            $workload[] = "{\"index\":{\"_index\":\"{$this->index}\",\"_id\":\"{$id}\"}}";
 
             //do the data types conversion
             $this->stdDataTypes($val);
@@ -1329,7 +1328,6 @@ class ElasticSearch7XModel implements IModel
          * well it maybe a bug of elasticsearch, but we have to do it this way
         */
         $workload[] = "\n";
-
         $_DSL = implode("\n", $workload);
         $json = $this->_request('PUT', $_DSL, "{$this->index}/_bulk");
         if ( $json == false || ! isset($json->items) ) {
@@ -1401,7 +1399,7 @@ class ElasticSearch7XModel implements IModel
         while ( ($ret = $this->scroll($iterator)) != false ) {
             $workload = array();
             foreach ( $ret['data'] as $val ) {
-                $workload[] = "{\"update\":{\"_index\":\"{$val['_index']}\",\"_type\":\"{$val['_type']}\",\"_id\":\"{$val['_id']}\"}}";
+                $workload[] = "{\"update\":{\"_index\":\"{$val['_index']}\",\"_id\":\"{$val['_id']}\"}}";
                 $workload[] = $cData;
             }
 
@@ -1692,7 +1690,7 @@ class ElasticSearch7XModel implements IModel
             //build the batch workload
             $workload = array();
             foreach ( $ret['data'] as $val ) {
-                $workload[] = "{\"delete\":{\"_index\":\"{$val['_index']}\",\"_type\":\"{$val['_type']}\",\"_id\":\"{$val['_id']}\"}}";
+                $workload[] = "{\"delete\":{\"_index\":\"{$val['_index']}\",\"_id\":\"{$val['_id']}\"}}";
             }
 
             $workload[] = "\n";
@@ -1858,7 +1856,7 @@ class ElasticSearch7XModel implements IModel
                 continue;
             }
 
-            //1. get the original data type
+            // 1. get the original data type
             $value = &$data[$key];
             switch ( $attr['type'] ) {
             case 'long':
