@@ -2151,72 +2151,74 @@ EOF;
     */
     public static function array2Json($data)
     {
-        if ( ! is_array($data) ) {
-            $type = gettype($data);
-            switch ( $type[0] ) {
-            case 'b':
-                return $data ? 'true' : 'false';
-            case 'i':
-            case 'd':
-            case 'N':
-                return $data;
-            case 's':
-                return '"'.self::addslash($data).'"';
-            default:
-                return null;
-            }
-        }
+        // if ( ! is_array($data) ) {
+        //     $type = gettype($data);
+        //     switch ( $type[0] ) {
+        //     case 'b':
+        //         return $data ? 'true' : 'false';
+        //     case 'i':
+        //     case 'd':
+        //     case 'N':
+        //         return $data;
+        //     case 's':
+        //         return '"'.self::addslash($data).'"';
+        //     default:
+        //         return null;
+        //     }
+        // }
 
-        //define the associative attribute
-        $isAssoc = false;
-        foreach ( $data as $key => $val ) {
-            if ( is_string($key) ) {
-                $isAssoc = true;
-                break;
-            }
-        }
+        // //define the associative attribute
+        // $isAssoc = false;
+        // foreach ( $data as $key => $val ) {
+        //     if ( is_string($key) ) {
+        //         $isAssoc = true;
+        //         break;
+        //     }
+        // }
 
-        $buff = [];
-        foreach ( $data as $key => $val ) {
-            $type = gettype($val);
-            switch ( $type[0] ) {
-            case 'o':   //object
-                $val = '{}';
-                break;
-            case 'r':   //resource
-                continue;
-                break;
-            case 'b':   //boolean
-                $val = $val ? 'true' : 'false';
-                break;
-            case 'i':   //integer
-            case 'd':   //double
-            case 'N':   //null
-                //leave it unchange
-                break;
-            case 's':
-                $val = '"'.self::addslash($val, '"').'"';
-                break;
-            case 'a':
-                $val = self::array2Json($val);
-                break;
-            }
+        // $buff = [];
+        // foreach ( $data as $key => $val ) {
+        //     $type = gettype($val);
+        //     switch ( $type[0] ) {
+        //     case 'o':   //object
+        //         $val = '{}';
+        //         break;
+        //     case 'r':   //resource
+        //         continue;
+        //         break;
+        //     case 'b':   //boolean
+        //         $val = $val ? 'true' : 'false';
+        //         break;
+        //     case 'i':   //integer
+        //     case 'd':   //double
+        //     case 'N':   //null
+        //         //leave it unchange
+        //         break;
+        //     case 's':
+        //         $val = '"'.self::addslash($val, '"').'"';
+        //         break;
+        //     case 'a':
+        //         $val = self::array2Json($val);
+        //         break;
+        //     }
 
-            //check and append the key
-            if ( $isAssoc ) {
-                $buff[] = "\"{$key}\":{$val}";
-            } else {
-                $buff[] = $val;
-            }
-        }
+        //     //check and append the key
+        //     if ( $isAssoc ) {
+        //         $buff[] = "\"{$key}\":{$val}";
+        //     } else {
+        //         $buff[] = $val;
+        //     }
+        // }
 
-        if ( $isAssoc ) {
-            $json = '{'.implode(',', $buff).'}';
-        } else {
-            $json = '['.implode(',', $buff).']';
-        }
+        // if ( $isAssoc ) {
+        //     $json = '{'.implode(',', $buff).'}';
+        // } else {
+        //     $json = '['.implode(',', $buff).']';
+        // }
 
-        return $json;
+        // return $json;
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
     }
 
     /**
