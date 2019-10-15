@@ -2218,7 +2218,12 @@ EOF;
 
         // return $json;
 
-        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
+        $mask = JSON_UNESCAPED_UNICODE;
+        if ( version_compare(PHP_VERSION, '7.2.0', '>=') ) {
+            $mask |= JSON_INVALID_UTF8_IGNORE;
+        }
+
+        return json_encode($data, $mask);
     }
 
     /**
