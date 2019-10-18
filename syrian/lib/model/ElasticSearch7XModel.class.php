@@ -620,7 +620,7 @@ class ElasticSearch7XModel implements IModel
         if ( isset($_query['highlight']) ) {
             $highlight = array(
                 'tags_schema' => 'styled',
-                'pre_tags'    => array('<b class="hit-hl">'),
+                'pre_tags'    => array('<b class="hl">'),
                 'post_tags'   => array('</b>'),
                 'order'       => 'score',
                 'number_of_fragments' => 1,
@@ -1223,6 +1223,8 @@ class ElasticSearch7XModel implements IModel
          *  "_id": "18032",
          *  "_version": 2,
          *  "found": true,
+         *  "_seq_no" : 10,
+         *  "_primary_term" : 1,
          *  "_source": {
          *      "title": "...",
          *      "cate_id": 35,
@@ -1274,25 +1276,24 @@ class ElasticSearch7XModel implements IModel
         // do the data types convertion
         $this->stdDataTypes($data);
         $_DSL = self::array2Json($data);
-        $json = $this->_request('PUT', $_DSL, "{$this->index}/{$id}");
+        $json = $this->_request('PUT', $_DSL, "{$this->index}/_doc/{$id}");
         if ( $json == false ) {
             return false;
         }
 
         /*
-         * api return:
-         * {
-         *  "_index":"stream",
-         *  "_type":"main",
-         *  "_id":"5717659b01b9402816458d4a",
-         *  "_version":1,
-         *  "_shards":{
-         *      "total":2,
-         *      "successful":1,
-         *      "failed":0
-         *  },
-         *  "created":true
-         * }
+         * "_shards" : {
+         *   "total" : 2,
+         *   "failed" : 0,
+         *   "successful" : 2
+         * },
+         * "_index" : "index",
+         * "_type" : "_doc",
+         * "_id" : "W0tpsmIBdwcYyG50zbta",
+         * "_version" : 1,
+         * "_seq_no" : 0,
+         * "_primary_term" : 1,
+         * "result": "created"
         */
 
         return isset($json->_id) ? $json->_id : $id;
@@ -1329,7 +1330,7 @@ class ElasticSearch7XModel implements IModel
         */
         $workload[] = "\n";
         $_DSL = implode("\n", $workload);
-        $json = $this->_request('PUT', $_DSL, "{$this->index}/_bulk");
+        $json = $this->_request('POST', $_DSL, "{$this->index}/_bulk");
         if ( $json == false || ! isset($json->items) ) {
             return false;
         }
@@ -1464,7 +1465,7 @@ class ElasticSearch7XModel implements IModel
          * doc (instance of elasticsearch document) keywords used here
         */
         $_DSL = self::array2Json(array('doc' => $data));
-        $json = $this->_request('POST', $_DSL, "{$this->index}/{$id}/_update");
+        $json = $this->_request('POST', $_DSL, "{$this->index}/_update/{$id}");
         if ( $json == false ) {
             return false;
         }
@@ -1529,8 +1530,6 @@ class ElasticSearch7XModel implements IModel
      * @param   $_field
      * @param   $_offset
      * @param   $id
-     * @Note    the fields_increase.groovy script must be compile
-     *  and loaded by elasticsearch, recommend to use the elasticsearch-jcseg
     */
     public function increaseById($_field, $_offset, $id)
     {
@@ -1549,10 +1548,9 @@ class ElasticSearch7XModel implements IModel
 
         $workload = array();
         $workload['script'] = array(
-            'file'   => 'fields_increase',
-            'lang'   => 'groovy',
+            'source' => "ctx._source.counter += params.count",
+            'lang'   => 'painless',
             'params' => array(
-                'act'    => 'increase',
                 'fields' => $fields,
                 'values' => $values
             )
@@ -1560,7 +1558,7 @@ class ElasticSearch7XModel implements IModel
 
         $_DSL = self::array2Json($workload);
         $args = array('retry_on_conflict' => 5);
-        $json = $this->_request('POST', $_DSL, "{$this->index}/{$id}/_update", $args);
+        $json = $this->_request('POST', $_DSL, "{$this->index}/_update/{$id}", $args);
         if ( $json == false ) {
             return false;
         }
@@ -1568,14 +1566,18 @@ class ElasticSearch7XModel implements IModel
         /*
          * api return:
          * {
-         *  "_index":"stream",
-         *  "_type":"main",
-         *  "_id":"141097",
-         *  "_version":2,
-         *  "_shards":{
-         *      "total":2,
-         *      "successful":1,
-         *      "failed":0
+         *  "_shards": {
+         *      "total": 0,
+         *      "successful": 0,
+         *      "failed": 0
+         *  },
+         *  "_index": "test",
+         *  "_type": "_doc",
+         *  "_id": "1",
+         *  "_version": 7,
+         *  "_primary_term": 1,
+         *  "_seq_no": 6,
+         *  "result": "noop"
          *  }
          * }
         */
@@ -1634,7 +1636,7 @@ class ElasticSearch7XModel implements IModel
 
         $_DSL = self::array2Json($workload);
         $args = array('retry_on_conflict' => 5);
-        $json = $this->_request('POST', $_DSL, "{$this->index}/{$id}/_update", $args);
+        $json = $this->_request('POST', $_DSL, "{$this->index}/_update/{$id}", $args);
         if ( $json == false ) {
             return false;
         }
@@ -1658,12 +1660,7 @@ class ElasticSearch7XModel implements IModel
     }
 
     /**
-     * Delete the specified records
-     * @Note: query delete is not support by default for elasticsearch.
-     * 1, query the first {$this->deleteTraffic} records and get the totals records and 
-     *  send the batch delete DSL to the _bulk terminal
-     * 2, if the totals records is more than {$this->deleteTraffic}, continue the above work
-     *  until all the records is deleted
+     * Delete the specified records fetched from a query
      *
      * @param   $_where
      * @param   $frag_recur
@@ -1675,22 +1672,16 @@ class ElasticSearch7XModel implements IModel
             throw new Exception("Empty delete condition is not allow");
         }
 
-        /*
-         * get the query iterator
-        */
-        $iterator = $this->iterator(
-            false, $_where, array('_doc'=>'asc'), $this->deleteTraffic, 2
-        );
-        if ( $iterator == false ) {
-            return false;
-        }
+        /* intercept the primary key deletion and translate it as a bulk request */
+        if ( count($_where) == 1 && isset($_where[$this->primary_key]) ) {
+            $id_set = $_where[$this->primary_key];
+            $sIdx = strpos($id_set, '(');
+            $eIdx = strrpos($id_set, ')');
+            $_ids = explode(',', substr($id_set, $sIdx, $eIdx - $sIdx));
 
-        $count  = 0;
-        while ( ($ret = $this->scroll($iterator)) != false ) {
-            //build the batch workload
             $workload = array();
-            foreach ( $ret['data'] as $val ) {
-                $workload[] = "{\"delete\":{\"_index\":\"{$val['_index']}\",\"_id\":\"{$val['_id']}\"}}";
+            foreach ( $_ids as $id ) {
+                $workload[] = "{\"delete\":{\"_index\":\"{$this->index}\",\"_id\":\"{$id}\"}}";
             }
 
             $workload[] = "\n";
@@ -1700,67 +1691,46 @@ class ElasticSearch7XModel implements IModel
                 return false;
             }
 
-            /*
-             * api return:
-             * {
-             *  "took": 71,
-             *  "errors": false,
-             *  "items": [{
-             *      "delete": {
-             *          "_index": "stream",
-             *          "_type": "main",
-             *          "_id": "17895",
-             *          "_version": 2,
-             *          "_shards": {
-             *              "total": 2,
-             *              "successful": 1,
-             *              "failed": 0
-             *          },
-             *          "status": 200,
-             *          "found": true
-             *      }
-             *  }]
-             * }
-            */ 
+            $ok_count = 0;
             foreach ( $json->items as $item ) {
-                if ( isset($item->delete) && $item->delete->found ) {
-                    $count++;
+                if ( isset($item->delete->_id) ) {
+                    $ok_count++;
                 }
             }
+
+            return $ok_count;
         }
 
-        return $count;
+        return false;
     }
 
     //delete by primary key
     //@frament suports
     public function deleteById($id)
     {
-        $json = $this->_request('DELETE', null, "{$this->index}/{$id}");
+        $json = $this->_request('DELETE', null, "{$this->index}/_doc/{$id}");
         if ( $json == false ) {
             return false;
         }
 
         /*
          * api return: 
-         * {
-         *  "found":true,
-         *  "_index":
-         *  "stream",
-         *  "_type":
-         *  "main",
-         *  "_id":"141090",
-         *  "_version":7,
-         *  "_shards":{
-         *      "total":2,
-         *      "successful":1,
-         *      "failed":0
-         *   }
-         * }
+         *  "_shards" : {
+         *  "total" : 2,
+         *  "failed" : 0,
+         *  "successful" : 2
+         * },
+         * "_index" : "twitter",
+         * "_type" : "_doc",
+         * "_id" : "1",
+         * "_version" : 2,
+         * "_primary_term": 1,
+         * "_seq_no": 5,
+         * "result": "deleted"
         */
 
-        if ( isset($json->found) ) {
-            return $json->found;
+        if ( isset($json->result) ) {
+            return $json->result == 'deleted' ? true : false;
         }
 
         return isset($json->_id) ? true : false;
@@ -1866,6 +1836,7 @@ class ElasticSearch7XModel implements IModel
                 if ( ! is_long($value) )    $value = intval($value);
                 break;
             case 'float':
+            case 'half_float':
                 if ( ! is_float($value) )   $value = floatval($value);
                 break;
             case 'double':
