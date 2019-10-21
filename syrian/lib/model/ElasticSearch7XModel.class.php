@@ -979,6 +979,89 @@ class ElasticSearch7XModel implements IModel
         return $json->count;
     }
 
+    /** 
+     * do the bulk with all primary key operations .
+     * [
+     *  {
+     *      "create": {
+     *          id: {...}
+     *      },
+     *      "index": {
+     *          id: {...}
+     *          ...
+     *      },
+     *      "delete": [id1, id2, id3, ...],
+     *      "update": {
+     *          id: {...}
+     *          ...
+     *      }
+     *  }
+     * ]
+     *
+     * @param   $data
+     * @param   $affected_rows
+     * @return  Mixed (Array or integer with affected rows)
+    */
+    public function bulk($data, $affected_rows=true)
+    {
+        $index = $this->index;
+        $workload = array();
+        foreach ( $data as $opt => $list ) {
+            switch ( $opt ) {
+            case 'create':
+            case 'index' :
+                foreach ( $list as $id => $val ) {
+                    $workload[] = "{\"{$opt}\":{\"_index\":\"{$index}\",\"_id\":{$id}}}";
+                    $this->stdDataTypes($val);
+                    $workload[] = self::array2Json($val);
+                }
+                break;
+            case 'delete':
+                /* With id string delimited by ',' support */
+                if ( is_string($list) ) {
+                    $list = explode(',', $list);
+                }
+                foreach ( $list as $id ) {
+                    $workload[] = "{\"{$opt}\":{\"_index\":\"{$index}\",\"_id\":{$id}}}";
+                }
+                break;
+            case 'update':
+                $attr = isset($list['attr']) ? $list['attr'] : null;
+                unset($list['attr']);
+                foreach ( $list as $id => $val ) {
+                    $workload[] = "{\"{$opt}\":{\"_index\":\"{$index}\",\"_id\":{$id}}}";
+                    $this->stdDataTypes($val);
+                    $workload[] = self::array2Json(array('doc' => $val));
+                }
+                break;
+            default:
+                throw new Exception("Invalid bulk operation type {$opt}");
+            }
+        }
+
+        $workload[] = "\n";
+        $_DSL = implode("\n", $workload);
+        $json = $this->_request('POST', $_DSL, "{$this->index}/_bulk");
+        if ( $json == false || ! isset($json->items) ) {
+            return false;
+        }
+
+        if ( $affected_rows == false ) {
+            return $json->items;
+        }
+
+        $ok_count = 0;
+        foreach ( $json->items as $item ) {
+            foreach ( $item as $k => $v ) {
+                if ( isset($v->_id) ) {
+                    $ok_count++;
+                }
+            }
+        }
+
+        return $ok_count;
+    }
+
     /**
      * Get a vector from the specified source
      *
