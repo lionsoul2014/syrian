@@ -1674,31 +1674,43 @@ class ElasticSearch7XModel implements IModel
 
         /* intercept the primary key deletion and translate it as a bulk request */
         if ( count($_where) == 1 && isset($_where[$this->primary_key]) ) {
-            $id_set = $_where[$this->primary_key];
-            $sIdx = strpos($id_set, '(');
-            $eIdx = strrpos($id_set, ')');
-            $_ids = explode(',', substr($id_set, $sIdx, $eIdx - $sIdx));
-
-            $workload = array();
-            foreach ( $_ids as $id ) {
-                $workload[] = "{\"delete\":{\"_index\":\"{$this->index}\",\"_id\":\"{$id}\"}}";
+            $value  = strtolower(trim($_where[$this->primary_key]));
+            $opcode = $value[0];
+            switch ( $opcode ) {
+            case '=':   // equal query
+                $_ids = array(substr($value, 1));
+                break;
+            case 'i':   // in query
+                $sIdx = strpos($value, '(') + 1;
+                $eIdx = strrpos($value, ')');
+                $_ids = explode(',', substr($value, $sIdx, $eIdx - $sIdx));
+                break;
+            default:
+                $_ids = false;
             }
 
-            $workload[] = "\n";
-            $_DSL = implode("\n", $workload);
-            $json = $this->_request('POST', $_DSL, "{$this->index}/_bulk");
-            if ( $json == false || ! isset($json->items) ) {
-                return false;
-            }
-
-            $ok_count = 0;
-            foreach ( $json->items as $item ) {
-                if ( isset($item->delete->_id) ) {
-                    $ok_count++;
+            if ( $_ids != false ) {
+                $workload = array();
+                foreach ( $_ids as $id ) {
+                    $workload[] = "{\"delete\":{\"_index\":\"{$this->index}\",\"_id\":\"{$id}\"}}";
                 }
-            }
 
-            return $ok_count;
+                $workload[] = "\n";
+                $_DSL = implode("\n", $workload);
+                $json = $this->_request('POST', $_DSL, "{$this->index}/_bulk");
+                if ( $json == false || ! isset($json->items) ) {
+                    return false;
+                }
+
+                $ok_count = 0;
+                foreach ( $json->items as $item ) {
+                    if ( isset($item->delete->_id) ) {
+                        $ok_count++;
+                    }
+                }
+
+                return $ok_count;
+            }
         }
 
         return false;
