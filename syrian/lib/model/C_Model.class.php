@@ -423,11 +423,11 @@ class C_Model implements IModel
             $_fields = $this->getSqlFields($_fields, $a_fields);
         }
 
-        $_sql = 'select ' . $_fields . ' from ' . $this->table;
-        if ( $_where != NULL ) $_sql .= ' where ' . $_where;
-        if ( $_group != NULL ) $_sql .= ' group by ' . $_group;
-        if ( $_order != NULL ) $_sql .= ' order by ' . $_order;
-        if ( $_limit != NULL ) $_sql .= ' limit ' . $_limit;
+        $_sql = "select {$_fields} from {$this->table}";
+        if ( $_where != NULL ) $_sql .= " where {$_where}";
+        if ( $_group != NULL ) $_sql .= " group by {$_group}";
+        if ( $_order != NULL ) $_sql .= " order by {$_order}";
+        if ( $_limit != NULL ) $_sql .= " limit {$_limit}";
 
         $ret = $this->db->getList($_sql, MYSQLI_ASSOC, $this->_srw);
         if ( $ret == false ) return false;
@@ -555,7 +555,7 @@ class C_Model implements IModel
             $_fields = $this->getSqlFields($_fields, $a_fields);
         }
 
-        $sql = 'select '.$_fields.' from ' . $this->table . ' where ' . $_where;
+        $sql = "select {$_fields} from {$this->table} where {$_where}";
         $ret = $this->db->getOneRow($sql, MYSQLI_ASSOC, $this->_srw);
         if ( $ret == false ) return false;
 
@@ -916,6 +916,41 @@ class C_Model implements IModel
             array($this->primary_key => "='{$id}'"),
             $affected_rows
         );
+    }
+
+    /** 
+     * case set implementation .
+     *
+     * @param   $field  field to update
+     * @param   $values value mapping with (case value : field value)
+     * @param   $case_field field for case
+     * @param   $_where where condition
+     * @param   $affected_rows return the affected rows ?
+     * @return  Mixed (False for failed)
+    */
+    public function setByCase(
+        $field, $values, $case_field, $_where=null, $affected_rows=true)
+    {
+        $_sql   = array();
+        $_sql[] = "UPDATE {$this->table} SET {$field}=(CASE {$case_field}";
+
+        /* build the when then conditions */
+        foreach ( $values as $val ) {
+            $_sql[] = "WHEN {$val[0]} THEN '{$val[1]}'";
+        }
+
+        $_sql[] = 'END)';
+        if ( $_where != null ) {
+            $_sql[] = "WHERE";
+            $_sql[] = is_array($_where) ? $this->getSqlWhere($_where) : $_where;
+        }
+
+        $_ret = $this->db->execute(implode(' ', $_sql), Idb::WRITE_OPT, false, false);
+        if ( $_ret == FALSE ) {
+            return false;
+        }
+
+        return $affected_rows ? $this->db->getAffectedRows() : true;
     }
 
     /**
