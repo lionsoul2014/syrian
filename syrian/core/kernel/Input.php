@@ -140,11 +140,12 @@ class Input
      * Fetch an boolean from $_GET global array
      *
      * @param   $_key
+     * @param   $_default
      * @return  boolean
     */
-    public function getBoolean($_key)
+    public function getBoolean($_key, $_default=false)
     {
-        if ( ! isset($_GET[$_key]) ) return false;
+        if ( ! isset($_GET[$_key]) ) return $_default;
         return self::string2Boolean($_GET[$_key]);
     }
 
@@ -250,11 +251,12 @@ class Input
      * Fetch an boolean from $_POST global array
      *
      * @param   $_key
+     * @param   $_default
      * @return  boolean
     */
-    public function postBoolean($_key)
+    public function postBoolean($_key, $_default=false)
     {
-        if ( ! isset($_POST[$_key]) ) return false;
+        if ( ! isset($_POST[$_key]) ) return $_default;
         return self::string2Boolean($_POST[$_key]);
     }
     
@@ -359,11 +361,12 @@ class Input
      * Fetch an boolean from $_COOKIE global array
      *
      * @param   $_key
+     * @param   $_default
      * @return  boolean
     */
-    public function cookieBoolean($_key)
+    public function cookieBoolean($_key, $_default=false)
     {
-        if ( ! isset($_COOKIE[$_key]) ) return false;
+        if ( ! isset($_COOKIE[$_key]) ) return $_default;
         return self::string2Boolean($_COOKIE[$_key]);
     }
 
@@ -493,11 +496,12 @@ class Input
      * Fetch an boolean from $_REQUEST global array
      *
      * @param   $_key
+     * @param   $_default
      * @return  boolean
     */
-    public function requestBoolean($_key)
+    public function requestBoolean($_key, $_default=false)
     {
-        if ( ! isset($_REQUEST[$_key]) ) return false;
+        if ( ! isset($_REQUEST[$_key]) ) return $_default;
         return self::string2Boolean($_REQUEST[$_key]);
     }
 
