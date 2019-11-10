@@ -56,8 +56,11 @@ class FileSession implements ISession
         }
 
         //set use user level session
-        session_module_name('user');
-        session_set_save_handler(
+        // fixed bug for session_module_name(): Cannot set 'user' save handler by ini_set() or session_module_name()
+        if(version_compare(PHP_VERSION,'7.2.0','<')) {
+            session_module_name('user');
+        }
+            session_set_save_handler(
             array($this, '_open'),
             array($this, '_close'),
             array($this, '_read'),

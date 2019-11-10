@@ -14,7 +14,7 @@ class Controller
     /**
      * method prefix and it default to '_'
     */
-    protected $method_prefix = 'action';
+    protected $method_prefix = '';
 
     /**
      * Construct method to create and initialize the controller

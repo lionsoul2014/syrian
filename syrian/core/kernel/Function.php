@@ -756,8 +756,13 @@ function controller(
      * get and check the existence of the controller main file
     */
     $_ctrl_file = SR_CTRLPATH;
-    if ( $uri->package != null ) $_ctrl_file .= "{$uri->package}/";
-    $_ctrl_file .= "{$uri->module}/main.php";
+    if (empty($uri->package)) {
+        $uri->package = $uri->module;
+    }
+    if ( $uri->package != null ) {
+        $_ctrl_file .= "{$uri->package}/";
+    }
+    $_ctrl_file .= ucfirst($uri->module)."Controller.php";
 
     if ( ! file_exists($_ctrl_file) ) {
         throw new Exception("Unable to locate the controller with request uri {$uri->uri}", 404);
@@ -766,8 +771,8 @@ function controller(
     /*
      * check and invoke the request dynamic resource pre load callback
     */
-    if ( $res_preload_callback != null ) {
-        $res_preload_callback($uri);
+    if ( !empty($res_preload_callback) ) {
+        call_user_func($res_preload_callback, $uri);
     }
 
     require $_ctrl_file;
@@ -1086,4 +1091,42 @@ function get_post_raw_data_json($assoc=false)
 {
     return json_decode(file_get_contents("php://input"), $assoc);
 }
-?>
+
+
+/**
+ * 打印一行
+ * @param $msg
+ */
+function printLine($msg) {
+    echo ("{$msg} \n");
+}
+
+/**
+ * 终端高亮打印绿色
+ * @param $message
+ */
+function tprintOk( $message ) {
+
+    printf("\033[32m\033[1m{$message}\033[0m\n");
+
+}
+
+/**
+ * 终端高亮打印红色
+ * @param $message
+ */
+function tprintError( $message ) {
+
+    printf("\033[31m\033[1m{$message}\033[0m\n");
+
+}
+
+/**
+ * 终端高亮打印黄色
+ * @param $message
+ */
+function tprintWarning( $message ) {
+
+    printf("\033[33m\033[1m{$message}\033[0m\n");
+
+}

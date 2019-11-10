@@ -16,6 +16,11 @@ class ShardingController extends Cli_Controller
         $this->debug = $input->getBoolean('debug', false);
     }
 
+    public function actionTest()
+    {
+        exit("Fuck it.");
+    }
+
     /**
      * convert the triditional table to sharding tables
      * copy the data, mainly actually!

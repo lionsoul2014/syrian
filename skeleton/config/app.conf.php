@@ -19,8 +19,8 @@ defined('CDN_IMGW_X720')    or define('CDN_IMGW_X720', '!720');
 defined('CDN_IMGW_THEME')   or define('CDN_IMGW_THEME', '!theme');
 
 $config = new StdClass();
-$config->url     = 'http://www.syrian.org';
-$config->img_url = 'http://img.syrian.org';
+$config->url     = 'http://dev.syrian.com';
+$config->img_url = 'http://dev.syrian.com';
 
 //script debug conf
 $config->script = array(
