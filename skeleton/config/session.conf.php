@@ -12,8 +12,8 @@ return array(
     'File' => array(
         'save_path'     => '/session/',
         'file_ext'      => '.ses',
-        'ttl'           => 604800,
-        //'cookie_domain' => '.lerays.com',     // must start with dot to support all sub share the cookies  
+        'ttl'           => 604800, // session 过期时间
+        //'cookie_domain' => '.xjxh.pro',     // must start with dot to support all sub share the cookies
         'session_name'  => 'SR_SESSID',
         'domain_strategy' => 'all_sub_host'     //domain strategy cur_host | all_sub_host
     ),

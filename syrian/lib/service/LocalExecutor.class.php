@@ -32,44 +32,37 @@ class LocalExecutor
     */
     protected function getService($path)
     {
-        $path = str_replace('/', '.', strtolower($path));
+        $path = str_replace('/', '.', $path);
         $part = explode('.', $path);
         if ( count($part) < 2 ) {
             return NULL;
         }
 
         $method  = array_pop($part);
-        $pathArr = array();
-        $nameArr = array();
-        foreach ( $part as $val ) {
-            $pathArr[] = $val;
-            $nameArr[] = ucfirst($val);
-        }
-
-        $clsPath = implode('/', $pathArr);
+        $clsPath = implode('/', $part);
         if ( isset(self::$POOL[$clsPath]) ) {
-            unset($path, $part, $pathArr, $nameArr);
+            unset($path, $part);
             return array($method, self::$POOL[$clsPath]);
         }
-
         //define the class file
-        $clsFile = SR_SERVICEPATH."{$clsPath}/main.php";
-        $clsName = implode('',  $nameArr).'Service';
-
+        $clsFile = SR_SERVICEPATH."{$clsPath}.php";
+        if (isset($part[1])) {
+            $clsName = $part[1];
+        } else {
+            // 直接位于 service 根目录下的服务类
+            $clsName = $part[0];
+        }
         if ( ! file_exists($clsFile) ) {
             unset(
-                $path, $part, $method, $pathArr, 
-                $nameArr, $clsFile, $clsName
+                $path, $part, $method, $clsFile, $clsName
             );
             return NULL;
         }
 
         require $clsFile;
-
         if ( ! class_exists($clsName) ) {
             unset(
-                $path, $part, $method, $pathArr, 
-                $nameArr, $clsFile, $clsName
+                $path, $part, $method, $clsFile, $clsName
             );
             return NULL;
         }
@@ -79,8 +72,7 @@ class LocalExecutor
         self::$POOL[$clsPath] = $obj;
 
         unset(
-            $path, $part, $method, $pathArr, 
-            $nameArr, $clsFile, $clsName
+            $path, $part, $method, $clsFile, $clsName
         );
 
         return $ret;
@@ -99,7 +91,6 @@ class LocalExecutor
         if ( $servInfo == NULL ) {
             throw new Exception("Cannot found service specifiled with {$serv_path}\n");
         }
-
         //invoke the run entrance method of the service
         $servObj = $servInfo[1];
         //return $servObj->run($servInfo[0], $args);
@@ -116,4 +107,3 @@ class LocalExecutor
     }
 
 }
-?>

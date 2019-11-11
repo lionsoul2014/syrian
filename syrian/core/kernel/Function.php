@@ -806,6 +806,7 @@ function controller(
  * @param   $executor (default to the local executor)
  * @param   $asyn (default to true)
  * @param   $priority
+ * @return Service
 */
 function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
 {
@@ -813,7 +814,6 @@ function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
         import('service.LocalExecutor');
         $executor = new LocalExecutor(null);
     }
-
     return $executor->execute(
         $serv_path, 
         $args, 
