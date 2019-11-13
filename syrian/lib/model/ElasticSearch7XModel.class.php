@@ -1390,6 +1390,7 @@ class ElasticSearch7XModel implements IModel
     public function batchAdd($data, $onDuplicateKey=null)
     {
         $workload = array();
+        $dataMap  = array();
         foreach ( $data as $val ) {
             if ( $this->primary_key == null ) {
                 $id = $this->genUUID($val);
@@ -1403,7 +1404,9 @@ class ElasticSearch7XModel implements IModel
 
             //do the data types conversion
             $this->stdDataTypes($val);
-            $workload[] = self::array2Json($val);
+            $jsonVal = self::array2Json($val);
+            $dataMap[$id] = $jsonVal;
+            $workload[] = $jsonVal;
         }
 
         /*
@@ -1421,33 +1424,84 @@ class ElasticSearch7XModel implements IModel
         /*
          * api return:
          * {
-         *  "took": 124,
-         *  "errors": false,
-         *  "items": [{
-         *      "index": {
-         *      "_index": "stream",
-         *      "_type": "main",
-         *      "_id": "18064",
+         *  "index": {
+         *      "_index": "index_name",
+         *      "_type": "_doc",
+         *      "_id": "4694860",
          *      "_version": 1,
+         *      "result": "created",
          *      "_shards": {
          *          "total": 2,
          *          "successful": 1,
          *          "failed": 0
          *      },
+         *      "_seq_no": 1065148,
+         *      "_primary_term": 1,
          *      "status": 201
+         *  }
+         * }
+         * with error:
+         * {
+         *  "index": {
+         *      "_index": "index_name",
+         *      "_type": "_doc",
+         *      "_id": "4694862",
+         *      "status": 400,
+         *      "error": {
+         *          "type": "illegal_argument_exception",
+         *          "reason": "startOffset must be non-negative, and endOffset must be >= startOffset, and offsets must not go backwards startOffset=0,endOffset=1,lastStartOffset=5 for field 'name'"
          *      }
-         *  }]
+         *  }
          * }
         */
 
         $ok_count = 0;
+        $er_count = 0;
+        $workload = array();
         foreach ( $json->items as $item ) {
-            if ( isset($item->index->_id) ) {
+            if ( isset($item->index->result) ) {
                 $ok_count++;
+            } else if ( isset($item->index->error) 
+                && isset($item->index->error->type) ) {
+                $er_count++;
+                $id = $item->index->_id;
+                $workload[] = "{\"index\":{\"_index\":\"{$this->index}\",\"_id\":\"{$id}\"}}";
+                $workload[] = $dataMap[$id];
             }
         }
 
+        /* Check and retry for the failed PARTS  */
+        while ( $er_count > 0 ) {
+            $workload[] = "\n";
+            $_DSL = implode("\n", $workload);
+            $rows = $er_count;
+            $this->_debug = true;
+            $json = $this->_request('POST', $_DSL, "{$this->index}/_bulk");
+            if ( $json == false || ! isset($json->items) ) {
+                break;
+            }
 
+            $er_count = 0;
+            $workload = array();
+            foreach ( $json->items as $item ) {
+                if ( isset($item->index->result) ) {
+                    $ok_count++;
+                } else if ( isset($item->index->error) 
+                    && isset($item->index->error->type) ) {
+                    $er_count++;
+                    $id = $item->index->_id;
+                    $workload[] = "{\"index\":{\"_index\":\"{$this->index}\",\"_id\":\"{$id}\"}}";
+                    $workload[] = $dataMap[$id];
+                }
+            }
+
+            if ( $er_count == $rows ) {
+                /* Abort if Nothing changed for this retry */
+                break;
+            }
+        }
+
+        unset($workload, $dataMap);
         return $ok_count;
     }
 
