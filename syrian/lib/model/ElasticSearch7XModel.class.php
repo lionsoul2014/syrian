@@ -1475,7 +1475,6 @@ class ElasticSearch7XModel implements IModel
             $workload[] = "\n";
             $_DSL = implode("\n", $workload);
             $rows = $er_count;
-            $this->_debug = true;
             $json = $this->_request('POST', $_DSL, "{$this->index}/_bulk");
             if ( $json == false || ! isset($json->items) ) {
                 break;
