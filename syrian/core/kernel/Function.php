@@ -85,7 +85,9 @@ function _cli_initialize()
         }
 
         $_SERVER['REQUEST_URI'] = $request_uri;
-        if ( ($queryPos = strpos($request_uri, '?')) !== false ) {
+        # take ? or # as the query arguments delimiter
+        if ( ($queryPos = strpos($request_uri, '?')) !== false 
+            || ($queryPos = strpos($request_uri, '#')) !== false ) {
             $query_string = substr($request_uri, $queryPos + 1);
             $_SERVER['QUERY_STRING'] = $query_string;
 
