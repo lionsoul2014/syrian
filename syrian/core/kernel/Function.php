@@ -251,7 +251,7 @@ function config($config_path, $_inc=false, $cache=true)
  *
  * @param   $model_path
  * @param   $cache check the cache first ?
- * @return  Object the object of the loaded model 
+ * @return  RouterShardingModel
 */
 function model($model_path, $cache=true)
 {
@@ -309,7 +309,7 @@ function model($model_path, $cache=true)
  * @param   $args
  * @param   $_inc @see #import
  * @param   $cache cache the instance ?
- * @return  Object
+ * @return  Helper
  *
  * Usage: 
  * helper('ServiceExecutor#StreamAccess', array('a', 'b'));
@@ -756,14 +756,10 @@ function controller(
      * get and check the existence of the controller main file
     */
     $_ctrl_file = SR_CTRLPATH;
-    if (empty($uri->package)) {
-        $uri->package = $uri->module;
-    }
     if ( $uri->package != null ) {
         $_ctrl_file .= "{$uri->package}/";
     }
-    $_ctrl_file .= ucfirst($uri->module)."Controller.php";
-
+    $_ctrl_file .= $uri->module.'/'.ucfirst($uri->module)."Controller.php";
     if ( ! file_exists($_ctrl_file) ) {
         throw new Exception("Unable to locate the controller with request uri {$uri->uri}", 404);
     }
@@ -774,9 +770,7 @@ function controller(
     if ( !empty($res_preload_callback) ) {
         call_user_func($res_preload_callback, $uri);
     }
-
     require $_ctrl_file;
-    
     /*
      * search and check the existence of the controller class
      * then create the controller instance
@@ -900,7 +894,7 @@ function bkdr_hash($str)
  * @param   $timer the unix time stamp that will store in the signature
  * @return  String
 */
-function build_signature($factors, $timer=null)
+function build_signature(array $factors, $timer=null)
 {
     $seeds = '=~!@#$%^&*()_+{}|\;:\',./<>"%%`~?~';
     $s_len = 33;

@@ -38,7 +38,7 @@ class Controller
      * @param   $output
      * @param   $uri
     */
-    protected function __init($input, $output, $uri)
+    protected function __init(Input $input, Output $output, $uri)
     {
         //@Added at 2015-05-29
         //define the flush mode global sign
@@ -68,7 +68,7 @@ class Controller
      * @param   $uri (standart parse_uri result)
      * @access  public
     */
-    public function run($input, $output, $uri)
+    public function run(Input $input, Output $output, $uri)
     {
         $this->__init($input, $output, $uri);
 
@@ -104,4 +104,3 @@ class Controller
     }
 
 }
-?>

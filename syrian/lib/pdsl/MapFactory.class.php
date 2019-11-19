@@ -55,6 +55,7 @@ class MapFactory
      *
      * @param   $_class class key
      * @param   $_args  arguments to initialize the instance
+     * @return RedisMap
     */
     public static function create($_class, $_conf=null)
     {

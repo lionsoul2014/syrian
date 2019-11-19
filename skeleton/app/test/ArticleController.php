@@ -25,7 +25,7 @@ class ArticleController extends C_Controller
         );
     }
     
-    public function actionAbout($input)
+    public function about($input)
     {
         return view('article/about.html', null, true);
     }
