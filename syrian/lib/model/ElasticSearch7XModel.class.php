@@ -1981,17 +1981,49 @@ class ElasticSearch7XModel implements IModel
             case 'integer':
             case 'short':
             case 'byte':
-                if ( ! is_long($value) )    $value = intval($value);
+                if ( is_array($value) ) {
+                    foreach ($value as $k => $v) {
+                        if (!is_long($v)) {
+                            $value[$k] = intval($v);
+                        }
+                    }
+                } else if ( ! is_long($value) ) {
+                    $value = intval($value);
+                }
                 break;
             case 'float':
             case 'half_float':
-                if ( ! is_float($value) )   $value = floatval($value);
+                if ( is_array($value) ) {
+                    foreach ($value as $k => $v) {
+                        if (!is_float($v)) {
+                            $value[$k] = floatval($v);
+                        }
+                    }
+                } else if ( ! is_float($value) ) {
+                    $value = floatval($value);
+                }
                 break;
             case 'double':
-                if ( ! is_double($value) )  $value = doubleval($value);
+                if ( is_array($value) ) {
+                    foreach ($value as $k => $v) {
+                        if (!is_double($v)) {
+                            $value[$k] = doubleval($v);
+                        }
+                    }
+                } else if ( ! is_double($value) ) {
+                    $value = doubleval($value);
+                }
                 break;
             case 'boolean':
-                if ( ! is_bool($value) ) settype($value, 'boolean');
+                if ( is_array($value) ) {
+                    foreach ($value as $k => $v) {
+                        if (!is_double($v)) {
+                            settype($value[$k], 'boolean');
+                        }
+                    }
+                } else if ( ! is_bool($value) ) {
+                    settype($value, 'boolean');
+                }
                 break;
             }
         }
