@@ -8,7 +8,7 @@
  */
 
  //----------------------------------------------------------
-
+import("util.Logger");
 class Mysql implements Idb
 {
     private $_link              = NULL;         //mysql connection resource

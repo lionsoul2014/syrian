@@ -6,11 +6,6 @@
  */
 import('Util');
 class Logger {
-
-    //提示信息日志
-    const LOG_INFO = '.info.log';
-    //错误信息日志
-    const LOG_ERROR = '.error.log';
     // 日志信息
     private static $message;
     // 日志目录
@@ -25,7 +20,7 @@ class Logger {
     public static function info($message, $logFile='default')
     {
         self::_dataInit($message);
-        return file_put_contents(self::$logDir.date("Y-m-d").'-'.$logFile.self::LOG_INFO, '['.date('Y-m-d H:i:s').'] '.self::$message."\n", FILE_APPEND);
+        return file_put_contents(self::$logDir.date("Y-m-d")."-{$logFile}.log", '['.date('Y-m-d H:i:s').'] [INFO]: '.self::$message."\n", FILE_APPEND);
     }
 
     /**
@@ -37,7 +32,7 @@ class Logger {
     public static function error($message, $logFile='default')
     {
         self::_dataInit($message);
-        return file_put_contents(self::$logDir.date("Y-m-d").'-'.$logFile.self::LOG_ERROR, '['.date('Y-m-d H:i:s').'] '.self::$message."\n", FILE_APPEND);
+        return file_put_contents(self::$logDir.date("Y-m-d")."-{$logFile}.log", '['.date('Y-m-d H:i:s').'] [ERROR]: '.self::$message."\n", FILE_APPEND);
     }
 
     /**
