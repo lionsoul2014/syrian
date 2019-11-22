@@ -74,6 +74,7 @@ class Mysql implements Idb
     {
         //connect to the database server as necessary
         $_sidx = 0;
+//        Logger::info($_query, "gamma");
         if ( $_srw == false || $opt == Idb::WRITE_OPT ) {
             if ( $this->_link == NULL ) {
                 $conf   = isset($this->_host['__w']) ? $this->_host['__w'] : $this->_host;
