@@ -669,6 +669,8 @@ function parse_uri($uri, $separator='/', $default=null)
     */
     if ( ($argsIdx = strpos($uri, '?')) !== false ) {
         $path = substr($uri, 0, $argsIdx);
+    } else if ( SR_CLI_MODE && ($argsIdx = strpos($uri, '#')) !== false ) {
+        $path = substr($uri, 0, $argsIdx);
     } else {
         $path = $uri;
     }
