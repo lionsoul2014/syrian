@@ -381,7 +381,7 @@ class Mysql implements Idb
         if ( $_where != NULL ) $_query .= ' WHERE ' . $_where;
         if ( $_group != NULL ) $_query .= ' GROUP BY '. $_group;
         if ( ($_ret = $this->getOneRow($_query, MYSQLI_NUM, $srw)) != FALSE )
-            return $_ret[0];
+            return intval($_ret[0]);
         return 0;
     }
 
