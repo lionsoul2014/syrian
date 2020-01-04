@@ -53,7 +53,7 @@ class HtmlView extends AView
      *
      * @param   $_conf
     */
-    public function __construct( &$_conf )
+    public function __construct(&$_conf)
     {
         ///check and initialize the global item
         if ( isset( $_conf['cache_time'] ) ) $this->_cache_time = $_conf['cache_time'];
@@ -68,7 +68,7 @@ class HtmlView extends AView
      * @param   $_tpl_file
      * @param   $_cache_file
     */
-    private function compile( $_tpl_file, $_cache_file )
+    private function compile($_tpl_file, $_cache_file)
     {
         //1.get the cotent of the template file
         $_TPL = @file_get_contents($_tpl_file);
@@ -77,8 +77,8 @@ class HtmlView extends AView
         }
             
         //2. regex replace
-        $_TPL = preg_replace( array_keys($this->_rules), $this->_rules, $_TPL);
-        if ( ! file_exists( $_cache_file ) ) {
+        $_TPL = preg_replace(array_keys($this->_rules), $this->_rules, $_TPL);
+        if ( ! file_exists($_cache_file) ) {
             $_path = dirname($_cache_file);
             $_names = array();
             do {
@@ -106,11 +106,11 @@ class HtmlView extends AView
      * @param   $_cache_file
      * @return  bool
     */
-    private function isCached( $_cache_file )
+    private function isCached($_cache_file)
     {
-        if ( ! file_exists( $_cache_file ) ) return false;
+        if ( ! file_exists($_cache_file) ) return false;
         if ( $this->_cache_time < 0 ) return true;
-        if ( time() - filemtime( $_cache_file ) > $this->_cache_time ) return false;
+        if ( time() - filemtime($_cache_file) > $this->_cache_time ) return false;
         return true;
     }
     
@@ -121,7 +121,7 @@ class HtmlView extends AView
      * @param   $_inc_file
      * @return  String the cache file to include
     */
-    private function getIncludeFile( $_inc_file )
+    private function getIncludeFile($_inc_file)
     {
         $_tpl_dir = $this->_tpl_dir;
         $_cache_dir = $this->_cache_dir;
@@ -136,13 +136,13 @@ class HtmlView extends AView
             }
         }
 
-        $_tpl_file = $_tpl_dir.'/'.$_inc_file;
-        $_cache_file = $_cache_dir.'/'.$_inc_file.'.php';
+        $_tpl_file   = "{$_tpl_dir}/{$_inc_file}";
+        $_cache_file = "{$_cache_dir}/{$_inc_file}.php";
         
         //echo $_tpl_file,'<br />';
         //echo $_cache_file,'<br />';
-        if ( ! $this->isCached( $_cache_file ) ) {
-            $this->compile( $_tpl_file, $_cache_file );
+        if ( ! $this->isCached($_cache_file) ) {
+            $this->compile($_tpl_file, $_cache_file);
         }
         
         return $_cache_file;
@@ -168,13 +168,14 @@ class HtmlView extends AView
      * @return  string the executed html text
      * @see     parent.getContent
     */
-    public function getContent( $_tpl_file=NULL, $sanitize=false )
+    public function getContent($_tpl_file=NULL, $sanitize=false)
     {
-        $_cache_file = $this->_cache_dir.$_tpl_file.'.php';
-        $_tpl_file   = $this->_tpl_dir.$_tpl_file;
+        $_cache_file = "{$this->_cache_dir}{$_tpl_file}.php";
+        $_tpl_file   = "{$this->_tpl_dir}{$_tpl_file}";
         
         //check the cache file is valid or not
-        if ( ! $this->isCached( $_cache_file ) ) {
+        if ( !$this->isCached($_cache_file) ) {
+            echo '---compile---';
             $this->compile($_tpl_file, $_cache_file);
         }
         
@@ -189,4 +190,3 @@ class HtmlView extends AView
     }
 
 }
-?>
