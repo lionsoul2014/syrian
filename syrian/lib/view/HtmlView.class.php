@@ -175,7 +175,6 @@ class HtmlView extends AView
         
         //check the cache file is valid or not
         if ( !$this->isCached($_cache_file) ) {
-            echo '---compile---';
             $this->compile($_tpl_file, $_cache_file);
         }
         
