@@ -159,7 +159,7 @@ interface IModel
      * @param   $frag_recur
      * @fragments suport
     */
-    public function delete($_where, $frag_recur=true);
+    public function delete($_where, $frag_recur=true, $affected_rows=true);
 
     //delete by primary key
     //@frament suports

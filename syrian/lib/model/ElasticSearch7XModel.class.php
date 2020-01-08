@@ -1800,9 +1800,10 @@ class ElasticSearch7XModel implements IModel
      *
      * @param   $_where
      * @param   $frag_recur
+     * @param   $affected_rows
      * @param   Mixed(false or affected rows)
     */
-    public function delete($_where, $frag_recur=true)
+    public function delete($_where, $frag_recur=true, $affected_rows=true)
     {
         if ( $_where == null ) {
             throw new Exception("Empty delete condition is not allow");
@@ -1849,7 +1850,7 @@ class ElasticSearch7XModel implements IModel
             }
         }
 
-        return false;
+        return $affected_rows ? 0 : false;
     }
 
     //delete by primary key
