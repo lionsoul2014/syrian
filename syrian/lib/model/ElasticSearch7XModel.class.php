@@ -727,7 +727,7 @@ class ElasticSearch7XModel implements IModel
      * @param   $ttl time to live in seconds
      * @return  Mixed(false or Array)
     */
-    public function iterator($_fields, $_where, $_order, $size, $ttl)
+    public function iterator($_fields, $_where, $_order=null, $size=null, $ttl=30)
     {
         /*
          * check and define the defaule sorting
@@ -738,7 +738,8 @@ class ElasticSearch7XModel implements IModel
         if ( $_order == null ) $_order = array('_doc' => 'asc');
 
         $_src = $this->getQueryFieldArgs($_fields);
-        $_DSL = $this->getQueryDSL($_where, $_order, array(-1, $size));
+        $_DSL = is_array($_where) ? $this->getQueryDSL(
+            $_where, $_order, array(-1, $size)) : $_where;
         $json = $this->_request('POST', $_DSL, "{$this->index}/_search", "scroll={$ttl}s&{$_src}", true);
         if ( $json == false ) {
             return false;
@@ -954,7 +955,8 @@ class ElasticSearch7XModel implements IModel
     */
     public function totals($_where=null, $_group=null)
     {
-        $_DSL = $this->getQueryDSL($_where, null, null);
+        $_DSL = is_array($_where)
+            ? $this->getQueryDSL($_where, null, null) : $_where;
         $json = $this->_request('POST', $_DSL, "{$this->index}/_count");
         if ( $json == false ) {
             return 0;
@@ -1077,7 +1079,8 @@ class ElasticSearch7XModel implements IModel
     public function getList($_fields, $_where=null, $_order=null, $_limit=null, $_group=null)
     {
         $_src = $this->getQueryFieldArgs($_fields);
-        $_DSL = $this->getQueryDSL($_where, $_order, $_limit);
+        $_DSL = is_array($_where) 
+            ? $this->getQueryDSL($_where, $_order, $_limit) : $_where;
         $json = $this->_request('POST', $_DSL, "{$this->index}/_search", $_src, true);
         if ( $json == false ) {
             return false;
@@ -1232,7 +1235,7 @@ class ElasticSearch7XModel implements IModel
     public function get($_fields, $_where)
     {
         $_src = $this->getQueryFieldArgs($_fields);
-        $_DSL = $this->getQueryDSL($_where, null, 1);
+        $_DSL = is_array($_where) ? $this->getQueryDSL($_where, null, 1) : $_where;
         $json = $this->_request('POST', $_DSL, "{$this->index}/_search", $_src, true);
         if ( $json == false ) {
             return false;
@@ -1813,7 +1816,7 @@ class ElasticSearch7XModel implements IModel
         if ( count($_where) == 1 && isset($_where[$this->primary_key]) ) {
             $value  = strtolower(trim($_where[$this->primary_key]));
             $opcode = $value[0];
-            switch ( $opcode ) {
+            switch ($opcode) {
             case '=':   // equal query
                 $_ids = array(substr($value, 1));
                 break;
@@ -1826,7 +1829,7 @@ class ElasticSearch7XModel implements IModel
                 $_ids = false;
             }
 
-            if ( $_ids != false ) {
+            if ($_ids != false) {
                 $workload = array();
                 foreach ( $_ids as $id ) {
                     $workload[] = "{\"delete\":{\"_index\":\"{$this->index}\",\"_id\":\"{$id}\"}}";
@@ -1850,7 +1853,23 @@ class ElasticSearch7XModel implements IModel
             }
         }
 
-        return $affected_rows ? 0 : false;
+        /* for the rest of the operation we push the 
+         * data to the _delete_by_query terminal for auto batch operation */
+        if (is_array($_where)) {
+            $_DSL = $this->getQueryDSL($_where, null, null);
+        } else if (is_string($_where)) {
+            $_DSL = $_where;
+        } else {
+            throw new Exception("Error: Invalid where value {$_where}\n");
+        }
+
+        $args = 'conflicts=proceed&from=0&scroll_size=500';
+        $json = $this->_request('POST', $_DSL, "{$this->index}/_delete_by_query?{$args}");
+        if ($json == false || ! isset($json->deleted)) {
+            return $affected_rows ? 0 : false;
+        }
+
+        return $affected_rows ? $json->deleted : true;
     }
 
     //delete by primary key
