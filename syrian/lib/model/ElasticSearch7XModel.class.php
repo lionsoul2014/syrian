@@ -1813,7 +1813,7 @@ class ElasticSearch7XModel implements IModel
         }
 
         /* intercept the primary key deletion and translate it as a bulk request */
-        if ( count($_where) == 1 && isset($_where[$this->primary_key]) ) {
+        if ( is_array($_where) && count($_where) == 1 && isset($_where[$this->primary_key]) ) {
             $value  = strtolower(trim($_where[$this->primary_key]));
             $opcode = $value[0];
             switch ($opcode) {
@@ -1863,7 +1863,7 @@ class ElasticSearch7XModel implements IModel
             throw new Exception("Error: Invalid where value {$_where}\n");
         }
 
-        $args = 'conflicts=proceed&from=0&scroll_size=500';
+        $args = 'conflicts=proceed&scroll_size=500';
         $json = $this->_request('POST', $_DSL, "{$this->index}/_delete_by_query?{$args}");
         if ($json == false || ! isset($json->deleted)) {
             return $affected_rows ? 0 : false;
