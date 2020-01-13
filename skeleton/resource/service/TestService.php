@@ -33,6 +33,5 @@ class TestService extends Service
     {
         return "nice to meet you, {$input}\n";
     }
-    
+
 }
-?>

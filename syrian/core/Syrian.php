@@ -64,4 +64,3 @@ if ( SR_CLI_MODE ) {
         @cli_set_process_title($_SERVER['PROCESS_TITLE']);
     }
 }
-?>

@@ -7,9 +7,8 @@
 
 class ErrorController extends Controller
 {
-    public function action404()
+    public function page404()
     {
         return '404 that\' an error.';
     }
 }
-?>

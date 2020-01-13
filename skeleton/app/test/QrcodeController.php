@@ -7,15 +7,23 @@
 
 import('image.QRcode');
 
- //------------------------------------------------------
- 
+
+/**
+ * Class QrcodeController
+ * @author yangjian
+ */
 class QrcodeController extends C_Controller
-{    
-    public function actionIndex($input, $output)
+{
+    /**
+     * @param Input $input
+     * @param Output $output
+     */
+    public function show($input, $output)
     {
+        $text = $input->get("text", null, "http://www.weitoutiao.com/user/home");
         $output->setHeader('Content-Type', 'image/png');
         QRCode::png(
-            "http://www.weitoutiao.com/user/home",
+            $text,
             false,
             'L',
             8,
@@ -24,4 +32,3 @@ class QrcodeController extends C_Controller
     }
 
 }
-?>

@@ -7,7 +7,7 @@
 
 class UserController extends C_Controller
 {    
-    public function actionProfile()
+    public function profile()
     {
         $sess = $this->isLoggedIn();
         if ( $sess == false ) {
@@ -24,9 +24,10 @@ class UserController extends C_Controller
         return json_view(STATUS_OK, $data);
     }
     
-    public function actionSignIn($input)
+    public function signIn($input)
     {
         $sessKey = isset($this->conf->session_key) ? $this->conf->session_key : 'File';
+
         $sessObj = build_session($sessKey, true, '1707ydlteVx9VPM9W0LBMHKCRWT648m9');
         $sessObj->register(7);
 
@@ -38,7 +39,7 @@ class UserController extends C_Controller
         return json_view(STATUS_OK, 'Ok');
     }
 
-    public function actionLogOut()
+    public function logOut()
     {
         $sess = $this->isLoggedIn();
         if ( $sess != false ) {
@@ -48,10 +49,9 @@ class UserController extends C_Controller
         return json_view(STATUS_OK, 'Ok');
     }
 
-    public function actionSignUp($input)
+    public function signUp($input)
     {
         return json_view(STATUS_OK, 'Ok');
     }
     
 }
-?>

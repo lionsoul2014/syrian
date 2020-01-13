@@ -33,4 +33,3 @@ class C_Controller extends Controller
         return $sessObj;
     }
 }
-?>

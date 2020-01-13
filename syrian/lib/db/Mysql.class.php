@@ -8,7 +8,7 @@
  */
 
  //----------------------------------------------------------
-
+import("util.Logger");
 class Mysql implements Idb
 {
     private $_link              = NULL;         //mysql connection resource
@@ -142,6 +142,10 @@ class Mysql implements Idb
 
             //so, do it again
             $query_ret = mysqli_query($this->clink, $_query);
+        }
+
+        if ($query_ret == false && $this->_debug !== false) {
+            //Logger::info($_query, "sql");
         }
 
         return $query_ret;

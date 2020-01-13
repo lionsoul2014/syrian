@@ -5,7 +5,7 @@
  * @author  chenxin<chenxin619315@gmail.com>
 */
 
-class TestController extends S_Controller
+class ScriptController extends S_Controller
 {
     public function actionIndex()
     {
@@ -16,4 +16,3 @@ class TestController extends S_Controller
         );
     }
 }
-?>

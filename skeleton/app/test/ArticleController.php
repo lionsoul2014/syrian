@@ -12,7 +12,7 @@ class ArticleController extends C_Controller
         $this->model = model('article.Article');
     }
     
-    public function actionIndex($input)
+    public function index($input)
     {
         $pageno = $input->getInt('pageno', 1);
 
@@ -25,10 +25,9 @@ class ArticleController extends C_Controller
         );
     }
     
-    public function actionAbout($input)
+    public function about($input)
     {
         return view('article/about.html', null, true);
     }
     
 }
-?>

@@ -617,5 +617,17 @@ class Input
         return true;
     }
 
+    /**
+     * 获取 http 请求头参数
+     * @param $name
+     */
+    public function getHeaderParam($name)
+    {
+        $headers = getallheaders();
+        if (!isset($headers[$name])) {
+            return false;
+        }
+        return $headers[$name];
+    }
+
 }
-?>

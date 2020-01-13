@@ -185,5 +185,3 @@ function resource_preload_callback($uri)
         break;
     }
 }
-
-?>
