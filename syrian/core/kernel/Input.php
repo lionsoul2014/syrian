@@ -86,7 +86,7 @@ class Input
     * @param    $_errno
     * @return    Mixed(Array, String, Bool)
    */
-    public function get( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    public function get($_key, $_model=NULL, $_default=false, &$_errno=NULL)
     {
         if ( ! isset( $_GET[$_key] ) ) return $_default;
         
@@ -124,7 +124,7 @@ class Input
      * @param    $allow_nagative
      * @return    Mixed(Integer or false)
     */
-    public function getInt( $_key, $_default=false, $allow_nagative=false )
+    public function getInt($_key, $_default=false, $allow_nagative=false)
     {
         if ( ! isset( $_GET[$_key] ) ) return $_default;
         
@@ -180,7 +180,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function getModel( $_model, &$_errno=NULL )
+    public function getModel($_model, &$_errno=NULL)
     {
         import('Filter');
         return Filter::loadFromModel($_GET, $_model, $_errno);
@@ -197,7 +197,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function post( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    public function post($_key, $_model=NULL, $_default=false, &$_errno=NULL)
     {
         if ( ! isset($_POST[$_key]) ) return $_default;
         
@@ -235,7 +235,7 @@ class Input
      * @param    $allow_nagative
      * @return    Mixed(Integer or false)
     */
-    public function postInt( $_key, $_default=false, $allow_nagative=false )
+    public function postInt($_key, $_default=false, $allow_nagative=false)
     {
         if ( ! isset( $_POST[$_key] ) ) return $_default;
         
@@ -290,7 +290,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function postModel( $_model, &$_errno=NULL )
+    public function postModel($_model, &$_errno=NULL)
     {
         import('Filter');
         return Filter::loadFromModel($_POST, $_model, $_errno);
@@ -307,7 +307,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function cookie( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    public function cookie($_key, $_model=NULL, $_default=false, &$_errno=NULL)
     {
         if ( ! isset($_COOKIE[$_key]) ) return $_default;
         
@@ -345,7 +345,7 @@ class Input
      * @param    $allow_nagative
      * @return    Mixed(Integer or false)
     */
-    public function cookieInt( $_key, $_default=false, $allow_nagative=false )
+    public function cookieInt($_key, $_default=false, $allow_nagative=false)
     {
         if ( ! isset( $_COOKIE[$_key] ) ) return $_default;
         
@@ -400,7 +400,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function cookieModel( $_model, &$_errno=NULL )
+    public function cookieModel($_model, &$_errno=NULL)
     {
         import('Filter');
         return Filter::loadFromModel($_COOKIE, $_model, $_errno);
@@ -417,7 +417,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function session( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    public function session($_key, $_model=NULL, $_default=false, &$_errno=NULL)
     {
         if ( ! isset($_SESSION[$_key]) ) return $_default;
         
@@ -442,7 +442,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function request( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    public function request($_key, $_model=NULL, $_default=false, &$_errno=NULL)
     {
         if ( ! isset($_REQUEST[$_key]) ) return $_default;
         
@@ -480,7 +480,7 @@ class Input
      * @param    $allow_nagative
      * @return    Mixed(Integer or false)
     */
-    public function requestInt( $_key, $_default=false, $allow_nagative=false )
+    public function requestInt($_key, $_default=false, $allow_nagative=false)
     {
         if ( ! isset( $_REQUEST[$_key] ) ) return $_default;
         
@@ -535,7 +535,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function requestModel( $_model, &$_errno=NULL )
+    public function requestModel($_model, &$_errno=NULL)
     {
         import('Filter');
         return Filter::loadFromModel($_REQUEST, $_model, $_errno);
@@ -552,7 +552,7 @@ class Input
      * @param    $_errno
      * @return   Mixed
     */
-    public function server( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    public function server($_key, $_model=NULL, $_default=false, &$_errno=NULL)
     {
         if ( ! isset($_SERVER[$_key]) ) return $_default;
         
@@ -577,7 +577,7 @@ class Input
      * @param    $_errno
      * @return    Mixed
     */
-    public function env( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+    public function env($_key, $_model=NULL, $_default=false, &$_errno=NULL)
     {
         if ( ! isset($_ENV[$_key]) ) return $_default;
         
@@ -589,6 +589,17 @@ class Input
         
         //normal string fetch
         return $_ENV[$_key];
+    }
+
+    /**
+     * get header parameter
+     *
+     * @param $name
+    */
+    public function header($name)
+    {
+        static $headers = getallheaders();
+        return isset($headers[$name]) ? $headers[$name] : null;
     }
 
 
@@ -615,19 +626,6 @@ class Input
         }
 
         return true;
-    }
-
-    /**
-     * 获取 http 请求头参数
-     * @param $name
-     */
-    public function getHeaderParam($name)
-    {
-        $headers = getallheaders();
-        if (!isset($headers[$name])) {
-            return false;
-        }
-        return $headers[$name];
     }
 
 }
