@@ -598,7 +598,11 @@ class Input
     */
     public function header($name)
     {
-        static $headers = getallheaders();
+        static $headers = null;
+        if ($headers == null ) {
+            $headers = getallheaders();
+        }
+
         return isset($headers[$name]) ? $headers[$name] : null;
     }
 
