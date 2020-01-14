@@ -219,4 +219,3 @@ class Output
         echo $_output;
     }
 }
-?>

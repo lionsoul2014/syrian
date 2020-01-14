@@ -10,7 +10,7 @@
  //--------------------------------------------------------------
  
 //Syrian Version Number
-const SR_VERSION = '2.0';
+const SR_VERSION = '2.2';
 const SR_FLUSH_MODE  = 'flush_mode';
 const SR_IGNORE_MODE = 'ignore_mode';
 
@@ -278,7 +278,7 @@ function config($config_path, $_inc=false, $cache=true)
  *
  * @param   $model_path
  * @param   $cache check the cache first ?
- * @return  Object the object of the loaded model 
+ * @return  RouterShardingModel
 */
 function model($model_path, $cache=true)
 {
@@ -336,7 +336,7 @@ function model($model_path, $cache=true)
  * @param   $args
  * @param   $_inc @see #import
  * @param   $cache cache the instance ?
- * @return  Object
+ * @return  Helper
  *
  * Usage: 
  * helper('ServiceExecutor#StreamAccess', array('a', 'b'));
@@ -594,7 +594,7 @@ function view_paging_register(
  * data scroll page data register
  *
  * @param   $total
- * @param   $c_cursor
+ * @param   $n_cursor
  * @param   $p_cursor
  * @param   $prevsign
  * @param   $n_cursor
@@ -830,6 +830,7 @@ function controller(
  * @param   $executor (default to the local executor)
  * @param   $asyn (default to true)
  * @param   $priority
+ * @return  Service
 */
 function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
 {
@@ -837,7 +838,7 @@ function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
         import('service.LocalExecutor');
         $executor = new LocalExecutor(null);
     }
-
+    
     return $executor->execute(
         $serv_path, 
         $args, 
@@ -924,7 +925,7 @@ function bkdr_hash($str)
  * @param   $timer the unix time stamp that will store in the signature
  * @return  String
 */
-function build_signature($factors, $timer=null)
+function build_signature(array $factors, $timer=null)
 {
     $seeds = '=~!@#$%^&*()_+{}|\;:\',./<>"%%`~?~';
     $s_len = 33;
@@ -1116,6 +1117,9 @@ function get_post_raw_data_json($assoc=false)
     return json_decode(file_get_contents("php://input"), $assoc);
 }
 
+
+
+
 class Helper
 {
     /**
@@ -1145,9 +1149,11 @@ class Helper
     }
 }
 
+
+
+
 //Load the input class manage the input of the controller/
 if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
-    //--------------------------------------------------------------
     //normal data type
     defined('OP_NULL')      or define('OP_NULL',        1 <<  0);
     defined('OP_LATIN')     or define('OP_LATIN',       1 <<  1);
@@ -1223,7 +1229,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
         * @param    $_errno
         * @return    Mixed(Array, String, Bool)
        */
-        public function get( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+        public function get($_key, $_model=NULL, $_default=false, &$_errno=NULL)
         {
             if ( ! isset( $_GET[$_key] ) ) return $_default;
             
@@ -1261,7 +1267,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $allow_nagative
          * @return    Mixed(Integer or false)
         */
-        public function getInt( $_key, $_default=false, $allow_nagative=false )
+        public function getInt($_key, $_default=false, $allow_nagative=false)
         {
             if ( ! isset( $_GET[$_key] ) ) return $_default;
             
@@ -1277,7 +1283,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * Fetch an boolean from $_GET global array
          *
          * @param   $_key
-     	 * @param   $_default
+         * @param   $_default
          * @return  boolean
         */
         public function getBoolean($_key, $_default=false)
@@ -1317,7 +1323,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $_errno
          * @return    Mixed
         */
-        public function getModel( $_model, &$_errno=NULL )
+        public function getModel($_model, &$_errno=NULL)
         {
             import('Filter');
             return Filter::loadFromModel($_GET, $_model, $_errno);
@@ -1334,7 +1340,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $_errno
          * @return    Mixed
         */
-        public function post( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+        public function post($_key, $_model=NULL, $_default=false, &$_errno=NULL)
         {
             if ( ! isset($_POST[$_key]) ) return $_default;
             
@@ -1372,7 +1378,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $allow_nagative
          * @return    Mixed(Integer or false)
         */
-        public function postInt( $_key, $_default=false, $allow_nagative=false )
+        public function postInt($_key, $_default=false, $allow_nagative=false)
         {
             if ( ! isset( $_POST[$_key] ) ) return $_default;
             
@@ -1388,7 +1394,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * Fetch an boolean from $_POST global array
          *
          * @param   $_key
-     	 * @param   $_default
+         * @param   $_default
          * @return  boolean
         */
         public function postBoolean($_key, $_default=false)
@@ -1427,7 +1433,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $_errno
          * @return    Mixed
         */
-        public function postModel( $_model, &$_errno=NULL )
+        public function postModel($_model, &$_errno=NULL)
         {
             import('Filter');
             return Filter::loadFromModel($_POST, $_model, $_errno);
@@ -1444,7 +1450,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $_errno
          * @return    Mixed
         */
-        public function cookie( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+        public function cookie($_key, $_model=NULL, $_default=false, &$_errno=NULL)
         {
             if ( ! isset($_COOKIE[$_key]) ) return $_default;
             
@@ -1482,7 +1488,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $allow_nagative
          * @return    Mixed(Integer or false)
         */
-        public function cookieInt( $_key, $_default=false, $allow_nagative=false )
+        public function cookieInt($_key, $_default=false, $allow_nagative=false)
         {
             if ( ! isset( $_COOKIE[$_key] ) ) return $_default;
             
@@ -1498,7 +1504,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * Fetch an boolean from $_COOKIE global array
          *
          * @param   $_key
-	 * @param   $_default
+         * @param   $_default
          * @return  boolean
         */
         public function cookieBoolean($_key, $_default=false)
@@ -1537,7 +1543,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $_errno
          * @return    Mixed
         */
-        public function cookieModel( $_model, &$_errno=NULL )
+        public function cookieModel($_model, &$_errno=NULL)
         {
             import('Filter');
             return Filter::loadFromModel($_COOKIE, $_model, $_errno);
@@ -1554,7 +1560,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $_errno
          * @return    Mixed
         */
-        public function session( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+        public function session($_key, $_model=NULL, $_default=false, &$_errno=NULL)
         {
             if ( ! isset($_SESSION[$_key]) ) return $_default;
             
@@ -1579,7 +1585,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $_errno
          * @return    Mixed
         */
-        public function request( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+        public function request($_key, $_model=NULL, $_default=false, &$_errno=NULL)
         {
             if ( ! isset($_REQUEST[$_key]) ) return $_default;
             
@@ -1617,7 +1623,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $allow_nagative
          * @return    Mixed(Integer or false)
         */
-        public function requestInt( $_key, $_default=false, $allow_nagative=false )
+        public function requestInt($_key, $_default=false, $allow_nagative=false)
         {
             if ( ! isset( $_REQUEST[$_key] ) ) return $_default;
             
@@ -1633,7 +1639,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * Fetch an boolean from $_REQUEST global array
          *
          * @param   $_key
-	 * @param   $_default
+         * @param   $_default
          * @return  boolean
         */
         public function requestBoolean($_key, $_default=false)
@@ -1672,7 +1678,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $_errno
          * @return    Mixed
         */
-        public function requestModel( $_model, &$_errno=NULL )
+        public function requestModel($_model, &$_errno=NULL)
         {
             import('Filter');
             return Filter::loadFromModel($_REQUEST, $_model, $_errno);
@@ -1689,7 +1695,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $_errno
          * @return   Mixed
         */
-        public function server( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+        public function server($_key, $_model=NULL, $_default=false, &$_errno=NULL)
         {
             if ( ! isset($_SERVER[$_key]) ) return $_default;
             
@@ -1714,7 +1720,7 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
          * @param    $_errno
          * @return    Mixed
         */
-        public function env( $_key, $_model=NULL, $_default=false, &$_errno=NULL )
+        public function env($_key, $_model=NULL, $_default=false, &$_errno=NULL)
         {
             if ( ! isset($_ENV[$_key]) ) return $_default;
             
@@ -1726,6 +1732,21 @@ if ( (SR_INC_COMPONENTS & 0x08) != 0 ) {
             
             //normal string fetch
             return $_ENV[$_key];
+        }
+
+        /**
+         * get header parameter
+         *
+         * @param $name
+        */
+        public function header($name)
+        {
+            static $headers = null;
+            if ($headers == null ) {
+                $headers = getallheaders();
+            }
+
+            return isset($headers[$name]) ? $headers[$name] : null;
         }
 
 
@@ -2078,4 +2099,3 @@ if ( SR_CLI_MODE ) {
         @cli_set_process_title($_SERVER['PROCESS_TITLE']);
     }
 }
-?>

@@ -10,7 +10,7 @@
  //--------------------------------------------------------------
  
 //Syrian Version Number
-const SR_VERSION = '2.0';
+const SR_VERSION = '2.2';
 const SR_FLUSH_MODE  = 'flush_mode';
 const SR_IGNORE_MODE = 'ignore_mode';
 
