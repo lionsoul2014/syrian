@@ -707,20 +707,26 @@ class RouterShardingModel implements IModel
      *
      * @param   $_where
      * @param   $frag_recur
+     * @param   $affected_rows
      * @fragments suport
     */
-    public function delete($_where, $frag_recur=true)
+    public function delete($_where, $frag_recur=true, $affected_rows=true)
     {
         $shardingModels = $this->__getQueryShardingModels($_where);
         if ( count($shardingModels) == 1 ) {
             $pModel = $shardingModels[0]['model'];
-            return $pModel->delete($shardingModels[0]['where'], $frag_recur);
+            return $pModel->delete($shardingModels[0]['where'], $frag_recur, $affected_rows);
         }
 
-        $ret = false;
+        $ret = $affected_rows ? 0 : false;
         foreach ( $shardingModels as $sharding ) {
             $pModel = $sharding['model'];
-            $ret    = $pModel->delete($sharding['where'], $frag_recur) || $ret;
+            $sret   = $pModel->delete($sharding['where'], $frag_recur, $affected_rows);
+            if ($affected_rows) {
+                $ret += $sret;
+            } else {
+                $ret = $ret || $sret;
+            }
         }
 
         return $ret;

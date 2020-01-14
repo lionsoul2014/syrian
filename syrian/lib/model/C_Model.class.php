@@ -1143,9 +1143,10 @@ class C_Model implements IModel
      *
      * @param   $_where
      * @param   $frag_recur
+     * @param   $affected_rows
      * @fragments support
     */
-    public function delete($where, $frag_recur=true)
+    public function delete($where, $frag_recur=true, $affected_rows=true)
     {
         //backup the original where condition
         $_where = $where;
@@ -1154,7 +1155,7 @@ class C_Model implements IModel
         //so this->isFragment == false checking disabled
         if ( $frag_recur == false || $this->fragments == NULL ) {
             if ( is_array( $_where ) ) $_where = $this->getSqlWhere($_where);
-            return $this->db->delete($this->table, $_where);
+            return $this->db->delete($this->table, $_where, $affected_rows);
         }
 
         //-------------------------------------
@@ -1171,8 +1172,10 @@ class C_Model implements IModel
         }
 
         $_where = "{$this->primary_key} {$idstr}";
-        $ret    = $this->db->delete($this->table, $_where);
-        if ( $ret == false ) return false;
+        $ret    = $this->db->delete($this->table, $_where, false);
+        if ( $ret == false ) {
+            return $affected_rows ? $this->db->getAffectedRows() : false;
+        }
 
         /*
          * process the fragments data delete
@@ -1185,18 +1188,18 @@ class C_Model implements IModel
          * So, the frag_recur arguments is going to solve this problem
          * sub query never do the fragment query
         */
-
+        $af_rows = $affected_rows ? $this->db->getAffectedRows() : 0;
         $primary = NULL;
         foreach ( $this->fragments as $fragment ) {
             $sModel = $this->getModel($fragment['model']);
             $swhere = array($sModel->getPrimaryKey() => "{$idstr}");
-            if ( $sModel->delete($swhere, false) == false ) {
+            if ( $sModel->delete($swhere, false, false) == false ) {
                 $activeModel = ($sModel instanceof C_Model) ? $sModel : $sModel->getLastActiveModel();
                 throw new Exception("Fail to do the sub delete for model identified with " . $activeModel->getTableName());
             }
         }
 
-        return true;
+        return $affected_rows ? $af_rows : true;
     }
 
     //delete by primary key

@@ -1077,9 +1077,10 @@ class SparkModel implements IModel
      *
      * @param   $_where
      * @param   $frag_recur
+     * @param   $affected_rows
      * @fragments suport
     */
-    public function delete($_where, $frag_recur=true)
+    public function delete($_where, $frag_recur=true, $affected_rows=true)
     {
         throw new Exception("Not implemented yet.");
     }

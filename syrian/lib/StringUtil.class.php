@@ -511,5 +511,29 @@ class StringUtil
         return preg_replace('/\{~\[(.*?)\]~\}/', '<$1>', $str);
     }
 
+    /**
+     * clear the punctuation and whitespace of the specifield string
+    */
+    public static function clearEnPunc($str, $replace='')
+    {
+        return preg_replace("/[[:punct:]]/i", $replace, $str);
+    }
+
+    public static function clearCnPunc($str, $replace='', $charset='utf-8')
+    {
+        // Filter 中文标点符号
+        mb_regex_encoding($charset);
+        $puncs = "，。、！？：；﹑•＂…‘’“”〝〞∕¦‖—　〈〉﹞﹝「」‹›〖〗】【»«』『〕〔》《﹐¸﹕︰﹔！¡？¿﹖﹌﹏﹋＇´ˊˋ―﹫︳︴¯＿￣﹢﹦﹤‐­˜﹟﹩﹠﹪﹡﹨﹍﹉﹎﹊ˇ︵︶︷︸︹︿﹀︺︽︾ˉ﹁﹂﹃﹄︻︼（）";
+        return mb_ereg_replace("[{$puncs}]", $replace, $str, $charset);
+    }
+
+    public static function clearPunc($str, $replace='', $charset='utf-8')
+    {
+        $str = preg_replace("/\s+/", $replace, $str);
+        $str = self::clearEnPunc($str, $replace);
+        $str = self::clearCnPunc($str, $replace, $charset);
+        return $str;
+    }
+
 }
 ?>

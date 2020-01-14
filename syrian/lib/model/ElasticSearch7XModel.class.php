@@ -727,7 +727,7 @@ class ElasticSearch7XModel implements IModel
      * @param   $ttl time to live in seconds
      * @return  Mixed(false or Array)
     */
-    public function iterator($_fields, $_where, $_order, $size, $ttl)
+    public function iterator($_fields, $_where, $_order=null, $size=null, $ttl=30)
     {
         /*
          * check and define the defaule sorting
@@ -738,7 +738,8 @@ class ElasticSearch7XModel implements IModel
         if ( $_order == null ) $_order = array('_doc' => 'asc');
 
         $_src = $this->getQueryFieldArgs($_fields);
-        $_DSL = $this->getQueryDSL($_where, $_order, array(-1, $size));
+        $_DSL = is_array($_where) ? $this->getQueryDSL(
+            $_where, $_order, array(-1, $size)) : $_where;
         $json = $this->_request('POST', $_DSL, "{$this->index}/_search", "scroll={$ttl}s&{$_src}", true);
         if ( $json == false ) {
             return false;
@@ -954,7 +955,8 @@ class ElasticSearch7XModel implements IModel
     */
     public function totals($_where=null, $_group=null)
     {
-        $_DSL = $this->getQueryDSL($_where, null, null);
+        $_DSL = is_array($_where)
+            ? $this->getQueryDSL($_where, null, null) : $_where;
         $json = $this->_request('POST', $_DSL, "{$this->index}/_count");
         if ( $json == false ) {
             return 0;
@@ -1077,7 +1079,8 @@ class ElasticSearch7XModel implements IModel
     public function getList($_fields, $_where=null, $_order=null, $_limit=null, $_group=null)
     {
         $_src = $this->getQueryFieldArgs($_fields);
-        $_DSL = $this->getQueryDSL($_where, $_order, $_limit);
+        $_DSL = is_array($_where) 
+            ? $this->getQueryDSL($_where, $_order, $_limit) : $_where;
         $json = $this->_request('POST', $_DSL, "{$this->index}/_search", $_src, true);
         if ( $json == false ) {
             return false;
@@ -1232,7 +1235,7 @@ class ElasticSearch7XModel implements IModel
     public function get($_fields, $_where)
     {
         $_src = $this->getQueryFieldArgs($_fields);
-        $_DSL = $this->getQueryDSL($_where, null, 1);
+        $_DSL = is_array($_where) ? $this->getQueryDSL($_where, null, 1) : $_where;
         $json = $this->_request('POST', $_DSL, "{$this->index}/_search", $_src, true);
         if ( $json == false ) {
             return false;
@@ -1390,6 +1393,7 @@ class ElasticSearch7XModel implements IModel
     public function batchAdd($data, $onDuplicateKey=null)
     {
         $workload = array();
+        $dataMap  = array();
         foreach ( $data as $val ) {
             if ( $this->primary_key == null ) {
                 $id = $this->genUUID($val);
@@ -1403,7 +1407,9 @@ class ElasticSearch7XModel implements IModel
 
             //do the data types conversion
             $this->stdDataTypes($val);
-            $workload[] = self::array2Json($val);
+            $jsonVal = self::array2Json($val);
+            $dataMap[$id] = $jsonVal;
+            $workload[] = $jsonVal;
         }
 
         /*
@@ -1421,33 +1427,83 @@ class ElasticSearch7XModel implements IModel
         /*
          * api return:
          * {
-         *  "took": 124,
-         *  "errors": false,
-         *  "items": [{
-         *      "index": {
-         *      "_index": "stream",
-         *      "_type": "main",
-         *      "_id": "18064",
+         *  "index": {
+         *      "_index": "index_name",
+         *      "_type": "_doc",
+         *      "_id": "4694860",
          *      "_version": 1,
+         *      "result": "created",
          *      "_shards": {
          *          "total": 2,
          *          "successful": 1,
          *          "failed": 0
          *      },
+         *      "_seq_no": 1065148,
+         *      "_primary_term": 1,
          *      "status": 201
+         *  }
+         * }
+         * with error:
+         * {
+         *  "index": {
+         *      "_index": "index_name",
+         *      "_type": "_doc",
+         *      "_id": "4694862",
+         *      "status": 400,
+         *      "error": {
+         *          "type": "illegal_argument_exception",
+         *          "reason": "startOffset must be non-negative, and endOffset must be >= startOffset, and offsets must not go backwards startOffset=0,endOffset=1,lastStartOffset=5 for field 'name'"
          *      }
-         *  }]
+         *  }
          * }
         */
 
         $ok_count = 0;
+        $er_count = 0;
+        $workload = array();
         foreach ( $json->items as $item ) {
-            if ( isset($item->index->_id) ) {
+            if ( isset($item->index->result) ) {
                 $ok_count++;
+            } else if ( isset($item->index->error) 
+                && isset($item->index->error->type) ) {
+                $er_count++;
+                $id = $item->index->_id;
+                $workload[] = "{\"index\":{\"_index\":\"{$this->index}\",\"_id\":\"{$id}\"}}";
+                $workload[] = $dataMap[$id];
             }
         }
 
+        /* Check and retry for the failed PARTS  */
+        while ( $er_count > 0 ) {
+            $workload[] = "\n";
+            $_DSL = implode("\n", $workload);
+            $rows = $er_count;
+            $json = $this->_request('POST', $_DSL, "{$this->index}/_bulk");
+            if ( $json == false || ! isset($json->items) ) {
+                break;
+            }
 
+            $er_count = 0;
+            $workload = array();
+            foreach ( $json->items as $item ) {
+                if ( isset($item->index->result) ) {
+                    $ok_count++;
+                } else if ( isset($item->index->error) 
+                    && isset($item->index->error->type) ) {
+                    $er_count++;
+                    $id = $item->index->_id;
+                    $workload[] = "{\"index\":{\"_index\":\"{$this->index}\",\"_id\":\"{$id}\"}}";
+                    $workload[] = $dataMap[$id];
+                }
+            }
+
+            if ( $er_count == $rows ) {
+                /* Abort if Nothing changed for this retry */
+                break;
+            }
+        }
+
+        unset($workload, $dataMap);
         return $ok_count;
     }
 
@@ -1747,19 +1803,20 @@ class ElasticSearch7XModel implements IModel
      *
      * @param   $_where
      * @param   $frag_recur
+     * @param   $affected_rows
      * @param   Mixed(false or affected rows)
     */
-    public function delete($_where, $frag_recur=true)
+    public function delete($_where, $frag_recur=true, $affected_rows=true)
     {
         if ( $_where == null ) {
             throw new Exception("Empty delete condition is not allow");
         }
 
         /* intercept the primary key deletion and translate it as a bulk request */
-        if ( count($_where) == 1 && isset($_where[$this->primary_key]) ) {
+        if ( is_array($_where) && count($_where) == 1 && isset($_where[$this->primary_key]) ) {
             $value  = strtolower(trim($_where[$this->primary_key]));
             $opcode = $value[0];
-            switch ( $opcode ) {
+            switch ($opcode) {
             case '=':   // equal query
                 $_ids = array(substr($value, 1));
                 break;
@@ -1772,7 +1829,7 @@ class ElasticSearch7XModel implements IModel
                 $_ids = false;
             }
 
-            if ( $_ids != false ) {
+            if ($_ids != false) {
                 $workload = array();
                 foreach ( $_ids as $id ) {
                     $workload[] = "{\"delete\":{\"_index\":\"{$this->index}\",\"_id\":\"{$id}\"}}";
@@ -1796,7 +1853,23 @@ class ElasticSearch7XModel implements IModel
             }
         }
 
-        return false;
+        /* for the rest of the operation we push the 
+         * data to the _delete_by_query terminal for auto batch operation */
+        if (is_array($_where)) {
+            $_DSL = $this->getQueryDSL($_where, null, null);
+        } else if (is_string($_where)) {
+            $_DSL = $_where;
+        } else {
+            throw new Exception("Error: Invalid where value {$_where}\n");
+        }
+
+        $args = 'conflicts=proceed&scroll_size=500';
+        $json = $this->_request('POST', $_DSL, "{$this->index}/_delete_by_query?{$args}");
+        if ($json == false || ! isset($json->deleted)) {
+            return $affected_rows ? 0 : false;
+        }
+
+        return $affected_rows ? $json->deleted : true;
     }
 
     //delete by primary key
@@ -1928,17 +2001,49 @@ class ElasticSearch7XModel implements IModel
             case 'integer':
             case 'short':
             case 'byte':
-                if ( ! is_long($value) )    $value = intval($value);
+                if ( is_array($value) ) {
+                    foreach ($value as $k => $v) {
+                        if (!is_long($v)) {
+                            $value[$k] = intval($v);
+                        }
+                    }
+                } else if ( ! is_long($value) ) {
+                    $value = intval($value);
+                }
                 break;
             case 'float':
             case 'half_float':
-                if ( ! is_float($value) )   $value = floatval($value);
+                if ( is_array($value) ) {
+                    foreach ($value as $k => $v) {
+                        if (!is_float($v)) {
+                            $value[$k] = floatval($v);
+                        }
+                    }
+                } else if ( ! is_float($value) ) {
+                    $value = floatval($value);
+                }
                 break;
             case 'double':
-                if ( ! is_double($value) )  $value = doubleval($value);
+                if ( is_array($value) ) {
+                    foreach ($value as $k => $v) {
+                        if (!is_double($v)) {
+                            $value[$k] = doubleval($v);
+                        }
+                    }
+                } else if ( ! is_double($value) ) {
+                    $value = doubleval($value);
+                }
                 break;
             case 'boolean':
-                if ( ! is_bool($value) ) settype($value, 'boolean');
+                if ( is_array($value) ) {
+                    foreach ($value as $k => $v) {
+                        if (!is_double($v)) {
+                            settype($value[$k], 'boolean');
+                        }
+                    }
+                } else if ( ! is_bool($value) ) {
+                    settype($value, 'boolean');
+                }
                 break;
             }
         }

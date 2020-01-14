@@ -85,7 +85,9 @@ function _cli_initialize()
         }
 
         $_SERVER['REQUEST_URI'] = $request_uri;
-        if ( ($queryPos = strpos($request_uri, '?')) !== false ) {
+        # take ? or # as the query arguments delimiter
+        if ( ($queryPos = strpos($request_uri, '?')) !== false 
+            || ($queryPos = strpos($request_uri, '#')) !== false ) {
             $query_string = substr($request_uri, $queryPos + 1);
             $_SERVER['QUERY_STRING'] = $query_string;
 
@@ -667,6 +669,8 @@ function parse_uri($uri, $separator='/', $default=null)
     */
     if ( ($argsIdx = strpos($uri, '?')) !== false ) {
         $path = substr($uri, 0, $argsIdx);
+    } else if ( SR_CLI_MODE && ($argsIdx = strpos($uri, '#')) !== false ) {
+        $path = substr($uri, 0, $argsIdx);
     } else {
         $path = $uri;
     }
@@ -756,10 +760,9 @@ function controller(
      * get and check the existence of the controller main file
     */
     $_ctrl_file = SR_CTRLPATH;
-    if ( $uri->package != null ) {
-        $_ctrl_file .= "{$uri->package}/";
-    }
-    $_ctrl_file .= $uri->module.'/'.ucfirst($uri->module)."Controller.php";
+    if ( $uri->package != null ) $_ctrl_file .= "{$uri->package}/";
+    $_ctrl_file .= "{$uri->module}/main.php";
+
     if ( ! file_exists($_ctrl_file) ) {
         throw new Exception("Unable to locate the controller with request uri {$uri->uri}", 404);
     }
@@ -767,10 +770,12 @@ function controller(
     /*
      * check and invoke the request dynamic resource pre load callback
     */
-    if ( !empty($res_preload_callback) ) {
-        call_user_func($res_preload_callback, $uri);
+    if ( $res_preload_callback != null ) {
+        $res_preload_callback($uri);
     }
+
     require $_ctrl_file;
+    
     /*
      * search and check the existence of the controller class
      * then create the controller instance
@@ -800,7 +805,7 @@ function controller(
  * @param   $executor (default to the local executor)
  * @param   $asyn (default to true)
  * @param   $priority
- * @return Service
+ * @return  Service
 */
 function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
 {
@@ -808,6 +813,7 @@ function service($serv_path, $args, $executor=null, $asyn=true, $priority=null)
         import('service.LocalExecutor');
         $executor = new LocalExecutor(null);
     }
+    
     return $executor->execute(
         $serv_path, 
         $args, 
@@ -1084,43 +1090,4 @@ function get_post_raw_data()
 function get_post_raw_data_json($assoc=false)
 {
     return json_decode(file_get_contents("php://input"), $assoc);
-}
-
-
-/**
- * 打印一行
- * @param $msg
- */
-function printLine($msg) {
-    echo ("{$msg} \n");
-}
-
-/**
- * 终端高亮打印绿色
- * @param $message
- */
-function tprintOk( $message ) {
-
-    printf("\033[32m\033[1m{$message}\033[0m\n");
-
-}
-
-/**
- * 终端高亮打印红色
- * @param $message
- */
-function tprintError( $message ) {
-
-    printf("\033[31m\033[1m{$message}\033[0m\n");
-
-}
-
-/**
- * 终端高亮打印黄色
- * @param $message
- */
-function tprintWarning( $message ) {
-
-    printf("\033[33m\033[1m{$message}\033[0m\n");
-
 }

@@ -10,12 +10,12 @@
  //--------------------------------------------------------------
  
 //Syrian Version Number
-define('SR_VERSION', '2.0');
+const SR_VERSION = '2.2';
+const SR_FLUSH_MODE  = 'flush_mode';
+const SR_IGNORE_MODE = 'ignore_mode';
 
 //sapi mode define
-defined('SR_CLI_MODE')      or define('SR_CLI_MODE', strncmp(php_sapi_name(), 'cli', 3)=='cli');
-defined('SR_FLUSH_MODE')    or define('SR_FLUSH_MODE',  'flush_mode');
-defined('SR_IGNORE_MODE')   or define('SR_IGNORE_MODE', 'ignore_mode');
+define('SR_CLI_MODE', strncmp(php_sapi_name(), 'cli', 3)=='cli');
 
 //check and define the including components
 //0x01: Function
