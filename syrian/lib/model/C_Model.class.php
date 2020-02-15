@@ -385,6 +385,7 @@ class C_Model implements IModel
             if ( is_string($_fields) ) $_fields = explode(',', $_fields);
             $fieldsMap = array_flip($_fields);
             $sQueries = array();
+            $this_cls = get_class($this);
             foreach ( $this->fragments as $fragment ) {
                 $item = array();
                 foreach ( $fragment['fields'] as $field ) {
@@ -395,10 +396,14 @@ class C_Model implements IModel
                 }
 
                 if ( ! empty($item) ) {
-                    $sQueries[] = array(
-                        'fields' => &$item,
-                        'model'  => $this->getModel($fragment['model'])
-                    );
+                    /* Avoid recursive references */
+                    $frag_model = $this->getModel($fragment['model']);
+                    if (get_class($frag_model) != $this_cls) {
+                        $sQueries[] = array(
+                            'fields' => &$item,
+                            'model'  => $frag_model
+                        );
+                    }
                 }
 
                 unset($item);
@@ -520,6 +525,7 @@ class C_Model implements IModel
 
             //intercept the fragment fields
             $sQueries = array();
+            $this_cls = get_class($this);
             foreach ( $this->fragments as $fragment ) {
                 $item = array();
                 foreach ( $fragment['fields'] as $field ) {
@@ -530,10 +536,14 @@ class C_Model implements IModel
                 }
 
                 if ( ! empty($item) ) {
-                    $sQueries[] = array(
-                        'fields' => &$item,
-                        'model'  => $this->getModel($fragment['model'])
-                    );
+                    /* Avoid recursive references */
+                    $frag_model = $this->getModel($fragment['model']);
+                    if (get_class($frag_model) != $this_cls) {
+                        $sQueries[] = array(
+                            'fields' => &$item,
+                            'model'  => $frag_model
+                        );
+                    }
                 }
 
                 unset($item);
@@ -675,6 +685,7 @@ class C_Model implements IModel
         //-----------------------------------
         //intercept the fragments data
         $sData = array();
+        $this_cls = get_class($this);
         foreach ( $this->fragments as $fragment ) {
             $item = array();
             foreach ( $fragment['fields'] as $field ) {
@@ -690,13 +701,19 @@ class C_Model implements IModel
              * if the sync_w attribtues is marked as true that means
              * no matter there is data that is going to inserted to the fragment no not
              * we will do the insert operation for the current fragment
+             *
+             * @Note added at 2020/02/15
+             * Add logic to check and Avoid recursive references
             */
             if ( ! empty($item) 
                 || (isset($fragment['sync_w']) && $fragment['sync_w']) ) {
-                $sData[] = array(
-                    'data'  => &$item,
-                    'model' => $this->getModel($fragment['model'])
-                );
+                $frag_model = $this->getModel($fragment['model']);
+                if (get_class($frag_model) != $this_cls) {
+                    $sData[] = array(
+                        'data'  => &$item,
+                        'model' => $frag_model
+                    );
+                }
             }
 
             unset($item);
@@ -773,7 +790,8 @@ class C_Model implements IModel
         $isFragment = $this->isFragment && $this->fragments != NULL;
         if ( $isFragment ) {
             //intercept the fragments data
-            $sData  = array();
+            $sData = array();
+            $this_cls = get_class($this);
             foreach ( $this->fragments as $fragment ) {
                 $item = array();
                 foreach ( $fragment['fields'] as $field ) {
@@ -785,10 +803,14 @@ class C_Model implements IModel
                 }
 
                 if ( ! empty($item) ) {
-                    $sData[] = array(
-                        'data'  => &$item,
-                        'model' => $this->getModel($fragment['model'])
-                    );
+                    /* Avoid recursive references */
+                    $frag_model = $this->getModel($fragment['model']);
+                    if (get_class($frag_model) != $this_cls) {
+                        $sData[] = array(
+                            'data'  => &$item,
+                            'model' => $frag_model
+                        );
+                    }
                 }
 
                 unset($item);
@@ -1188,10 +1210,16 @@ class C_Model implements IModel
          * So, the frag_recur arguments is going to solve this problem
          * sub query never do the fragment query
         */
-        $af_rows = $affected_rows ? $this->db->getAffectedRows() : 0;
-        $primary = NULL;
+        $this_cls = get_class($this);
+        $af_rows  = $affected_rows ? $this->db->getAffectedRows() : 0;
+        $primary  = NULL;
         foreach ( $this->fragments as $fragment ) {
+            /* Avoid recursive references */
             $sModel = $this->getModel($fragment['model']);
+            if (get_class($sModel) == $this_cls) {
+                continue;
+            }
+
             $swhere = array($sModel->getPrimaryKey() => "{$idstr}");
             if ( $sModel->delete($swhere, false, false) == false ) {
                 $activeModel = ($sModel instanceof C_Model) ? $sModel : $sModel->getLastActiveModel();
@@ -1298,6 +1326,29 @@ class C_Model implements IModel
     public function getFragmentInfo()
     {
         return isset($this->fragments) ? $this->fragments : NULL;
+    }
+
+    /**
+     * Add a new fragment setting
+     *
+     * @param   $model_path
+     * @param   $fields
+     * @param   $sync_w
+     * @return  $this
+    */
+    public function addFragment($model_path, $fields, $sync_w=false)
+    {
+        if ($this->fragments == NULL) {
+            $this->fragments = array();
+        }
+
+        $this->fragments[] = array(
+            'model'  => $model_path,
+            'sync_w' => $sync_w,
+            'fields' => $fields
+        );
+
+        return $this;
     }
 
     /**
