@@ -126,9 +126,29 @@ class Input
     */
     public function getInt($_key, $_default=false, $allow_nagative=false)
     {
-        if ( ! isset( $_GET[$_key] ) ) return $_default;
+        if ( ! isset($_GET[$_key]) ) return $_default;
         
         $v = intval($_GET[$_key]);
+        if ( $v < 0 && $allow_nagative == false ) {
+            return false;
+        }
+
+        return $v;
+    }
+
+    /**
+     * Fetch an float form $_GET global array
+     *
+     * @param    $_key
+     * @param    $_default
+     * @param    $allow_nagative
+     * @return   Mixed(Integer or false)
+    */
+    public function getFloat($_key, $_default=false, $allow_nagative=false)
+    {
+        if ( ! isset($_GET[$_key]) ) return $_default;
+        
+        $v = floatval($_GET[$_key]);
         if ( $v < 0 && $allow_nagative == false ) {
             return false;
         }
@@ -248,6 +268,26 @@ class Input
     }
 
     /**
+     * Fetch an float form $_POST global array
+     *
+     * @param    $_POST
+     * @param    $_default
+     * @param    $allow_nagative
+     * @return   Mixed(Integer or false)
+    */
+    public function postFloat($_key, $_default=false, $allow_nagative=false)
+    {
+        if ( ! isset($_POST[$_key]) ) return $_default;
+        
+        $v = floatval($_POST[$_key]);
+        if ( $v < 0 && $allow_nagative == false ) {
+            return false;
+        }
+
+        return $v;
+    }
+
+    /**
      * Fetch an boolean from $_POST global array
      *
      * @param   $_key
@@ -350,6 +390,26 @@ class Input
         if ( ! isset( $_COOKIE[$_key] ) ) return $_default;
         
         $v = intval($_COOKIE[$_key]);
+        if ( $v < 0 && $allow_nagative == false ) {
+            return false;
+        }
+
+        return $v;
+    }
+
+    /**
+     * Fetch an float form $_COOKIE global array
+     *
+     * @param    $_key
+     * @param    $_default
+     * @param    $allow_nagative
+     * @return   Mixed(Integer or false)
+    */
+    public function cookieFloat($_key, $_default=false, $allow_nagative=false)
+    {
+        if ( ! isset($_COOKIE[$_key]) ) return $_default;
+        
+        $v = floatval($_COOKIE[$_key]);
         if ( $v < 0 && $allow_nagative == false ) {
             return false;
         }
@@ -485,6 +545,26 @@ class Input
         if ( ! isset( $_REQUEST[$_key] ) ) return $_default;
         
         $v = intval($_REQUEST[$_key]);
+        if ( $v < 0 && $allow_nagative == false ) {
+            return false;
+        }
+
+        return $v;
+    }
+
+    /**
+     * Fetch an float form $_REQUEST global array
+     *
+     * @param    $_key
+     * @param    $_default
+     * @param    $allow_nagative
+     * @return   Mixed(Integer or false)
+    */
+    public function requestFloat($_key, $_default=false, $allow_nagative=false)
+    {
+        if ( ! isset( $_REQUEST[$_key] ) ) return $_default;
+        
+        $v = floatval($_REQUEST[$_key]);
         if ( $v < 0 && $allow_nagative == false ) {
             return false;
         }
