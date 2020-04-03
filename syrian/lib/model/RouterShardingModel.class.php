@@ -88,6 +88,16 @@ class RouterShardingModel implements IModel
         return isset($this->primary_key) ? $this->primary_key : $this->guidKey;
     }
 
+    /**
+     * return the sharding array
+     *
+     * @param   Array or NULL for not setted
+    */
+    public function getShardings()
+    {
+        return $this->shardings;
+    }
+
 
     /**
      * get the last active C_Model object
