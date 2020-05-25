@@ -125,7 +125,7 @@ class RedisMap implements IMap
     */
     public function size()
     {
-        return $this->connect()->llen($this->key);
+        return $this->connect()->hlen($this->key);
     }
 
     /**
