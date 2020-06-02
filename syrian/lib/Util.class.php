@@ -49,27 +49,50 @@ class Util
      *  of the access client
      *
      * @param   $convert
+     * @param   $mask like: FILTER_FLAG_IPV4 
+     *          | FILTER_FLAG_NO_PRIV_RANGE 
+     *          | FILTER_FLAG_NO_RES_RANGE
      * @return  mixed(int or string)
      */
-    public static function getIpAddress($convert=false) 
+    public static function getIpAddress($convert=false, $mask = FILTER_FLAG_IPV4)
     {
-        $ip = ""; 
-        foreach ( array('HTTP_CLIENT_IP', 
-            'HTTP_X_FORWARDED_FOR', 
-            'HTTP_X_FORWARDED', 
-            'HTTP_FORWARDED_FOR', 
-            'HTTP_FORWARDED', 
-            'REMOTE_ADDR') as $e ) {
-            if ( getenv($e) ) {
-                $ip = getenv($e);
-                break;
+        // $ip = ""; 
+        // foreach ( array('HTTP_CLIENT_IP', 
+        //     'HTTP_X_FORWARDED_FOR', 
+        //     'HTTP_X_FORWARDED', 
+        //     'HTTP_FORWARDED_FOR', 
+        //     'HTTP_FORWARDED', 
+        //     'REMOTE_ADDR') as $e ) {
+        //     if ( getenv($e) ) {
+        //         $ip = getenv($e);
+        //         break;
+        //     }
+        // }
+
+        // if ( ($comma=strpos($ip, ',')) !== false ) $ip = substr($ip, 0, $comma);
+        // if ( $convert ) $ip = intval(sprintf("%u", ip2long($ip)));
+
+        // return $ip;
+
+        foreach (array(
+            'HTTP_CLIENT_IP',
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_FORWARDED',
+            'HTTP_X_CLUSTER_CLIENT_IP',
+            'HTTP_FORWARDED_FOR',
+            'HTTP_FORWARDED',
+            'REMOTE_ADDR') as $key) {
+            if (isset($_SERVER[$key])) {
+                foreach (explode(',', $_SERVER[$key]) as $ip) {
+                    $ip = trim($ip);
+                    if (filter_var($ip, FILTER_VALIDATE_IP, $mask) !== false) {
+                        return $convert ? intval(sprintf("%u", ip2long())) : $ip;
+                    }
+                }
             }
         }
 
-        if ( ($comma=strpos($ip, ',')) !== false ) $ip = substr($ip, 0, $comma);
-        if ( $convert ) $ip = intval(sprintf("%u", ip2long($ip)));
-
-        return $ip;
+        return $convert ? 0 : null;
     }
 
     //get the real client ip
