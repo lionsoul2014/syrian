@@ -86,7 +86,7 @@ class Util
                 foreach (explode(',', $_SERVER[$key]) as $ip) {
                     $ip = trim($ip);
                     if (filter_var($ip, FILTER_VALIDATE_IP, $mask) !== false) {
-                        return $convert ? intval(sprintf("%u", ip2long())) : $ip;
+                        return $convert ? intval(sprintf("%u", ip2long($ip))) : $ip;
                     }
                 }
             }
