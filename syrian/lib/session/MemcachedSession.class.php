@@ -184,6 +184,11 @@ class MemcachedSession implements ISession
         session_destroy();
     }
 
+    public function flush()
+    {
+        return true;
+    }
+
     //get the current session id
     //invoke it after the invoke the start method
     public function getSessionId()

@@ -13,10 +13,11 @@ class FastSession implements ISession
 
     /* default the session life time to 10mins */
     private $_ttl       = 600;
-    private $_sess_name = 'sy_sess_d';
+    private $_sess_name = 'syrian-sess-d';
     private $_sess_id   = null;
-    private $_sess_pack = null;;
+    private $_sess_pack = null;
     private $_sess_data = null;
+    private $_override  = true;
 
     // @see ./FileSession
     private $_expire_strategy = 'request';
@@ -28,7 +29,7 @@ class FastSession implements ISession
      * demo config data:
      *  $_conf = array(
      *       'ttl'           => 86400,  // time to live
-     *       'session_name'  => 'sy_sess_d',
+     *       'session_name'  => 'syrian-sess-d',
      *       // domain strategy cur_host | all_sub_host
              'domain_strategy' => 'all_sub_host'
      *   );
@@ -39,6 +40,10 @@ class FastSession implements ISession
     {
         if (isset($conf['ttl'])) {
             $this->_ttl = $conf['ttl'];
+        }
+
+        if (isset($conf['session_name'])) {
+            $this->_sess_name = $conf['session_name'];
         }
 
         if (isset($conf['cookie_domain'])) {
@@ -61,10 +66,6 @@ class FastSession implements ISession
                 break;
             }
         }
-
-        if ($this->_expire_strategy == 'global') {
-            session_set_cookie_params($this->_ttl, '/', $this->_cookie_domain);
-        }
     }
 
     /* start the session */
@@ -73,24 +74,25 @@ class FastSession implements ISession
         if ( $this->_sess_id != null ) {
         }
         /* try to fetch the session id from the GP data */
-        else if ( isset($_REQUEST[$this->_session_name]) ) {
-            $this->_sess_id = $_REQUEST[$this->_session_name];
+        else if ( isset($_REQUEST[$this->_sess_name]) ) {
+            $this->_sess_id = $_REQUEST[$this->_sess_name];
         }
         /* try to fetch the session id from the cookie data */
-        else if ( isset($_COOKIE[$this->_session_name]) ) {
-            $this->_sess_id = $_COOKIE[$this->_session_name];
+        else if ( isset($_COOKIE[$this->_sess_name]) ) {
+            $this->_sess_id = $_COOKIE[$this->_sess_name];
         }
         /*
          * session id is not define or the client has not bring
          * the sended session id back here we will generate one
         */
         else {
-            $this->_sess_pack = self::_build_sess_pack(null);
+            // DO nothing here
         }
 
         /* check and decode the session data */
+        $this->_sess_pack = $this->_read();
         if ($this->_sess_pack == null) {
-            $this->_sess_pack = $this->_read();
+            $this->_sess_pack = $this->_build_sess_pack(null);
         }
     }
 
@@ -98,11 +100,16 @@ class FastSession implements ISession
     public function destroy()
     {
         // 1. clear the session data
-        unset($this->_session);
-        $this->_session = array();
+        unset($this->_sess_data);
+        $this->_sess_data = array();
 
         // 2. destroy the session file or stored data
         $this->_destroy();
+    }
+
+    public function flush()
+    {
+        return $this->_write();
     }
 
     // get the current session id
@@ -130,19 +137,19 @@ class FastSession implements ISession
         if ( $this->_sess_id == null 
             || ($data = base64_decode($this->_sess_id)) == false 
                 || ($json = json_decode($data, true)) == null) {
-            return array();
+            return null;
         }
-        
+
         foreach (array('id', 'dt', 'sg') as $k) {
             if (isset($json[$k]) == false) {
-                return array();
+                return null;
             }
         }
 
         /* check the signature */
         if (valid_signature(array($json['id'], 
-            json_encode($json['dt'])), $sg, $this->ttl) == false) {
-            return array();
+            json_encode($json['dt'])), $json['sg'], $this->_ttl) == false) {
+            return null;
         }
 
         /* reload the data to the global session */
@@ -165,17 +172,35 @@ class FastSession implements ISession
     */
     private function _write()
     {
-        if ($this->_expire_strategy == 'request') {
-            setcookie(
-                $this->_session_name, 
-                $this->_sess_id,
-                time() + $this->_ttl,
-                '/',
-                $this->_cookie_domain,
-                false,
-                true
-            );
+        if ($this->_sess_pack === null) {
+            return false;
         }
+
+        if ($this->_override == false) {
+            return true;
+        }
+
+        $c_time = time();
+        $_sess_pack = &$this->_sess_pack;
+        $_sess_pack['dt'] = $this->_sess_data;
+        $_sess_pack['sg'] = build_signature(
+            array($_sess_pack['id'], json_encode($_sess_pack['dt'])), $c_time);
+        $this->_sess_id = base64_encode(json_encode($_sess_pack));
+        $this->_override = false;
+        // echo "_write#_sess_id={$this->_sess_id}\n";
+
+        /* send the cookies update request */
+        setcookie(
+            $this->_sess_name, 
+            $this->_sess_id,
+            $c_time + $this->_ttl,
+            '/',
+            $this->_cookie_domain,
+            false,
+            true
+        );
+
+        return true;
     }
     
     /* build a session package with the specifield data */
@@ -186,7 +211,7 @@ class FastSession implements ISession
 
         $id = StringUtil::genGlobalUid(Util::getIpAddress(true));
         $dt = $data == null ? array() : $data;
-        $sg = build_signature(array($id, json_encode($dt)), $this->ttl);
+        $sg = build_signature(array($id, json_encode($dt)), $this->_ttl);
 
         return array(
             'id' => $id,
@@ -201,8 +226,8 @@ class FastSession implements ISession
     */
     function _destroy($_sess_id)
     {
-        if ( isset($_COOKIE[$this->_session_name]) ) {
-            setcookie($this->_session_name, '', time() - 86400, '/');
+        if ( isset($_COOKIE[$this->_sess_name]) ) {
+            setcookie($this->_sess_name, '', time() - 86400, '/');
         }
 
         return true;
@@ -224,6 +249,7 @@ class FastSession implements ISession
     public function set($key, $val)
     {
         $this->_sess_data[$key] = &$val;
+        $this->_override = true;
         return $this;
     }
 

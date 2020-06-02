@@ -204,6 +204,11 @@ class MempureSession implements ISession
         $this->_destroy();
     }
 
+    public function flush()
+    {
+        return $this->_write();
+    }
+
     //get the current session id
     //invoke it after the invoke the start method
     public function getSessionId()
@@ -253,6 +258,8 @@ class MempureSession implements ISession
                 $this->_sessid, json_encode($this->_session), $this->_ttl
             );
         }
+
+        return true;
     }
     
     /**
@@ -267,20 +274,20 @@ class MempureSession implements ISession
     }
     
     //check the specifield mapping is exists or not
-    public function has( $key )
+    public function has($key)
     {
         return isset($this->_session[$key]);
     }
 
     //get the value mapping with the specifield key
-    public function get( $key )
+    public function get($key)
     {
         if ( ! isset($this->_session[$key]) ) return null;
         return $this->_session[$key];
     }
 
     //set the value mapping with the specifield key
-    public function set( $key, $val )
+    public function set($key, $val)
     {
         $this->_session[$key] = $val;
         $this->_override = true;
@@ -294,7 +301,7 @@ class MempureSession implements ISession
     }
 
     //set the current R8C invoke it before invoke start
-    public function setR8C( $r8c )
+    public function setR8C($r8c)
     {
         $this->_R8C = $r8c;
         return $this;

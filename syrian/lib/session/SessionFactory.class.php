@@ -10,6 +10,8 @@ interface ISession
 {
     public function start();
     public function destroy();
+
+    public function flush();
     public function setSessionId($_sessid);
     public function getSessionId();
 
@@ -58,4 +60,3 @@ class SessionFactory
         return new $_class($_conf);
     }
 }
-?>
