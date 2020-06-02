@@ -224,12 +224,9 @@ class FastSession implements ISession
      * This callback is executed when a session is destroyed with session_destroy().
      * Return value should be true for success, false for failure.
     */
-    function _destroy($_sess_id)
+    private function _destroy()
     {
-        if ( isset($_COOKIE[$this->_sess_name]) ) {
-            setcookie($this->_sess_name, '', time() - 86400, '/');
-        }
-
+        setcookie($this->_sess_name, '', time() - 86400, '/');
         return true;
     }
     
