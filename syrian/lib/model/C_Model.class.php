@@ -151,6 +151,18 @@ class C_Model implements IModel
         $delimiter = NULL;
         foreach ( $_where as $field => $val ) {
             /*
+             * @Note: added at 2020/07/08
+             * check and define the quote
+            */
+            $qstr = '\'';
+            if (is_array($val)) {
+                if (isset($val['quote']) && $val['quote'] == false) {
+                    $qstr = NULL;
+                }
+                $val = isset($val['value']) ? $val['value'] : null;
+            }
+
+            /*
              * For more flexiable where condition syntax
              * We quote the value with single quotes by default
              *
@@ -166,7 +178,7 @@ class C_Model implements IModel
             case '=':
                 if ( ! self::isStringQuoted($val, 1, $eIdx) ) {
                     $nval = trim(substr($val, 1, $eIdx));
-                    $val  = "='{$nval}'{$parenthesis}";
+                    $val  = "={$qstr}{$nval}{$qstr}{$parenthesis}";
                 }
                 break;
             case '>':
@@ -175,13 +187,13 @@ class C_Model implements IModel
                 $sIdx = $hasEqual == NULL ? 1 : 2;
                 if ( ! self::isStringQuoted($val, $sIdx, $eIdx) ) {
                     $nval = trim(substr($val, $sIdx, $eIdx - $sIdx + 1));
-                    $val  = "{$val[0]}{$hasEqual}'{$nval}'{$parenthesis}";
+                    $val  = "{$val[0]}{$hasEqual}{$qstr}{$nval}{$qstr}{$parenthesis}";
                 }
                 break;
             case '!':   //!=
                 if ( ! self::isStringQuoted($val, 2, $eIdx) ) {
                     $nval = trim(substr($val, 2, $eIdx - 1));   //$eIdx - 2 + 1
-                    $val  = "!='{$nval}'{$parenthesis}";
+                    $val  = "!={$qstr}{$nval}{$qstr}{$parenthesis}";
                 }
                 break;
             case 'i':   //in(v1,v2)
@@ -216,7 +228,7 @@ class C_Model implements IModel
                         continue;
                     }
 
-                    $varr[$key] = "'{$v_item}'";
+                    $varr[$key] = "{$qstr}{$v_item}{$qstr}";
                 }
 
                 $nval = implode(',', $varr);
@@ -225,7 +237,7 @@ class C_Model implements IModel
             default:
                 if ( ! self::isStringQuoted($val, 0, $eIdx) ) {
                     $nval = trim($val);
-                    $val  = "='{$nval}'{$parenthesis}";
+                    $val  = "={$qstr}{$nval}{$qstr}{$parenthesis}";
                 }
                 break;
             }
