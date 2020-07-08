@@ -25,9 +25,10 @@ class Mysql implements Idb
     public function __construct( &$_host )
     {
         $this->_host = &$_host;
-        
-        //check the default magic quotes for GPC data
-        $this->_escape = get_magic_quotes_gpc();
+
+        // check the default magic quotes for GPC data
+        $this->_escape = version_compare(PHP_VERSION, '7.4.0', '<')
+            ? get_magic_quotes_gpc() : false;
     }
 
     /*
