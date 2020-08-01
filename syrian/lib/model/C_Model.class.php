@@ -234,6 +234,12 @@ class C_Model implements IModel
                 $nval = implode(',', $varr);
                 $val  = "{$opt_key}($nval){$parenthesis}";
                 break;
+            case 'l':
+                if (strncmp($val, "like ", 5) == 0) {
+                    $nval = trim(substr($val, 5));
+                    $val  = "like {$qstr}{$nval}{$qstr}{$parenthesis}";
+                }
+                break;
             default:
                 if ( ! self::isStringQuoted($val, 0, $eIdx) ) {
                     $nval = trim($val);
