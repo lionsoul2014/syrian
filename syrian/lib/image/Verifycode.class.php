@@ -214,7 +214,7 @@ class Verifycode
         }
 
         $output[] = ';base64,';
-        $output[] = ob_get_contents();
+        $output[] = base64_encode(ob_get_contents());
         ob_end_clean();
 
         return implode('', $output);
