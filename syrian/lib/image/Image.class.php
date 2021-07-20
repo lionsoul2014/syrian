@@ -1,6 +1,6 @@
 <?php
 /**
- * image handl class based on imagick
+ * image handle class based on imagick
  * 
  * @author    dongyado<dongyado@gmail.com>
  *
