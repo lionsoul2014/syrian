@@ -60,7 +60,8 @@ class FileSession implements ISession
         if(version_compare(PHP_VERSION,'7.2.0','<')) {
             session_module_name('user');
         }
-            session_set_save_handler(
+
+        session_set_save_handler(
             array($this, '_open'),
             array($this, '_close'),
             array($this, '_read'),

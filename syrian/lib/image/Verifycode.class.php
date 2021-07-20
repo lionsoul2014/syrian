@@ -85,6 +85,7 @@ class Verifycode
             $_code_buff[] = self::$_letters[mt_rand() % $_length];
         }
         $this->_codes = implode('', $_code_buff);
+        # $this->_codes = '....';
 
         # create an image and draw the codes on it
         if ( $this->_image == NULL ) {
@@ -98,8 +99,9 @@ class Verifycode
         case 3: $_bg = imagecolorallocate($this->_image, 233, 255, 242); break;
         }
         
+        # $_bg = imagecolorallocate($this->_image, 255, 255, 255);
         imagefilledrectangle($this->_image, 0, 0, $this->_config[0], $this->_config[1], $_bg);
-        //imagefilter($this->_image, IMG_FILTER_EMBOSS);
+        # //imagefilter($this->_image, IMG_FILTER_EMBOSS);
         
         switch ( mt_rand() % 5 ) {
         case 0: $_color = imagecolorallocate($this->_image, 128, 128, 128); break; // gray
@@ -109,7 +111,7 @@ class Verifycode
         case 4: $_color = imagecolorallocate($this->_image, 238, 175,   7); break; // orange
         }
 
-        //$_color = imagecolorallocate($this->_image, 238, 175, 7);
+        //$_color = imagecolorallocate($this->_image, 128, 128, 128);
         $_font = dirname(__FILE__) . DIRECTORY_SEPARATOR. 'fonts' . DIRECTORY_SEPARATOR . 'ariblk.ttf';
         
         //draw the code chars

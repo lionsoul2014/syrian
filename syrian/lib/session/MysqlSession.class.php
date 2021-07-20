@@ -19,7 +19,10 @@ class DBSession
         $this->Db = &$Db;
         $this->_ttl = $_ttl;
         //set use user level session
-        session_module_name('user');
+        if(version_compare(PHP_VERSION,'7.2.0','<')) {
+            session_module_name('user');
+        }
+
         session_set_save_handler(
             array(this, 'open'),
             array(this, 'close'),
