@@ -73,11 +73,13 @@ class Verifycode
     public function setInterferenceLines($num)
     {
         $this->_config[5] = $num;
+        return $this;
     }
 
     public function setInterferenceArc($num)
     {
         $this->_config[6] = $num;
+        return $this;
     }
     
     /**
