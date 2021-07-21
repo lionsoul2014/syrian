@@ -56,16 +56,15 @@ class MemcachedSession extends SessionBase
         if (isset($conf['hash_strategy'])) {
             switch ($conf['hash_strategy']) {
             case 'consistent':
-                $this->_mem->setOption(Memcached::OPT_DISTRIBUTION,
+                $this->_mem->setOption(Memcached::OPT_DISTRIBUTION, 
                     Memcached::DISTRIBUTION_CONSISTENT); 
                 $this->_mem->setOPtion(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
                 break;
             }
         }
 
-        if (isset($conf['hash'])) {
-            $hash = self::$_hash_opts[$conf['hash']];
-            $this->_mem->setOption(Memcached::OPT_HASH, $hash); 
+        if (isset($conf['hash']) && isset(self::$_hash_opts[$conf['hash']])) {
+            $this->_mem->setOption(Memcached::OPT_HASH, self::$_hash_opts[$conf['hash']]); 
         }
 
         if (isset($conf['prefix'])) {
@@ -90,8 +89,7 @@ class MemcachedSession extends SessionBase
     protected function _write($uid, $str)
     {
         if (strlen($str) < 1) {
-            $this->_mem->delete($uid);
-            return true;
+            return $this->_mem->delete($uid);
         }
 
         # print("write: {$str}\n");
@@ -102,7 +100,7 @@ class MemcachedSession extends SessionBase
     protected function _destroy($uid)
     {
         # print("delete: {$uid}\n");
-        $this->_mem->delete($uid);
+        return $this->_mem->delete($uid);
     }
     
 }
