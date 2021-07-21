@@ -139,8 +139,9 @@ abstract class SessionBase
 
         // check and update the session cookie
         // if the session id were passed through the HTTP cookie
-        header("HTTP-SESSION-NAME: {$this->_sess_name}");
-        header("HTTP-SESSION-ID: {$this->_sess_id}");
+        // print("{$this->_sess_name}, {$this->_sess_id}, {$this->_sess_uid}");
+        header("Session-Name: {$this->_sess_name}");
+        header("Session-Id: {$this->_sess_id}");
         setcookie(
             $this->_sess_name, 
             $this->_sess_id, 
@@ -151,8 +152,10 @@ abstract class SessionBase
         );
 
         // extra fields to update
-        $this->set('__at', microtime(true));
-        $this->set('__ct', $this->get('__ct', 1) + 1);
+        if (!empty($this->_sess_data)) {
+            $this->set('__at', microtime(true));
+            $this->set('__ct', $this->get('__ct', 1) + 1);
+        }
 
         return true;
     }
@@ -195,6 +198,11 @@ abstract class SessionBase
             setcookie($this->_sess_name, '', time() - 43200, '/');
         }
 
+        // basic clean up and force not to flush the data
+        // in case the data were write to the driver again
+        // by calling flush/close or destruct the instance
+        $this->_sess_data = [];
+        $this->_need_flush = false;
         return true;
     }
 

@@ -101,6 +101,7 @@ class MemcachedSession extends SessionBase
     /** @see SessionBase#_destroy($uid)*/
     protected function _destroy($uid)
     {
+        # print("delete: {$uid}\n");
         $this->_mem->delete($uid);
     }
     
