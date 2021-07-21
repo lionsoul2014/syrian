@@ -1,60 +1,100 @@
 <?php
 /**
- * user level session handler class and base on file
+ * user level session handler class and base on memcached
  *    
  *    R8C security was append after the session_id
  *        and take the '---' as the delimiter
  *
- * @author chenxin <chenxin619315@gmail.com>
+ * @author dongyado<dongydao@gmail.com>
+ * @author chenxin<chenxin619315@gmail.com>
 */
 
- //----------------------------------------------------------
-
-class FileSession implements ISession
+class MemcachedSession implements ISession
 {
-    private $_partitions    = 1000;
-    private $_save_path     = null;
-    private $_ttl           = 0;
-    private $_ext           = '.ses';
-    private $_sessid        = null;
-    private $_R8C           = null;
-    private $_session_name  = null;
+    private static $_hash_opts = array(
+        'default'   => Memcached::HASH_DEFAULT,
+        'md5'       => Memcached::HASH_MD5,
+        'crc'       => Memcached::HASH_CRC,
+        'fnv1_64'   => Memcached::HASH_FNV1_64,
+        'fnv1a_64'  => Memcached::HASH_FNV1A_64,
+        'fnv1_32'   => Memcached::HASH_FNV1_32,
+        'fnv1a_32'  => Memcached::HASH_FNV1A_32,
+        'hsieh'     => Memcached::HASH_HSIEH,
+        'murmur'    => Memcached::HASH_MURMUR
+    );
 
-    //valud of session_id's hash value
-    private $_hval  = -1;
+    private $_ttl     = 0;
+    private $_sessid  = null;
+    private $_R8C     = null;
+    private $_mem     = null;
 
-    /**
-     * @added at 2016/08/29
-     * cookie expired strategy
-     * 1, request: expired time means the intervals bettween the requests
-     * 2, global : expired time means the global intervals and once set 
-     *  and can not be changed
-    */
+    //@see ./FileSession
     private $_expire_strategy = 'request';
     private $_cookie_extra    = 0;
     private $_cookie_domain   = '';
-    
+
+
     /**
      * construct method to initialize the class
-     *
+     * 
+     * demo config data:
+     *  $_conf = array(
+     *       'servers'       => array(
+     *           array('localhost', 11211, 60), // host, port, weight
+     *           array('localhost', 11212, 40),
+     *       ),
+     *       'ttl'           => 60, // time to live
+     *       // default: standard,  consistent was recommended,
+     *       // for more infomation,  search 'consistent hash'
+     *       'hash_strategy' => 'consistent',
+     *       'hash'          => 'default', // hash function,  empty for default
+     *       'prefix'        => 'ses_'
+     *   );
+     *  
      * @param   $conf
      */
     public function __construct($conf)
     {
-        if ( isset($conf['save_path']) ) 
-            $this->_save_path = $conf['save_path'];
-        if ( isset($conf['ttl']) )
-            $this->_ttl = $conf['ttl'];
-        if ( isset($conf['partitions']) )
-            $this->_partitions = $conf['partitions'];
-        if ( isset($conf['file_ext']) )
-            $this->_ext = $conf['file_ext'];
-        if ( isset($conf['expire_strategy']) )
+        if ( ! isset($conf['servers']) || empty($conf['servers']) ) {
+           throw new Exception('Memcached server should not be empty'); 
+        }
+
+        if ( isset($conf['ttl']) ) $this->_ttl = $conf['ttl'];
+        if ( isset($conf['expire_strategy']) ) 
             $this->_expire_strategy = $conf['expire_strategy'];
         if ( isset($conf['cookie_extra']) ) {
             $this->_cookie_extra = $conf['cookie_extra'];
         }
+            
+        $this->_mem = new Memcached();
 
+        // hash distribute strategy, 
+        // default: Memcached::DISTRIBUTION_MODULA
+        if ( isset($conf['hash_strategy']) ) {
+            switch ( $conf['hash_strategy'] ) {
+            case 'consistent':
+                $this->_mem->setOption(Memcached::OPT_DISTRIBUTION,
+                    Memcached::DISTRIBUTION_CONSISTENT); 
+                $this->_mem->setOPtion(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
+                break;
+            }
+        }
+
+        if ( isset($conf['hash']) ) {
+            $hash = self::$_hash_opts[$conf['hash']];
+            $this->_mem->setOption(Memcached::OPT_HASH, $hash); 
+        }
+
+        if ( isset($conf['prefix']) ) {
+            $this->_mem->setOption(Memcached::OPT_PREFIX_KEY, $conf['prefix']);
+        }
+
+        $servers = $this->_mem->getServerList();
+        if ( empty($servers) ) {
+            $this->_mem->addServers($conf['servers']);
+        }
+
+        //set use user level session
         //set use user level session
         // fixed bug for session_module_name(): Cannot set 'user' save handler by ini_set() or session_module_name()
         if(version_compare(PHP_VERSION,'7.2.0','<')) {
@@ -79,7 +119,7 @@ class FileSession implements ISession
         } else if ( isset($conf['domain_strategy']) ) {
             $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
             switch ( $conf['domain_strategy'] ) {
-            case 'cur_host': $this->cookie_domain = $host; break;
+            case 'cur_host': $this->_cookie_domain = $host; break;
             case 'all_sub_host':
                 $pnum = 0;
                 $hostLen = min(strlen($host), 255);
@@ -95,10 +135,9 @@ class FileSession implements ISession
             }
         }
 
-        //set the session id cookies lifetime
         if ( $this->_expire_strategy == 'global' ) {
             session_set_cookie_params(
-                $this->_ttl + $this->cookie_extra, '/', $this->_cookie_domain
+                $this->_ttl + $this->_cookie_extra, '/', $this->_cookie_domain
             );
         }
     }
@@ -134,9 +173,7 @@ class FileSession implements ISession
         }
     }
 
-    /**
-     * destroy the current session
-    */
+    //destroy the currrent session
     public function destroy()
     {
         //1. clear the session data
@@ -176,13 +213,11 @@ class FileSession implements ISession
     
     /**
      * It is the first callback function executed when the session
-     *        is started automatically or manually with session_start().
+     *  is started automatically or manually with session_start().
      * Return value is true for success, false for failure.
      */
     function _open( $_save_path, $_sessname )
     {
-        //use the default _save_path without user define save_path
-        if ( $this->_save_path == null ) $this->_save_path = $_save_path;
         return true;
     }
 
@@ -212,70 +247,29 @@ class FileSession implements ISession
         //set the global session id when it is null
         if ( $this->_sessid == null ) $this->_sessid = $_sessid;
 
-        //take the _hval as the partitions number
-        if ( $this->_hval == -1 ) {
-            $this->_hval = self::bkdrHash($_sessid, $this->_partitions);
-        }
-
-        //make the final session file
-        $_file = "{$this->_save_path}/{$this->_hval}/{$_sessid}{$this->_ext}";
-
-        //check the existence and the lifetime
-        if ( ! file_exists($_file) ) return '';
-
-        //@Note: atime update maybe closed by filesystem
-        $ctime = max(filemtime($_file), fileatime($_file));
-        if ( $ctime + $this->_ttl < time() ) {
-            @unlink($_file);
-            return '';
-        }
-
-        //get and return the content of the session file
-        $_txt = file_get_contents($_file);
-        return ($_txt == false ? '' : $_txt);
+        $ret = $this->_mem->get($_sessid);
+        return $ret == false ? '' : $ret;
     }
     
     /**
      * The write callback is called when the session needs to be saved and closed.
      * The serialized session data passed to this callback should be stored against
-     *  the passed session ID. When retrieving this data, the read callback must
-     *  return the exact value that was originally passed to the write callback.
+     * the passed session ID. When retrieving this data, the read callback must
+     * return the exact value that was originally passed to the write callback.
     */
     function _write( $_sessid, $_data )
     {
         $_sessid = $this->_sessid;
 
-        //take the _hval as the partitions number
-        if ( $this->_hval == -1 ) {
-            $this->_hval = self::bkdrHash($_sessid, $this->partitions);
-        }
-
-        //make the final session file
-        $_baseDir = "{$this->_save_path}/{$this->_hval}";
-        if ( ! file_exists($_baseDir) ) @mkdir($_baseDir, 0777);
-
-        /*
-         * @added at 2016/08/09
-         * when the data is empty like the invoke of session close
-         * we choose to clear the session storage file rather than
-         * write an empty string into it.
-         * Also, we we should return true for this or u will receive a
-         * warning from php session module say that: "Fail to write session data ..."
-        */
-        $_sfile = "{$_baseDir}/{$_sessid}{$this->_ext}";
+        //@sess FileSession#_write
         if ( strlen($_data) < 1 ) {
-            if ( file_exists($_sfile) ) @unlink($_sfile);
+            $this->_mem->delete($_sessid);
             return true;
         }
 
-        //write the data to the final session file
-        if ( @file_put_contents($_sfile, $_data) !== false ) {
-            //chmod the newly created file
-            @chmod($_sfile, 0755);
-            return true;
-        }
-
-        return false;
+        return $this->_mem->set(
+            $_sessid, $_data, $this->_ttl
+        );
     }
     
     /**
@@ -284,9 +278,7 @@ class FileSession implements ISession
     */
     function _destroy( $_sessid )
     {
-        //delete the session data
-        $_file = "{$this->_save_path}/{$this->_hval}/{$this->_sessid}{$this->_ext}";
-        if ( file_exists($_file) ) @unlink($_file);
+        $this->_mem->delete($_sessid);
 
         //delete the PHPSESSId cookies
         $sessname = session_name();
@@ -341,22 +333,4 @@ class FileSession implements ISession
         return $this;
     }
 
-    //------------------------------------------------------------
-    //bkdr hash function
-    private static function bkdrHash( $_str, $_size )
-    {
-        $_hash = 0;
-        $len   = strlen($_str);
-    
-        for ( $i = 0; $i < $len; $i++ ) {
-            $_hash = (int) ($_hash * 1331 + (ord($_str[$i]) % 127));
-        }
-        
-        if ( $_hash < 0 )       $_hash *= -1;
-        if ( $_hash >= $_size ) $_hash = ( int ) $_hash % $_size; 
-        
-        return ( $_hash & 0x7FFFFFFF );
-    }
-
 }
-?>

@@ -64,4 +64,3 @@ class DBSession
         return TRUE;
     }
 }
-?>
