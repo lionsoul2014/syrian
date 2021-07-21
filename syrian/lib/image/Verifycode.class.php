@@ -14,8 +14,8 @@ class Verifycode
     /**letters generator array.*/
     private static $_letters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     
-    //width, height, x, y, fontsize
-    private $_config = array(130, 50, 0, 0, 20);
+    //width, height, x, y, fontsize, lines, arcs
+    private $_config = array(130, 50, 0, 0, 20, 10, 10);
     
     /*image resource pointer*/
     private $_image  = NULL;
@@ -68,6 +68,16 @@ class Verifycode
     {
         $this->_config[4] = $_size;
         return $this;
+    }
+
+    public function setInterferenceLines($num)
+    {
+        $this->_config[5] = $num;
+    }
+
+    public function setInterferenceArc($num)
+    {
+        $this->_config[6] = $num;
     }
     
     /**
@@ -129,14 +139,14 @@ class Verifycode
 
         # draw the interference line
         imagesetthickness($this->_image, 2);
-        for ($i=0; $i < 10 ; $i++) {
+        for ($i=0; $i < $this->_config[5] ; $i++) {
             $x = mt_rand(0,1024) % $this->_config[0];
             $y = mt_rand(0,1024) % $this->_config[1];
             imageline($this->_image, $x, $y, $x + 10, $y + 10, $_color);
         }
 
         # imagesetthickness($this->_image, 2);
-        for ($i=0; $i < 10 ; $i++) {
+        for ($i=0; $i < $this->_config[6] ; $i++) {
             $x = mt_rand(0,1024) % $this->_config[0];
             $y = mt_rand(0,1024) % $this->_config[1];
             imagearc($this->_image, $x, $y,
