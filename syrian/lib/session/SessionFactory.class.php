@@ -25,6 +25,7 @@ abstract class SessionBase
     protected $_ttl = 1800;    // default expire time to 30 mins
     protected $_cookie_domain = '';
     protected $_need_flush = true;
+    protected $_cas_token  = null;
 
     /* the request that update the seed in the session data 
      * consider to be the primary one */
@@ -199,9 +200,11 @@ abstract class SessionBase
     public function reload($override=false)
     {
         if ($this->_sess_uid != null) {
-            $_data_str = $this->_read($this->_sess_uid);
+            $_data_str = $this->_read($this->_sess_uid, $this->_cas_token);
             if (strlen($_data_str) > 2 
                 && ($arr = json_decode($_data_str, true)) != null) {
+                // @TODO: need a better solution for data merge
+                // since the CAS failed may need to calling reload frequently.
                 $this->_sess_data = $override 
                     ? $arr : array_merge($this->_sess_data, $arr);
             }
@@ -214,8 +217,9 @@ abstract class SessionBase
     public function flush()
     {
         if ($this->_sess_uid != null && $this->_need_flush) {
+            // @TODO: cas write implementation.
             if ($this->_write($this->_sess_uid, 
-                json_encode($this->_sess_data)) == true) {
+                json_encode($this->_sess_data), $this->_cas_token) == true) {
                 $this->_need_flush = false;
             }
         }
@@ -267,26 +271,34 @@ abstract class SessionBase
      * The read callback must always return a session encoded (serialized) string,
      *  or an empty string if there is no data to read.
      * This callback is called internally when the session starts.
+     * @Note: the _read implementation should return the cas_token for compare and set.
      *
-     * @return string
+     * @param   $uid
+     * @param   $cas_token the 
+     * @return  string
     */
-    protected abstract function _read($uid);
+    protected abstract function _read($uid, &$cas_token=null);
 
     /**
      * The write callback is called when the session needs to be saved and closed.
      * The serialized session data passed to this callback should be stored against
      * the passed session ID. When retrieving this data, the read callback must
      * return the exact value that was originally passed to the write callback.
+     * @Note: the _write implementation should use the cas_token for compare and set.
      *
-     * @return bool
+     * @param   $uid
+     * @param   $val
+     * @param   $cas_token
+     * @return  bool
     */
-    protected abstract function _write($uid, $str);
+    protected abstract function _write($uid, $val, $cas_token=null);
 
     /**
      * This callback is executed when a session is destroyed.
      * Return value should be true for success, false for failure.
      *
-     * @return bool
+     * @param   $uid
+     * @return  bool
     */
     protected abstract function _destroy($uid);
 

@@ -78,22 +78,27 @@ class MemcachedSession extends SessionBase
     }
 
     /** @see SessionBase#_read($uid)*/
-    protected function _read($uid)
+    protected function _read($uid, &$cas_token=null)
     {
-        $str = $this->_mem->get($uid);
-        # print("read: {$str}\n");
-        return $str == false ? '' : $str;
-    }
-    
-    /** @see SessionBase#_write($uid, $str)*/
-    protected function _write($uid, $str)
-    {
-        if (strlen($str) < 1) {
-            return $this->_mem->delete($uid);
+        if (defined(Memcached::GET_EXTENDED) == false) {
+            $val = $this->_mem->get($uid, null, $cas_token);
+        } else if (($r = $this->_mem->get(
+            $uid, null, Memcached::GET_EXTENDED)) != false) {
+            $val = $r['value'];
+            $cas_token = $r['cas'];
+        } else {
+            $val = '';
         }
 
-        # print("write: {$str}\n");
-        return $this->_mem->set($uid, $str, $this->_ttl);
+        # print("read: {$val}\n");
+        return $val == false ? '' : $val;
+    }
+    
+    /** @see SessionBase#_write($uid, $val, $cas_token)*/
+    protected function _write($uid, $val, $cas_token)
+    {
+        # print("write: {$val}\n");
+        return $this->_mem->set($uid, $val, $this->_ttl);
     }
     
     /** @see SessionBase#_destroy($uid)*/
