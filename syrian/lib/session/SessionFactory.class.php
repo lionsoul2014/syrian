@@ -76,10 +76,12 @@ abstract class SessionBase
         $sign_check = true;
         if ($this->_sess_id != null) {
             # initialize by #setId
-        } else if (isset($_COOKIE[$this->_sess_name])) {
-            # check the cookie first
+        } else if (isset($_COOKIE[$this->_sess_name]) 
+            && strlen($_COOKIE[$this->_sess_name]) > 2) {
+            # check session id from the cookie first
             $this->_sess_id = $_COOKIE[$this->_sess_name];
-        } else if (isset($_REQUEST[$this->_sess_name])) {
+        } else if (isset($_REQUEST[$this->_sess_name]) 
+            && strlen($_REQUEST[$this->_sess_name]) > 2) {
             # check session id from GET/POST
             $this->_sess_id = urldecode($_REQUEST[$this->_sess_name]);
         } else {
@@ -195,7 +197,14 @@ abstract class SessionBase
 
         // delete the cookies
         if (isset($_COOKIE[$this->_sess_name])) {
-            setcookie($this->_sess_name, '', time() - 43200, '/');
+            setcookie(
+                $this->_sess_name, 
+                '', 
+                time() - 43200, 
+                '/', 
+                $this->_cookie_domain, 
+                false, true
+            );
         }
 
         // basic clean up and force not to flush the data
@@ -256,10 +265,23 @@ abstract class SessionBase
         return $this;
     }
 
-    /* return the final UID passed in #start and used for data retrieving and stored */
+    /* return the final UID passed in #start 
+     * and used for data retrieving and stored */
     public function getUid()
     {
         return $this->_sess_uid;
+    }
+
+    /* set the final UID passed in #start 
+     * and used for data retrieving and stored.
+     * @Note this method should be invoke before the #start
+     * And this usually use in an debug mode or for experts operations.
+     * set the uid after #start may cause the invalid result from #_read.
+    */
+    public function setUid($uid)
+    {
+        $this->_sess_uid = $uid;
+        return $this;
     }
 
     /* check if the specifed key is exists in the session data */
