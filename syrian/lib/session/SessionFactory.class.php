@@ -132,11 +132,12 @@ abstract class SessionBase
 
             # 4, basic initialize and load the data from the driver
             $this->_sess_uid = $obj->uid;
-            $_data_str = $this->_read($obj->uid);
-            if (strlen($_data_str) > 2 
-                && ($arr = json_decode($_data_str, true)) != null) {
-                $this->_sess_data = array_merge($this->_sess_data, $arr);
-            }
+            // $_data_str = $this->_read($obj->uid);
+            // if (strlen($_data_str) > 2 
+            //     && ($arr = json_decode($_data_str, true)) != null) {
+            //     $this->_sess_data = array_merge($this->_sess_data, $arr);
+            // }
+            $this->reload(false);
         }
 
         // check and update the session cookie
@@ -156,10 +157,26 @@ abstract class SessionBase
         // extra fields to update
         if (!empty($this->_sess_data)) {
             $this->set('__at', microtime(true));
-            $this->set('__ct', $this->get('__ct', 1) + 1);
+            $this->inc('__ct', 1);
         }
 
         return true;
+    }
+
+    /* public method to load the data from the driver */
+    public function reload($override=false)
+    {
+        if ($this->_sess_uid != null) {
+            $_data_str = $this->_read($this->_sess_uid);
+            if (strlen($_data_str) > 2 
+                && ($arr = json_decode($_data_str, true)) != null) {
+                $this->_sess_data = $override 
+                    ? $arr : array_merge($this->_sess_data, $arr);
+            }
+            return true;
+        }
+
+        return false;
     }
 
     /* flush the current session
@@ -282,6 +299,12 @@ abstract class SessionBase
     {
         $this->_sess_uid = $uid;
         return $this;
+    }
+
+    /* get the size of the session data */
+    public function size()
+    {
+        return count($this->_sess_data);
     }
 
     /* check if the specifed key is exists in the session data */
