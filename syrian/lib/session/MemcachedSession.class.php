@@ -43,8 +43,6 @@ class MemcachedSession extends SessionBase
      */
     public function __construct($conf)
     {
-        parent::__construct($conf);
-
         if (! isset($conf['servers']) || empty($conf['servers'])) {
            throw new Exception('Memcached server should not be empty'); 
         }
@@ -69,12 +67,16 @@ class MemcachedSession extends SessionBase
 
         if (isset($conf['prefix'])) {
             $this->_mem->setOption(Memcached::OPT_PREFIX_KEY, $conf['prefix']);
+        } else {
+            $this->_mem->setOption(Memcached::OPT_PREFIX_KEY, '_sess_');
         }
 
         $servers = $this->_mem->getServerList();
         if (empty($servers)) {
             $this->_mem->addServers($conf['servers']);
         }
+
+        parent::__construct($conf);
     }
 
     /** @see SessionBase#_read($uid)*/
