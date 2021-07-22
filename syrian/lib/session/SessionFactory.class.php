@@ -6,6 +6,14 @@
 */
 abstract class SessionBase
 {
+    /* error constants for #start */
+    const OK = 0x00;
+    const EMPTY_SESS_ID = 0x01;
+    const DECODE_FAILED = 0x02;
+    const FIELD_MISSING = 0x03;
+    const INVALID_SIGN  = 0x04;
+    const INVALID_SEED  = 0x05;
+    const INVALID_ADDR  = 0x06;
 
     /* session global vars */
     protected $_sess_data = [];
@@ -17,6 +25,10 @@ abstract class SessionBase
     protected $_ttl = 1800;    // default expire time to 30 mins
     protected $_cookie_domain = '';
     protected $_need_flush = true;
+
+    /* the request that update the seed in the session data 
+     * consider to be the primary one */
+    protected $_is_primary = true;
 
     public function __construct($conf)
     {
@@ -69,22 +81,16 @@ abstract class SessionBase
      * and this uid should be unique for your system. we will try to generate
      * an unique uid if not specified.
      *
-     * uid: uid should be use to for final data access not the json pack.
+     * uid: uid should be use to for final data access and it should be the one
+     *  in your database or somewhere you could find it again.
+     *
+     * @param   $create_new force to create a new session id ?
+     * @param   $uid optional
+     * @return  bool
     */
-    public function start($uid=null)
+    public function start($create_new=false, $uid=null, &$errno=self::OK)
     {
-        $sign_check = true;
-        if ($this->_sess_id != null) {
-            # initialize by #setId
-        } else if (isset($_COOKIE[$this->_sess_name]) 
-            && strlen($_COOKIE[$this->_sess_name]) > 2) {
-            # check session id from the cookie first
-            $this->_sess_id = $_COOKIE[$this->_sess_name];
-        } else if (isset($_REQUEST[$this->_sess_name]) 
-            && strlen($_REQUEST[$this->_sess_name]) > 2) {
-            # check session id from GET/POST
-            $this->_sess_id = urldecode($_REQUEST[$this->_sess_name]);
-        } else {
+        if ($create_new == true) {
             import('Util');
             $seed = microtime(true);
             $addr = Util::getIpAddress(true);
@@ -95,7 +101,6 @@ abstract class SessionBase
                 ));
             }
 
-            $sign_check = false;
             $this->_sess_uid = $uid;
             $this->_sess_id  = base64_encode(json_encode(array(
                 'uid'  => $this->_sess_uid,
@@ -103,14 +108,33 @@ abstract class SessionBase
                 'addr' => $addr,
                 'sign' => build_signature(array('_sess_id', $this->_sess_uid, $seed, $addr))
             )));
-        }
 
-        // check and do session id signature checking
-        if ($sign_check == true) {
+            # track the seed for the newly created session pack
+            $this->_sess_data['__sd'] = $seed;
+            $this->_sess_data['__ar'] = $addr;
+        } else {
+            // try to get the session id
+            if ($this->_sess_id != null) {
+                # initialize by #setId
+            } else if (isset($_COOKIE[$this->_sess_name]) 
+                && strlen($_COOKIE[$this->_sess_name]) > 2) {
+                # check session id from the cookie first
+                $this->_sess_id = $_COOKIE[$this->_sess_name];
+            } else if (isset($_REQUEST[$this->_sess_name]) 
+                && strlen($_REQUEST[$this->_sess_name]) > 2) {
+                # check session id from GET/POST
+                $this->_sess_id = urldecode($_REQUEST[$this->_sess_name]);
+            } else {
+                $errno = self::EMPTY_SESS_ID;
+                return false;
+            }
+
+            // check and do session id signature checking
             # 1, data decode
             if (($idval = base64_decode($this->_sess_id)) === false 
                 || ($obj = json_decode($idval, false)) == null) {
                 $this->destroy();   # destroy the error session
+                $errno = self::DECODE_FAILED;
                 return false;
             }
 
@@ -119,6 +143,7 @@ abstract class SessionBase
             foreach (array('uid', 'seed', 'addr', 'sign') as $f) {
                 if (isset($obj->{$f}) == false) {
                     $this->destroy();   # destroy the error session
+                    $errno = self::FIELD_MISSING;
                     return false;
                 }
             }
@@ -127,21 +152,34 @@ abstract class SessionBase
             if (strcmp($obj->sign, build_signature(array(
                 '_sess_id', $obj->uid, $obj->seed, $obj->addr))) != 0) {
                 $this->destroy();   # destroy the error session
+                $errno = self::INVALID_SIGN;
                 return false;
             }
 
             # 4, basic initialize and load the data from the driver
             $this->_sess_uid = $obj->uid;
-            // $_data_str = $this->_read($obj->uid);
-            // if (strlen($_data_str) > 2 
-            //     && ($arr = json_decode($_data_str, true)) != null) {
-            //     $this->_sess_data = array_merge($this->_sess_data, $arr);
-            // }
             $this->reload(false);
+
+            # 5, random seed checking, basicly the login timestamp
+            # @Note: we keep things going if the seed is not match.
+            # so the parent invoker could do whatever it want
+            #   according to the errno.
+            if (!isset($this->_sess_data['__sd']) 
+                || $this->_sess_data['__sd'] != $obj->seed) {
+                $errno = self::INVALID_SEED;
+                $this->_is_primary = false;
+                # return false;
+                # @Note: keep things going
+            }
+
+            // extra fields to update
+            if (!empty($this->_sess_data)) {
+                $this->set('__at', microtime(true));
+                $this->inc('__ct', 1);
+            }
         }
 
         // check and update the session cookie
-        // if the session id were passed through the HTTP cookie
         // print("{$this->_sess_name}, {$this->_sess_id}, {$this->_sess_uid}");
         header("Session-Name: {$this->_sess_name}");
         header("Session-Id: {$this->_sess_id}");
@@ -153,12 +191,6 @@ abstract class SessionBase
             $this->_cookie_domain, 
             false, true
         );
-
-        // extra fields to update
-        if (!empty($this->_sess_data)) {
-            $this->set('__at', microtime(true));
-            $this->inc('__ct', 1);
-        }
 
         return true;
     }
@@ -173,10 +205,8 @@ abstract class SessionBase
                 $this->_sess_data = $override 
                     ? $arr : array_merge($this->_sess_data, $arr);
             }
-            return true;
         }
-
-        return false;
+        return $this;
     }
 
     /* flush the current session
@@ -189,8 +219,7 @@ abstract class SessionBase
                 $this->_need_flush = false;
             }
         }
-
-        return true;
+        return $this;
     }
     
     /* close the current session
@@ -200,13 +229,15 @@ abstract class SessionBase
     {
         $this->flush();
         $this->_sess_data = [];
-        return true;
+        return $this;
     }
 
-    /* destroy the current session */
+    /* destroy the current session.
+     * @Note: 
+     * ONLY the primary request could invoke the internal #_destroy */
     public function destroy()
     {
-        if ($this->_sess_uid != null) {
+        if ($this->_sess_uid != null && $this->isPrimary()) {
             if ($this->_destroy($this->_sess_uid) == true) {
                 $this->_sess_data = [];
             }
@@ -229,7 +260,7 @@ abstract class SessionBase
         // by calling flush/close or destruct the instance
         $this->_sess_data = [];
         $this->_need_flush = false;
-        return true;
+        return $this;
     }
 
     /**
@@ -307,6 +338,12 @@ abstract class SessionBase
         return count($this->_sess_data);
     }
 
+    /* @see #_is_primary */
+    public function isPrimary()
+    {
+        return $this->_is_primary;
+    }
+
     /* check if the specifed key is exists in the session data */
     public function has($key)
     {
@@ -316,7 +353,20 @@ abstract class SessionBase
     /* return the value of the specified key or null for no mapping */
     public function get($key, $default=null)
     {
-        return isset($this->_sess_data[$key]) ? $this->_sess_data[$key] : $default;
+        return isset($this->_sess_data[$key])
+            ? $this->_sess_data[$key] : $default;
+    }
+
+    /* return the seed stored in the session data */
+    public function getSeed()
+    {
+        return $this->get('__sd');
+    }
+
+    /* return the IP stored in the session data */
+    public function getAddr()
+    {
+        return $this->get('__ar');
     }
 
     /* increase a numeric value by a specified offset */
@@ -327,12 +377,14 @@ abstract class SessionBase
         } else {
             $this->_sess_data[$key]  = $offset;
         }
+        return $this;
     }
 
     public function set($key, $val)
     {
         $this->_sess_data[$key] = $val;
         $this->_need_flush = true;
+        return $this;
     }
 
     public function del($key)
@@ -342,6 +394,7 @@ abstract class SessionBase
             unset($this->_sess_data[$key]);
             $this->_need_flush = true;
         }
+        return $this;
     }
 
     public function __destruct()
