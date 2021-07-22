@@ -97,10 +97,32 @@ class MemcachedSession extends SessionBase
     }
     
     /** @see SessionBase#_write($uid, $val, $cas_token)*/
-    protected function _write($uid, $val, $cas_token)
+    protected function _write($uid, $val, $cas_token, &$errno=self::OK)
     {
         # print("write: {$val}\n");
-        return $this->_mem->set($uid, $val, $this->_ttl);
+        # directly set for no cas token
+        if ($cas_token == null) {
+            $r = $this->_mem->set($uid, $val, $this->_ttl);
+            if ($r == false) {
+                $errno = self::OPT_FAILED;
+            }
+            return $r;
+        }
+
+        # do the cas operation
+        $r = $this->_mem->cas($cas_token, $uid, $val, $this->_ttl);
+        if ($r == true) {
+            return true;
+        }
+
+        # mark the cas
+        if ($this->_mem->getResultCode() == Memcached::RES_DATA_EXISTS) {
+            $errno = self::CAS_FAILED;
+        } else {
+            $errno = self::OPT_FAILED;
+        }
+
+        return false;
     }
     
     /** @see SessionBase#_destroy($uid)*/

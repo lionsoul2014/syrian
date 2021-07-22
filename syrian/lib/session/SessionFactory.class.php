@@ -15,6 +15,9 @@ abstract class SessionBase
     const INVALID_SEED  = 0x05;
     const INVALID_ADDR  = 0x06;
 
+    const CAS_FAILED = 100;  # operation failed cus of CAS failed.
+    const OPT_FAILED = 101;  # the other operation failed
+
     /* session global vars */
     protected $_sess_data = [];
     protected $_sess_name = null;
@@ -26,6 +29,7 @@ abstract class SessionBase
     protected $_cookie_domain = '';
     protected $_need_flush = true;
     protected $_cas_token  = null;
+    protected $_max_retrys = 6;
 
     /* the request that update the seed in the session data 
      * consider to be the primary one */
@@ -217,10 +221,25 @@ abstract class SessionBase
     public function flush()
     {
         if ($this->_sess_uid != null && $this->_need_flush) {
-            // @TODO: cas write implementation.
-            if ($this->_write($this->_sess_uid, 
-                json_encode($this->_sess_data), $this->_cas_token) == true) {
-                $this->_need_flush = false;
+            $this->_need_flush = false;
+            for ($i = 0; $i < $this->_max_retrys; ) {
+                $r = $this->_write(
+                    $this->_sess_uid, 
+                    json_encode($this->_sess_data), 
+                    $this->_cas_token, $errno
+                );
+
+                if ($r == true) {
+                    break;
+                }
+
+                # keep trying for cas failed
+                # and limited retries for normal failed.
+                if ($errno == self::CAS_FAILED) {
+                    $this->reload();
+                } else {
+                    $i++;
+                }
             }
         }
         return $this;
@@ -289,9 +308,10 @@ abstract class SessionBase
      * @param   $uid
      * @param   $val
      * @param   $cas_token
+     * @param   $errno
      * @return  bool
     */
-    protected abstract function _write($uid, $val, $cas_token=null);
+    protected abstract function _write($uid, $val, $cas_token=null, &$errno=self::OK);
 
     /**
      * This callback is executed when a session is destroyed.
