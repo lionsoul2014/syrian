@@ -79,11 +79,14 @@ class MemcachedSession extends SessionBase
         parent::__construct($conf);
     }
 
-    /** @see SessionBase#_read($uid)*/
-    protected function _read($uid, &$cas_token=null)
+    /** @see SessionBase#_read($uid, $cas_token, &$exists) */
+    protected function _read($uid, &$cas_token, &$exists=true)
     {
-        if (defined(Memcached::GET_EXTENDED) == false) {
+        if (defined('Memcached::GET_EXTENDED') == false) {
             $val = $this->_mem->get($uid, null, $cas_token);
+            if ($val === false) {
+                $val = '';
+            }
         } else if (($r = $this->_mem->get(
             $uid, null, Memcached::GET_EXTENDED)) != false) {
             $val = $r['value'];
@@ -92,30 +95,51 @@ class MemcachedSession extends SessionBase
             $val = '';
         }
 
-        # print("read: {$val}\n");
-        return $val == false ? '' : $val;
-    }
-    
-    /** @see SessionBase#_write($uid, $val, $cas_token)*/
-    protected function _write($uid, $val, $cas_token, &$errno=self::OK)
-    {
-        # print("write: {$val}\n");
-        # directly set for no cas token
-        if ($cas_token == null) {
-            $r = $this->_mem->set($uid, $val, $this->_ttl);
-            if ($r == false) {
-                $errno = self::OPT_FAILED;
-            }
-            return $r;
+        # define the exists
+        if ($this->_mem->getResultCode() == Memcached::RES_NOTFOUND) {
+            $exists = false;
+        } else {
+            $exists = true;
         }
 
-        # do the cas operation
-        $r = $this->_mem->cas($cas_token, $uid, $val, $this->_ttl);
+        print("read: {err: {$this->_mem->getResultMessage()}, cas: {$cas_token}, val: {$val}}\n");
+        return $val;
+    }
+
+    /** @see SessionBase#_add($uid, $val, &$errno=self::OK) */
+    protected function _add($uid, $val, &$errno=self::OK)
+    {
+        $r = $this->_mem->add($uid, $val, $this->_ttl);
         if ($r == true) {
             return true;
         }
 
-        # mark the cas
+        if ($this->_mem->getResultCode() == Memcached::RES_NOTSTORED) {
+            $errno = self::CAS_FAILED;
+        } else {
+            $errno = self::OPT_FAILED;
+        }
+        
+        return false;
+    }
+
+    /** @see SessionBase#_write($uid, $val, $cas_token, &$errno=self::OK) */
+    protected function _write($uid, $val, $cas_token, &$errno=self::OK)
+    {
+        # directly abort for no cas token
+        if ($cas_token == null) {
+            $errno = self::OPT_FAILED;
+            return false;
+        }
+
+        # do the cas operation
+        $r = $this->_mem->cas($cas_token, $uid, $val, $this->_ttl);
+        print("write: {err: {$this->_mem->getResultMessage()}, cas: {$cas_token}, val: {$val}}\n");
+        if ($r == true) {
+            return true;
+        }
+
+        # set the errno accoarding to the result code.
         if ($this->_mem->getResultCode() == Memcached::RES_DATA_EXISTS) {
             $errno = self::CAS_FAILED;
         } else {
@@ -128,7 +152,7 @@ class MemcachedSession extends SessionBase
     /** @see SessionBase#_destroy($uid)*/
     protected function _destroy($uid)
     {
-        # print("delete: {$uid}\n");
+        print("delete: {$uid}\n");
         return $this->_mem->delete($uid);
     }
     

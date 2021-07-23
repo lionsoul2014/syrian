@@ -1,6 +1,9 @@
 <?php
 /**
- * session 2.0 base abstract implementation
+ * session 2.0 base abstract implementation.
+ * 1, based on sign session id.
+ * 2, mutl clients and limits supported.
+ * 3, operation process safe based on driver CAS operation.
  *
  * @author chenxin<chenxin619315@gmail.com>
 */
@@ -14,27 +17,56 @@ abstract class SessionBase
     const INVALID_SIGN  = 0x04;
     const INVALID_SEED  = 0x05;
     const INVALID_ADDR  = 0x06;
+    const CLIENTS_LIMIT = 0x07;
 
     const CAS_FAILED = 100;  # operation failed cus of CAS failed.
     const OPT_FAILED = 101;  # the other operation failed
+
+    const STATUS_RM = 0;
+    const STATUS_OK = 1;
+
+    const FIELD_CLIENT = '__clients';    # client list
+    const FIELD_AR = 'ar';              # address
+    const FIELD_AT = 'at';              # last access time
+    const FIELD_CT = 'ct';              # counter
+    const FIELD_OK = 'ok';              # status
+    const FIELD_UA = 'ua';              # user-agent
 
     /* session global vars */
     protected $_sess_data = [];
     protected $_sess_name = null;
     protected $_sess_id   = null;
     protected $_sess_uid  = null;
+    protected $_sess_seed = null;
 
     /* common config item */
-    protected $_ttl = 1800;    // default expire time to 30 mins
+    protected $_ttl = 1800;             # default expire time to 30 mins
     protected $_cookie_domain = '';
-    protected $_need_flush = true;
+    protected $_need_flush = false;     # default flush mark to false
+    protected $_max_retries = 3;
+
+    /* CAS operation token*/
     protected $_cas_token  = null;
-    protected $_max_retrys = 6;
 
-    /* the request that update the seed in the session data 
-     * consider to be the primary one */
-    protected $_is_primary = true;
+    /* is the data row exists in the driver
+     * this should be defined after calling the #_read implementation. */
+    protected $_row_exists = true;
 
+    /* maximum parallel clients, -1 for not limits 
+     * @Note: set this before calling #start() */
+    protected $_max_clients = -1;
+
+
+    /**
+     * base config sample:
+     * ```
+     * $_conf = array(
+     *   'ttl'             => 1800,             // time to live
+     *   'session_name'    => 'SR_SESSID',      // session name
+     *   'domain_strategy' => 'all_sub_host'    // domain strategy cur_host | all_sub_host
+     *   'max_clients'     => 2                 // max clients
+     * ); 
+     * ``` */
     public function __construct($conf)
     {
         if (!isset($conf['session_name'])) {
@@ -44,6 +76,10 @@ abstract class SessionBase
         $this->_sess_name = $conf['session_name'];
         if (isset($conf['ttl'])) {
             $this->_ttl = $conf['ttl'];
+        }
+
+        if (isset($conf['max_clients'])) {
+            $this->_max_clients = $conf['max_clients'];
         }
 
         # check and get the cookie domain name
@@ -91,13 +127,19 @@ abstract class SessionBase
      *
      * @param   $create_new force to create a new session id ?
      * @param   $uid optional
+     * @param   $errno
      * @return  bool
     */
     public function start($create_new=false, $uid=null, &$errno=self::OK)
     {
+        # necessary resets the need flush mark
+        $this->_need_flush = false;
+        $this->_row_exists = true;
+
+        # check and create the session
         if ($create_new == true) {
             import('Util');
-            $seed = microtime(true);
+            $seed = sprintf("%.6f", microtime(true));
             $addr = Util::getIpAddress(true);
             # check and generate the uid
             if ($uid == null) {
@@ -106,8 +148,10 @@ abstract class SessionBase
                 ));
             }
 
-            $this->_sess_uid = $uid;
-            $this->_sess_id  = base64_encode(json_encode(array(
+            $this->_cas_token = null;
+            $this->_sess_uid  = $uid;
+            $this->_sess_seed = $seed;
+            $this->_sess_id   = base64_encode(json_encode(array(
                 'uid'  => $this->_sess_uid,
                 'seed' => $seed,
                 'addr' => $addr,
@@ -115,8 +159,25 @@ abstract class SessionBase
             )));
 
             # track the seed for the newly created session pack
-            $this->_sess_data['__sd'] = $seed;
-            $this->_sess_data['__ar'] = $addr;
+            $this->_sess_data[self::FIELD_CLIENT] = array(
+                $seed => array(
+                    self::FIELD_AR => $addr,
+                    self::FIELD_AT => time(),
+                    self::FIELD_CT => 0,
+                    self::FIELD_OK => self::STATUS_OK,
+                    self::FIELD_UA => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
+                )
+            );
+
+            # try to reload and merge the data
+            $this->reload();
+
+            # clients parallel number checking for newly created session
+            if ($this->_max_clients > 0 
+                && $this->getClientSize() >= $this->_max_clients) {
+                $errno = self::CLIENTS_LIMIT;
+                return false;
+            }
         } else {
             // try to get the session id
             if ($this->_sess_id != null) {
@@ -162,27 +223,24 @@ abstract class SessionBase
             }
 
             # 4, basic initialize and load the data from the driver
-            $this->_sess_uid = $obj->uid;
-            $this->reload(false);
-
-            # 5, random seed checking, basicly the login timestamp
-            # @Note: we keep things going if the seed is not match.
-            # so the parent invoker could do whatever it want
-            #   according to the errno.
-            if (!isset($this->_sess_data['__sd']) 
-                || $this->_sess_data['__sd'] != $obj->seed) {
-                $errno = self::INVALID_SEED;
-                $this->_is_primary = false;
-                # return false;
-                # @Note: keep things going
-            }
-
-            // extra fields to update
-            if (!empty($this->_sess_data)) {
-                $this->set('__at', microtime(true));
-                $this->inc('__ct', 1);
-            }
+            $this->cas_token  = null;
+            $this->_sess_uid  = $obj->uid;
+            $this->_sess_seed = $obj->seed;
+            $this->reload();
         }
+
+        # client seed checking
+        if ($this->getClientItem(self::FIELD_AR) == null) {
+            $errno = self::INVALID_SEED;
+            return false;
+        }
+
+        // request updates for current client
+        $this->setClientItem(self::FIELD_AT, time());
+        $this->incClientItem(self::FIELD_CT, 1);
+
+        // open the flush mark ONLY if everything are Ok
+        $this->_need_flush = true;
 
         // check and update the session cookie
         // print("{$this->_sess_name}, {$this->_sess_id}, {$this->_sess_uid}");
@@ -201,48 +259,100 @@ abstract class SessionBase
     }
 
     /* public method to load the data from the driver */
-    public function reload($override=false)
+    public function reload()
     {
-        if ($this->_sess_uid != null) {
-            $_data_str = $this->_read($this->_sess_uid, $this->_cas_token);
-            if (strlen($_data_str) > 2 
-                && ($arr = json_decode($_data_str, true)) != null) {
-                // @TODO: need a better solution for data merge
-                // since the CAS failed may need to calling reload frequently.
-                $this->_sess_data = $override 
-                    ? $arr : array_merge($this->_sess_data, $arr);
+        if ($this->_sess_uid == null) {
+            return true;
+        }
+
+        $_data_str = $this->_read($this->_sess_uid, 
+            $this->_cas_token, $this->_row_exists);
+        if (strlen($_data_str) < 3 
+            || ($data = json_decode($_data_str, true)) == null) {
+            return false;
+        }
+
+        // do the data merge.
+        // CAS failed may need to calling reload multi-times, so:
+        // 1. merge all the keys from both global _sess_data and local data.
+        // 2. local data priority for conflicting fields.
+        // 3. merge the special FIELD_CLIENT fields by taking both their items.
+        foreach ($data as $k => $v) {
+            if ($k == self::FIELD_CLIENT) {             # seed special field
+                // $clients = &$this->_sess_data[self::FIELD_CLIENT];
+                // @TODO: handler the removed clients
+                $this->_sess_data[self::FIELD_CLIENT] = array_merge(
+                    $this->_sess_data[self::FIELD_CLIENT] ?? array(), 
+                    $data[self::FIELD_CLIENT] ?? array()
+                );
+            } else if (isset($this->_sess_data[$k])) {  # conflicting field
+                $this->_sess_data[$k] = $v;
+            } else {
+                $this->_sess_data[$k] = $v;             # missing field
             }
         }
-        return $this;
+
+        return true;
     }
 
-    /* flush the current session
-     * this will force to invoking the #_write(id, data) */
+    /* flush the current session data to the driver */
     public function flush()
     {
-        if ($this->_sess_uid != null && $this->_need_flush) {
-            $this->_need_flush = false;
-            for ($i = 0; $i < $this->_max_retrys; ) {
-                $r = $this->_write(
-                    $this->_sess_uid, 
-                    json_encode($this->_sess_data), 
-                    $this->_cas_token, $errno
-                );
+        if ($this->_sess_uid == null 
+            || $this->_need_flush == false) {
+            return true;
+        }
 
-                if ($r == true) {
-                    break;
+        # encode the data
+        $_data_str = json_encode($this->_sess_data);
+
+        /* invoke the #_add to create an add atomic operation */
+        if ($this->_row_exists == false) {
+            for ($i = 0; $i < $this->_max_retries; ) {
+                if ($this->_add($this->_sess_uid, $_data_str, $errno) == true) {
+                    $this->_need_flush = false;
+                    return true;
                 }
 
-                # keep trying for cas failed
-                # and limited retries for normal failed.
+                # reload the data for CAS failed
+                # and continue the follow #_write operation.
                 if ($errno == self::CAS_FAILED) {
                     $this->reload();
+                    $i = -1;
+                    break;
                 } else {
                     $i++;
                 }
             }
+
+            # failed with retries
+            if ($i != -1) {
+                return false;
+            }
         }
-        return $this;
+
+        // @Note: do the best to make sure the data _write succeed.
+        // normal error will keep retry for #_max_retries times and for
+        // CAS error it will keep trying util it succeed. */
+        for ($i = 0; $i < $this->_max_retries; ) {
+            if ($this->_write($this->_sess_uid, 
+                $_data_str, $this->_cas_token, $errno) == true) {
+                # reset the flush need mark to false
+                # if the _write operation succeed
+                $this->_need_flush = false;
+                return true;
+            }
+
+            # keep trying for cas failed
+            # and limited retries for normal failed.
+            if ($errno == self::CAS_FAILED) {
+                $this->reload();
+            } else {
+                $i++;
+            }
+        }
+
+        return false;
     }
     
     /* close the current session
@@ -252,15 +362,18 @@ abstract class SessionBase
     {
         $this->flush();
         $this->_sess_data = [];
-        return $this;
     }
 
-    /* destroy the current session.
-     * @Note: 
-     * ONLY the primary request could invoke the internal #_destroy */
+    /* destroy the current session. */
     public function destroy()
     {
-        if ($this->_sess_uid != null && $this->isPrimary()) {
+        /* for multi-clients just clear the current client
+         * and then flush the data with CAS operation. */
+        if ($this->getClientSize() > 1) {
+            $this->setClientItem(self::FIELD_OK, self::STATUS_RM)
+            $this->delClient($this->_sess_seed);
+            // @TODO flush the data
+        } else if ($this->_sess_uid != null) {
             if ($this->_destroy($this->_sess_uid) == true) {
                 $this->_sess_data = [];
             }
@@ -283,27 +396,43 @@ abstract class SessionBase
         // by calling flush/close or destruct the instance
         $this->_sess_data = [];
         $this->_need_flush = false;
-        return $this;
     }
 
     /**
      * The read callback must always return a session encoded (serialized) string,
      *  or an empty string if there is no data to read.
      * This callback is called internally when the session starts.
-     * @Note: the _read implementation should return the cas_token for compare and set.
+     * @Note: the _read implementation should return the cas_token for CAS operation.
      *
      * @param   $uid
-     * @param   $cas_token the 
+     * @param   $cas_token the cas token will return
+     * @param   $exists
      * @return  string
     */
-    protected abstract function _read($uid, &$cas_token=null);
+    protected abstract function _read($uid, &$cas_token, &$exists=true);
 
     /**
-     * The write callback is called when the session needs to be saved and closed.
+     * The write callback is called when the session needs to be saved and closed
+     * for the first time it created and there is NO row exists in the storage driver.
+     *
+     * @see     #_write($uid, $val, $cas_token, &$errno=self::OK)
+     * @param   $uid
+     * @param   $val
+     * @param   $errno
+     * @return  bool
+    */
+    protected abstract function _add($uid, $val, &$errno=self::OK);
+
+    /**
+     * The write callback is called when the session needs to be saved and closed
+     * for the row exists in the storage driver ONLY.
      * The serialized session data passed to this callback should be stored against
      * the passed session ID. When retrieving this data, the read callback must
      * return the exact value that was originally passed to the write callback.
-     * @Note: the _write implementation should use the cas_token for compare and set.
+     *
+     * @Note: 
+     * 1, the _write implementation should use the cas_token for compare and set.
+     * 2, perform failed on exists add operation if the cas_token is null
      *
      * @param   $uid
      * @param   $val
@@ -311,7 +440,7 @@ abstract class SessionBase
      * @param   $errno
      * @return  bool
     */
-    protected abstract function _write($uid, $val, $cas_token=null, &$errno=self::OK);
+    protected abstract function _write($uid, $val, $cas_token, &$errno=self::OK);
 
     /**
      * This callback is executed when a session is destroyed.
@@ -370,11 +499,79 @@ abstract class SessionBase
         return count($this->_sess_data);
     }
 
-    /* @see #_is_primary */
-    public function isPrimary()
+    /* return the seed of the session */
+    public function getSeed()
     {
-        return $this->_is_primary;
+        return $this->_sess_seed;
     }
+
+
+    /* return the clients number */
+    public function getClientSize()
+    {
+        if (!isset($this->_sess_data[self::FIELD_CLIENT])) {
+            return null;
+        }
+
+        return count($this->_sess_data[self::FIELD_CLIENT]);
+    }
+
+    /* delete the specified client with its seed */
+    protected function delClient($_sess_seed)
+    {
+        if (isset($this->_sess_data[self::FIELD_CLIENT])) {
+            unset($this->_sess_data[self::FIELD_CLIENT][$_sess_seed]);
+        }
+        return true;
+    }
+
+    /* return the register address/at/counter item eg ... */
+    public function getClientItem($field)
+    {
+        if (!isset($this->_sess_data[self::FIELD_CLIENT])) {
+            return null;
+        }
+
+        $list = $this->_sess_data[self::FIELD_CLIENT];
+        if (!isset($list[$this->_sess_seed])) {
+            return null;
+        }
+
+        return $list[$this->_sess_seed][$field] ?? null;
+    }
+
+    /* set the register address/at/counter item eg ... */
+    protected function setClientItem($field, $val)
+    {
+        if (!isset($this->_sess_data[self::FIELD_CLIENT])) {
+            return null;
+        }
+
+        $list = &$this->_sess_data[self::FIELD_CLIENT];
+        if (!isset($list[$this->_sess_seed])) {
+            return null;
+        }
+
+        $this->_need_flush = true;
+        $list[$this->_sess_seed][$field] = $val;
+    }
+
+    /* increase the register address/at/counter item eg ... */
+    protected function incClientItem($field, $offset=1)
+    {
+        if (!isset($this->_sess_data[self::FIELD_CLIENT])) {
+            return null;
+        }
+
+        $list = &$this->_sess_data[self::FIELD_CLIENT];
+        if (!isset($list[$this->_sess_seed])) {
+            return null;
+        }
+
+        $this->_need_flush = true;
+        $list[$this->_sess_seed][$field] += $offset;
+    }
+
 
     /* check if the specifed key is exists in the session data */
     public function has($key)
@@ -387,29 +584,6 @@ abstract class SessionBase
     {
         return isset($this->_sess_data[$key])
             ? $this->_sess_data[$key] : $default;
-    }
-
-    /* return the seed stored in the session data */
-    public function getSeed()
-    {
-        return $this->get('__sd');
-    }
-
-    /* return the IP stored in the session data */
-    public function getAddr()
-    {
-        return $this->get('__ar');
-    }
-
-    /* increase a numeric value by a specified offset */
-    public function inc($key, $offset=1)
-    {
-        if (isset($this->_sess_data[$key])) {
-            $this->_sess_data[$key] += $offset;
-        } else {
-            $this->_sess_data[$key]  = $offset;
-        }
-        return $this;
     }
 
     public function set($key, $val)
