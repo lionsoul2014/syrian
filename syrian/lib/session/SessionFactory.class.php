@@ -370,7 +370,7 @@ abstract class SessionBase
         /* for multi-clients just clear the current client
          * and then flush the data with CAS operation. */
         if ($this->getClientSize() > 1) {
-            $this->setClientItem(self::FIELD_OK, self::STATUS_RM)
+            $this->setClientItem(self::FIELD_OK, self::STATUS_RM);
             $this->delClient($this->_sess_seed);
             // @TODO flush the data
         } else if ($this->_sess_uid != null) {
