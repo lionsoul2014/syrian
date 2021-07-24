@@ -102,7 +102,7 @@ class MemcachedSession extends SessionBase
             $exists = true;
         }
 
-        print("read: {err: {$this->_mem->getResultMessage()}, cas: {$cas_token}, val: {$val}}\n");
+        # print("read: {err: {$this->_mem->getResultMessage()}, cas: {$cas_token}, val: {$val}}\n");
         return $val;
     }
 
@@ -134,7 +134,7 @@ class MemcachedSession extends SessionBase
 
         # do the cas operation
         $r = $this->_mem->cas($cas_token, $uid, $val, $this->_ttl);
-        print("write: {err: {$this->_mem->getResultMessage()}, cas: {$cas_token}, val: {$val}}\n");
+        # print("write: {err: {$this->_mem->getResultMessage()}, cas: {$cas_token}, val: {$val}}\n");
         if ($r == true) {
             return true;
         }
@@ -152,7 +152,7 @@ class MemcachedSession extends SessionBase
     /** @see SessionBase#_destroy($uid)*/
     protected function _destroy($uid)
     {
-        print("delete: {$uid}\n");
+        # print("delete: {$uid}\n");
         return $this->_mem->delete($uid);
     }
     

@@ -11,25 +11,25 @@ abstract class SessionBase
 {
     /* error constants for #start */
     const OK = 0x00;
-    const EMPTY_SESS_ID = 0x01;
-    const DECODE_FAILED = 0x02;
-    const FIELD_MISSING = 0x03;
-    const INVALID_SIGN  = 0x04;
-    const INVALID_SEED  = 0x05;
-    const INVALID_ADDR  = 0x06;
-    const CLIENTS_LIMIT = 0x07;
+    const EMPTY_SESS_ID  = 0x01;
+    const DECODE_FAILED  = 0x02;
+    const FIELD_MISSING  = 0x03;
+    const INVALID_SIGN   = 0x04;
+    const INVALID_SEED   = 0x05;
+    const INVALID_ADDR   = 0x06;
+    const CLIENT_MISSING = 0x07;
 
     const CAS_FAILED = 100;  # operation failed cus of CAS failed.
     const OPT_FAILED = 101;  # the other operation failed
 
-    const STATUS_RM = 0;
+    const STATUS_RM = -1;
     const STATUS_OK = 1;
 
     const FIELD_CLIENT = '__clients';    # client list
     const FIELD_AR = 'ar';              # address
     const FIELD_AT = 'at';              # last access time
     const FIELD_CT = 'ct';              # counter
-    const FIELD_OK = 'ok';              # status
+    const FIELD_ST = 'st';              # status
     const FIELD_UA = 'ua';              # user-agent
 
     /* session global vars */
@@ -164,20 +164,15 @@ abstract class SessionBase
                     self::FIELD_AR => $addr,
                     self::FIELD_AT => time(),
                     self::FIELD_CT => 0,
-                    self::FIELD_OK => self::STATUS_OK,
+                    self::FIELD_ST => self::STATUS_OK,
                     self::FIELD_UA => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
                 )
             );
 
             # try to reload and merge the data
+            # clients max number checking for newly created session
+            # if reach the limits we will delete the furthest access clients.
             $this->reload();
-
-            # clients parallel number checking for newly created session
-            if ($this->_max_clients > 0 
-                && $this->getClientSize() >= $this->_max_clients) {
-                $errno = self::CLIENTS_LIMIT;
-                return false;
-            }
         } else {
             // try to get the session id
             if ($this->_sess_id != null) {
@@ -226,16 +221,24 @@ abstract class SessionBase
             $this->cas_token  = null;
             $this->_sess_uid  = $obj->uid;
             $this->_sess_seed = $obj->seed;
+            $this->_sess_data[self::FIELD_CLIENT] = array();
             $this->reload();
         }
 
-        # client seed checking
-        if ($this->getClientItem(self::FIELD_AR) == null) {
+        # client field checking
+        if (!isset($this->_sess_data[self::FIELD_CLIENT])) {
+            $errno = self::CLIENT_MISSING;
+            return false;
+        }
+
+        # client seed & status checking
+        if ($this->getClientItem(self::FIELD_ST) !== self::STATUS_OK) {
             $errno = self::INVALID_SEED;
             return false;
         }
 
         // request updates for current client
+        $errno = self::OK;
         $this->setClientItem(self::FIELD_AT, time());
         $this->incClientItem(self::FIELD_CT, 1);
 
@@ -276,19 +279,48 @@ abstract class SessionBase
         // CAS failed may need to calling reload multi-times, so:
         // 1. merge all the keys from both global _sess_data and local data.
         // 2. local data priority for conflicting fields.
-        // 3. merge the special FIELD_CLIENT fields by taking both their items.
-        foreach ($data as $k => $v) {
-            if ($k == self::FIELD_CLIENT) {             # seed special field
-                // $clients = &$this->_sess_data[self::FIELD_CLIENT];
-                // @TODO: handler the removed clients
-                $this->_sess_data[self::FIELD_CLIENT] = array_merge(
-                    $this->_sess_data[self::FIELD_CLIENT] ?? array(), 
-                    $data[self::FIELD_CLIENT] ?? array()
-                );
-            } else if (isset($this->_sess_data[$k])) {  # conflicting field
-                $this->_sess_data[$k] = $v;
+        foreach ($data as $f => $val) {
+            if ($f != self::FIELD_CLIENT) {
+                # conflicting & missing fields
+                $this->_sess_data[$f] = $val;
+                continue;
+            }
+        }
+
+        // 3. merge the special FIELD_CLIENT fields by taking both their items
+        //  also ignore and clean the removed clients.
+        $_clients = array();
+        foreach ($this->_sess_data[self::FIELD_CLIENT] as $s => $c) {
+            if ($c[self::FIELD_ST] == self::STATUS_RM) {
+                // ignore the removed seed
             } else {
-                $this->_sess_data[$k] = $v;             # missing field
+                $_clients[$s] = $c;
+            }
+        }
+
+        // merge the original clients data
+        // ignore and clean the removed seed
+        foreach ($data[self::FIELD_CLIENT] as $s => $c) {
+            if ($c[self::FIELD_ST] == self::STATUS_RM) {
+                // ignore the removed seed
+                // also remove the current seed if it were set
+                unset($_clients[$s]);
+            } else {
+                $_clients[$s] = $c;
+            }
+        }
+
+        $this->_sess_data[self::FIELD_CLIENT] = $_clients;
+
+
+        // check and do the furthest access clients clean as need.
+        // allow this->_max_clients clients login at the same time.
+        // @Note: this may clean up the current request session and 
+        // the #start will report a INVALID_SEED error.
+        if ($this->_max_clients > 0) {
+            $_size = $this->getClientSize();
+            for ($i = $this->_max_clients; $i < $_size; $i++) {
+                $this->delFurthestAccessClient();
             }
         }
 
@@ -303,7 +335,13 @@ abstract class SessionBase
             return true;
         }
 
-        # encode the data
+        # clean up the session seeds and encode the data
+        $_clients = &$this->_sess_data[self::FIELD_CLIENT];
+        foreach ($_clients as $seed => $conf) {
+            if ($conf[self::FIELD_ST] == self::STATUS_RM) {
+                unset($_clients[$seed]);
+            }
+        }
         $_data_str = json_encode($this->_sess_data);
 
         /* invoke the #_add to create an add atomic operation */
@@ -367,19 +405,23 @@ abstract class SessionBase
     /* destroy the current session. */
     public function destroy()
     {
-        /* for multi-clients just clear the current client
-         * and then flush the data with CAS operation. */
+        /* 1, For multi-clients clear the current client and close the session.
+         * 2, If there is ONLY one session record (it must be the current one)
+         *  we force to destroy the session data by calling #_destroy(). */
         if ($this->getClientSize() > 1) {
-            $this->setClientItem(self::FIELD_OK, self::STATUS_RM);
             $this->delClient($this->_sess_seed);
-            // @TODO flush the data
+            $this->close();
         } else if ($this->_sess_uid != null) {
-            if ($this->_destroy($this->_sess_uid) == true) {
-                $this->_sess_data = [];
-            }
+            // calling #_destroy() and force not to flush the data if
+            // we destory the session data in the driver.
+            // In case the data were write to the driver again
+            // by calling flush/close or destruct the instance
+            $this->_destroy($this->_sess_uid);
+            $this->_sess_data = [];
+            $this->_need_flush = false;
         }
 
-        // delete the cookies
+        // check and delete the session cookie
         if (isset($_COOKIE[$this->_sess_name])) {
             setcookie(
                 $this->_sess_name, 
@@ -390,12 +432,6 @@ abstract class SessionBase
                 false, true
             );
         }
-
-        // basic clean up and force not to flush the data
-        // in case the data were write to the driver again
-        // by calling flush/close or destruct the instance
-        $this->_sess_data = [];
-        $this->_need_flush = false;
     }
 
     /**
@@ -509,67 +545,58 @@ abstract class SessionBase
     /* return the clients number */
     public function getClientSize()
     {
-        if (!isset($this->_sess_data[self::FIELD_CLIENT])) {
-            return null;
-        }
-
         return count($this->_sess_data[self::FIELD_CLIENT]);
     }
 
     /* delete the specified client with its seed */
-    protected function delClient($_sess_seed)
+    protected function delClient($seed)
     {
-        if (isset($this->_sess_data[self::FIELD_CLIENT])) {
-            unset($this->_sess_data[self::FIELD_CLIENT][$_sess_seed]);
+        $this->_need_flush = true;
+        $client = &$this->_sess_data[self::FIELD_CLIENT][$seed];
+        $client[self::FIELD_ST] = self::STATUS_RM;
+        return $client;
+    }
+
+    /* delete the furthest access client */
+    protected function delFurthestAccessClient()
+    {
+        $seed = null;
+        $time = time();
+        foreach ($this->_sess_data[self::FIELD_CLIENT] as $s => $conf) {
+            if ($conf[self::FIELD_AT] < $time) {
+                $time = $conf[self::FIELD_AT];
+                $seed = $s;
+            }
         }
-        return true;
+
+        return $this->delClient($seed);
     }
 
     /* return the register address/at/counter item eg ... */
     public function getClientItem($field)
     {
-        if (!isset($this->_sess_data[self::FIELD_CLIENT])) {
-            return null;
-        }
-
-        $list = $this->_sess_data[self::FIELD_CLIENT];
-        if (!isset($list[$this->_sess_seed])) {
-            return null;
-        }
-
-        return $list[$this->_sess_seed][$field] ?? null;
+        $clients = $this->_sess_data[self::FIELD_CLIENT];
+        return $clients[$this->_sess_seed][$field] ?? null;
     }
 
     /* set the register address/at/counter item eg ... */
     protected function setClientItem($field, $val)
     {
-        if (!isset($this->_sess_data[self::FIELD_CLIENT])) {
-            return null;
+        $clients = &$this->_sess_data[self::FIELD_CLIENT];
+        if (isset($clients[$this->_sess_seed])) {
+            $this->_need_flush = true;
+            $clients[$this->_sess_seed][$field] = $val;
         }
-
-        $list = &$this->_sess_data[self::FIELD_CLIENT];
-        if (!isset($list[$this->_sess_seed])) {
-            return null;
-        }
-
-        $this->_need_flush = true;
-        $list[$this->_sess_seed][$field] = $val;
     }
 
     /* increase the register address/at/counter item eg ... */
     protected function incClientItem($field, $offset=1)
     {
-        if (!isset($this->_sess_data[self::FIELD_CLIENT])) {
-            return null;
+        $clients = &$this->_sess_data[self::FIELD_CLIENT];
+        if (isset($clients[$this->_sess_seed])) {
+            $this->_need_flush = true;
+            $clients[$this->_sess_seed][$field] += $offset;
         }
-
-        $list = &$this->_sess_data[self::FIELD_CLIENT];
-        if (!isset($list[$this->_sess_seed])) {
-            return null;
-        }
-
-        $this->_need_flush = true;
-        $list[$this->_sess_seed][$field] += $offset;
     }
 
 
@@ -588,17 +615,16 @@ abstract class SessionBase
 
     public function set($key, $val)
     {
-        $this->_sess_data[$key] = $val;
         $this->_need_flush = true;
+        $this->_sess_data[$key] = $val;
         return $this;
     }
 
     public function del($key)
     {
         if (isset($this->_sess_data[$key])) {
-            $this->_sess_data[$key] = null;
-            unset($this->_sess_data[$key]);
             $this->_need_flush = true;
+            unset($this->_sess_data[$key]);
         }
         return $this;
     }
