@@ -85,29 +85,28 @@ abstract class SessionBase
         # check and get the cookie domain name
         if (isset($conf['cookie_domain'])) {
             $this->_cookie_domain = $conf['cookie_domain'];
-        } else {
+        } else if (isset($conf['domain_strategy']) == false) {
+            $this->_cookie_domain = $_SERVER['HTTP_HOST'] ?? '';
+        } else if ($conf['domain_strategy'] == 'all_sub_host') {
             $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
-            switch ($conf['domain_strategy'] ?? 'cur_host') {
-            case 'cur_host': $this->_cookie_domain = $host; break;
-            case 'all_sub_host':
-                $pnum = 0;
-                $hostLen = min(strlen($host), 255);
-                for ($i = 0; $i < $hostLen; $i++) {
-                    if ($host[$i] == '.') $pnum++;
-                }
-                
-                // define the sub host ($pnum could be 0 like localhost)
-                if ($pnum == 0) $this->_cookie_domain = $host;
-                else if ($pnum == 1) $this->_cookie_domain = ".{$host}";
-                else if ($pnum == 4 && preg_match(
-                    '/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/', $host) == 1) {
-                    # ip address checking
-                    $this->_cookie_domain = $host;
-                } else {
-                    $this->_cookie_domain = substr($host, strpos($host, '.'));
-                }
-                break;
+            $pnum = 0;
+            $hostLen = min(strlen($host), 255);
+            for ($i = 0; $i < $hostLen; $i++) {
+                if ($host[$i] == '.') $pnum++;
             }
+            
+            // define the sub host ($pnum could be 0 like localhost)
+            if ($pnum == 0) $this->_cookie_domain = $host;
+            else if ($pnum == 1) $this->_cookie_domain = ".{$host}";
+            else if ($pnum == 4 && preg_match(
+                '/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/', $host) == 1) {
+                # ip address checking
+                $this->_cookie_domain = $host;
+            } else {
+                $this->_cookie_domain = substr($host, strpos($host, '.'));
+            }
+        } else {
+            $this->_cookie_domain = $_SERVER['HTTP_HOST'] ?? '';
         }
     }
 
