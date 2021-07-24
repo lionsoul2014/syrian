@@ -563,13 +563,16 @@ abstract class SessionBase
         return $client;
     }
 
-    /* delete the furthest access client */
+    /* delete the furthest access client, with removed clients priority */
     protected function delFurthestAccessClient()
     {
         $seed = null;
         $time = time();
         foreach ($this->_sess_data[self::FIELD_CLIENT] as $s => $conf) {
-            if ($conf[self::FIELD_AT] < $time) {
+            if ($conf[self::FIELD_ST] == self::STATUS_RM) {
+                $seed = $s;
+                break;
+            } else if ($conf[self::FIELD_AT] < $time) {
                 $time = $conf[self::FIELD_AT];
                 $seed = $s;
             }
