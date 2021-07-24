@@ -542,10 +542,16 @@ abstract class SessionBase
     }
 
 
-    /* return the clients number */
+    /* return the clients number with removed clients ignored */
     public function getClientSize()
     {
-        return count($this->_sess_data[self::FIELD_CLIENT]);
+        $size = 0;
+        foreach ($this->_sess_data[self::FIELD_CLIENT]) as $conf) {
+            if ($conf[self::FIELD_ST] == self::STATUS_OK) {
+                $size++;
+            }
+        }
+        return $size;
     }
 
     /* delete the specified client with its seed */
