@@ -87,6 +87,8 @@ abstract class SessionBase
             $this->_cookie_domain = $conf['cookie_domain'];
         } else if (isset($conf['domain_strategy']) == false) {
             $this->_cookie_domain = $_SERVER['HTTP_HOST'] ?? '';
+        } else if ($conf['domain_strategy'] == 'cur_host') {
+            $this->_cookie_domain = $_SERVER['HTTP_HOST'] ?? '';
         } else if ($conf['domain_strategy'] == 'all_sub_host') {
             $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
             $pnum = 0;
@@ -105,8 +107,6 @@ abstract class SessionBase
             } else {
                 $this->_cookie_domain = substr($host, strpos($host, '.'));
             }
-        } else {
-            $this->_cookie_domain = $_SERVER['HTTP_HOST'] ?? '';
         }
     }
 
