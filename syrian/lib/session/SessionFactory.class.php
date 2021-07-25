@@ -2,8 +2,9 @@
 /**
  * session 2.0 base abstract implementation.
  * 1, based on sign session id.
- * 2, mutl clients and limits supported.
+ * 2, mutl clients and limits supports.
  * 3, operation process safe based on driver CAS operation.
+ * 4, not thread-safe.
  *
  * @author chenxin<chenxin619315@gmail.com>
 */
@@ -25,7 +26,7 @@ abstract class SessionBase
     const STATUS_RM = -1;
     const STATUS_OK = 1;
 
-    const FIELD_CLIENT = '__clients';    # client list
+    const FIELD_CLIENT = '__clients';   # client list
     const FIELD_AR = 'ar';              # address
     const FIELD_AT = 'at';              # last access time
     const FIELD_CT = 'ct';              # counter
@@ -42,6 +43,7 @@ abstract class SessionBase
     /* common config item */
     protected $_ttl = 1800;             # default expire time to 30 mins
     protected $_cookie_domain = '';
+    protected $_create_new = false;     # the first time create the session ?
     protected $_need_flush = false;     # default flush mark to false
     protected $_max_retries = 3;
 
@@ -158,6 +160,7 @@ abstract class SessionBase
             )));
 
             # track the seed for the newly created session pack
+            $this->_create_new = true;
             $this->_sess_data[self::FIELD_CLIENT] = array(
                 $seed => array(
                     self::FIELD_AR => $addr,
@@ -217,9 +220,10 @@ abstract class SessionBase
             }
 
             # 4, basic initialize and load the data from the driver
-            $this->cas_token  = null;
-            $this->_sess_uid  = $obj->uid;
-            $this->_sess_seed = $obj->seed;
+            $this->cas_token   = null;
+            $this->_sess_uid   = $obj->uid;
+            $this->_sess_seed  = $obj->seed;
+            $this->_create_new = false;
             $this->_sess_data[self::FIELD_CLIENT] = array();
             $this->reload();
         }
@@ -274,7 +278,7 @@ abstract class SessionBase
             return false;
         }
 
-        // do the data merge.
+        // do the data none-clients fields merge.
         // CAS failed may need to calling reload multi-times, so:
         // 1. merge all the keys from both global _sess_data and local data.
         // 2. local data priority for conflicting fields.
@@ -282,48 +286,83 @@ abstract class SessionBase
             if ($f != self::FIELD_CLIENT) {
                 # conflicting & missing fields
                 $this->_sess_data[$f] = $val;
-                continue;
             }
         }
 
-        // 3. merge the special FIELD_CLIENT fields by taking both their items
-        //  also ignore and clean the removed clients.
-        $_clients = array();
-        foreach ($this->_sess_data[self::FIELD_CLIENT] as $s => $c) {
-            if ($c[self::FIELD_ST] == self::STATUS_RM) {
-                // ignore the removed seed
+        // do the clients merge.
+        // 1, take the newly loaded data priority.
+        // 2, missing fields in the newly loaded data consider
+        //  to be removed by the last flush request.
+        // 3, missing fields in the current _sess_data ? well, that should
+        //  be a new client registered and just take it in.
+        $_new_clients = $data[self::FIELD_CLIENT];
+        $_cur_clients = &$this->_sess_data[self::FIELD_CLIENT];
+        foreach ($_cur_clients as $k => $v) {
+            if (isset($_new_clients[$k])) {
+                // both own client, task newly loaded priority
+                $_cur_clients[$k] = $_new_clients[$k];
+            } else if ($k == $this->_sess_seed 
+                && $this->_create_new == true) {
+                // force keep the current newly register client.
             } else {
-                $_clients[$s] = $c;
+                // missing field in the newly loaded data
+                // consider the client were removed by another client.
+                // so mark the current client as removed.
+                $_cur_clients[self::FIELD_ST] = self::STATUS_RM;
             }
         }
 
-        // merge the original clients data
-        // ignore and clean the removed seed
-        foreach ($data[self::FIELD_CLIENT] as $s => $c) {
-            if ($c[self::FIELD_ST] == self::STATUS_RM) {
-                // ignore the removed seed
-                // also remove the current seed if it were set
-                unset($_clients[$s]);
+        // append the newly registered clients
+        foreach ($_new_clients as $k => $v) {
+            if (isset($_cur_clients[$k])) {
+                // do nothing here since both own client alreay merged
             } else {
-                $_clients[$s] = $c;
-            }
-        }
-
-        $this->_sess_data[self::FIELD_CLIENT] = $_clients;
-
-
-        // check and do the furthest access clients clean as need.
-        // allow this->_max_clients clients login at the same time.
-        // @Note: this may clean up the current request session and 
-        // the #start will report a INVALID_SEED error.
-        if ($this->_max_clients > 0) {
-            $_size = $this->getClientSize();
-            for ($i = $this->_max_clients; $i < $_size; $i++) {
-                $this->delFurthestAccessClient();
+                // just append the newly registered client
+                $_cur_clients[$k] = $v;
             }
         }
 
         return true;
+    }
+
+    /* get the final data for driver updates 
+     * 1, mainly check and clean up the removed clients. 
+     * 2, do the _max_clients clients check and clean up. */
+    private function _getDataForFlush()
+    {
+        // @Note: make a copy of the global session data
+        // since we cannot broke the original structures like
+        //   marked at remove clients.
+        $_sess_data = $this->_sess_data;
+
+        // clean up the removed clients
+        foreach ($_sess_data[self::FIELD_CLIENT] as $seed => $conf) {
+            if ($conf[self::FIELD_ST] == self::STATUS_RM) {
+                unset($_sess_data[self::FIELD_CLIENT][$seed]);
+            }
+        } 
+
+        // check and do the furthest access clients clean up as need.
+        // allow this->_max_clients clients register at the same time.
+        if ($this->_max_clients > 0) {
+            $_client_list = &$_sess_data[self::FIELD_CLIENT];
+            $_client_size = count($_client_list);
+            for ($i = $this->_max_clients; $i < $_client_size; $i++) {
+                $seed = null;
+                $time = time();
+                foreach ($_client_list as $s => $c) {
+                    if ($c[self::FIELD_AT] < $time) {
+                        $time = $c[self::FIELD_AT];
+                        $seed = $s;
+                    }
+                }
+
+                // remove the furthest access client
+                unset($_client_list[$seed]);
+            }
+        }
+
+        return $_sess_data;
     }
 
     /* flush the current session data to the driver */
@@ -334,25 +373,21 @@ abstract class SessionBase
             return true;
         }
 
-        # clean up the session seeds and encode the data
-        $_clients = &$this->_sess_data[self::FIELD_CLIENT];
-        foreach ($_clients as $seed => $conf) {
-            if ($conf[self::FIELD_ST] == self::STATUS_RM) {
-                unset($_clients[$seed]);
-            }
-        }
-        $_data_str = json_encode($this->_sess_data);
+        $_sess_data = null;
 
         /* invoke the #_add to create an add atomic operation */
         if ($this->_row_exists == false) {
             for ($i = 0; $i < $this->_max_retries; ) {
-                if ($this->_add($this->_sess_uid, $_data_str, $errno) == true) {
+                $_sess_data = $this->_getDataForFlush();
+                if ($this->_add($this->_sess_uid, 
+                    json_encode($_sess_data), $errno) == true) {
+                    $this->_sess_data  = $_sess_data;
                     $this->_need_flush = false;
                     return true;
                 }
 
                 # reload the data for CAS failed
-                # and continue the follow #_write operation.
+                # and continue the follow #_update operation.
                 if ($errno == self::CAS_FAILED) {
                     $this->reload();
                     $i = -1;
@@ -368,14 +403,16 @@ abstract class SessionBase
             }
         }
 
-        // @Note: do the best to make sure the data _write succeed.
+        // @Note: do the best to make sure the data _update succeed.
         // normal error will keep retry for #_max_retries times and for
         // CAS error it will keep trying util it succeed. */
         for ($i = 0; $i < $this->_max_retries; ) {
-            if ($this->_write($this->_sess_uid, 
-                $_data_str, $this->_cas_token, $errno) == true) {
+            $_sess_data = $this->_getDataForFlush();
+            if ($this->_update($this->_sess_uid, 
+                json_encode($_sess_data), $this->_cas_token, $errno) == true) {
                 # reset the flush need mark to false
-                # if the _write operation succeed
+                # if the _update operation succeed
+                $this->_sess_data  = $_sess_data;
                 $this->_need_flush = false;
                 return true;
             }
@@ -393,7 +430,7 @@ abstract class SessionBase
     }
     
     /* close the current session
-     * this will force to flush the data by invoking the #_write(id, data).
+     * this will force to flush the data by invoking the #_update(id, data).
      * And then clean up the session data */
     public function close()
     {
@@ -404,21 +441,9 @@ abstract class SessionBase
     /* destroy the current session. */
     public function destroy()
     {
-        /* 1, For multi-clients clear the current client and close the session.
-         * 2, If there is ONLY one session record (it must be the current one)
-         *  we force to destroy the session data by calling #_destroy(). */
-        if ($this->getClientSize() > 1) {
-            $this->delClient($this->_sess_seed);
-            $this->close();
-        } else if ($this->_sess_uid != null) {
-            // calling #_destroy() and force not to flush the data if
-            // we destory the session data in the driver.
-            // In case the data were write to the driver again
-            // by calling flush/close or destruct the instance
-            $this->_destroy($this->_sess_uid);
-            $this->_sess_data = [];
-            $this->_need_flush = false;
-        }
+        // delete the current client
+        $this->delClient($this->_sess_seed);
+        $this->close();
 
         // check and delete the session cookie
         if (isset($_COOKIE[$this->_sess_name])) {
@@ -432,6 +457,19 @@ abstract class SessionBase
             );
         }
     }
+
+    /**
+     * The write callback is called when the session needs to be saved and closed
+     * for the first time it created and there is NO row exists in the storage driver.
+     * @Note: errno will set to CAS_FAILED if row exists.
+     *
+     * @see     #_update($uid, $val, $cas_token, &$errno=self::OK)
+     * @param   $uid
+     * @param   $val
+     * @param   $errno
+     * @return  bool
+    */
+    protected abstract function _add($uid, $val, &$errno=self::OK);
 
     /**
      * The read callback must always return a session encoded (serialized) string,
@@ -448,25 +486,14 @@ abstract class SessionBase
 
     /**
      * The write callback is called when the session needs to be saved and closed
-     * for the first time it created and there is NO row exists in the storage driver.
-     *
-     * @see     #_write($uid, $val, $cas_token, &$errno=self::OK)
-     * @param   $uid
-     * @param   $val
-     * @param   $errno
-     * @return  bool
-    */
-    protected abstract function _add($uid, $val, &$errno=self::OK);
-
-    /**
-     * The write callback is called when the session needs to be saved and closed
      * for the row exists in the storage driver ONLY.
+
      * The serialized session data passed to this callback should be stored against
      * the passed session ID. When retrieving this data, the read callback must
      * return the exact value that was originally passed to the write callback.
      *
      * @Note: 
-     * 1, the _write implementation should use the cas_token for compare and set.
+     * 1, the _update implementation should use the cas_token for compare and set.
      * 2, perform failed on exists add operation if the cas_token is null
      *
      * @param   $uid
@@ -475,16 +502,16 @@ abstract class SessionBase
      * @param   $errno
      * @return  bool
     */
-    protected abstract function _write($uid, $val, $cas_token, &$errno=self::OK);
+    protected abstract function _update($uid, $val, $cas_token, &$errno=self::OK);
 
     /**
-     * This callback is executed when a session is destroyed.
+     * This callback is executed when a session is detected to be destroyed.
      * Return value should be true for success, false for failure.
      *
      * @param   $uid
      * @return  bool
     */
-    protected abstract function _destroy($uid);
+    protected abstract function _delete($uid);
 
 
     /* get the current session name */
@@ -560,24 +587,6 @@ abstract class SessionBase
         $client = &$this->_sess_data[self::FIELD_CLIENT][$seed];
         $client[self::FIELD_ST] = self::STATUS_RM;
         return $client;
-    }
-
-    /* delete the furthest access client, with removed clients priority */
-    protected function delFurthestAccessClient()
-    {
-        $seed = null;
-        $time = time();
-        foreach ($this->_sess_data[self::FIELD_CLIENT] as $s => $conf) {
-            if ($conf[self::FIELD_ST] == self::STATUS_RM) {
-                $seed = $s;
-                break;
-            } else if ($conf[self::FIELD_AT] < $time) {
-                $time = $conf[self::FIELD_AT];
-                $seed = $s;
-            }
-        }
-
-        return $this->delClient($seed);
     }
 
     /* return the register address/at/counter item eg ... */
@@ -656,6 +665,7 @@ abstract class SessionBase
 
 class SessionFactory
 {
+
     private static $_classes = NULL;
     
     /**
@@ -680,4 +690,5 @@ class SessionFactory
         //return the newly created instance
         return new $_class($_conf);
     }
+
 }

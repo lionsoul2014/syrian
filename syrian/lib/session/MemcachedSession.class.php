@@ -79,6 +79,23 @@ class MemcachedSession extends SessionBase
         parent::__construct($conf);
     }
 
+    /** @see SessionBase#_add($uid, $val, &$errno=self::OK) */
+    protected function _add($uid, $val, &$errno=self::OK)
+    {
+        $r = $this->_mem->add($uid, $val, $this->_ttl);
+        if ($r == true) {
+            return true;
+        }
+
+        if ($this->_mem->getResultCode() == Memcached::RES_NOTSTORED) {
+            $errno = self::CAS_FAILED;
+        } else {
+            $errno = self::OPT_FAILED;
+        }
+        
+        return false;
+    }
+
     /** @see SessionBase#_read($uid, $cas_token, &$exists) */
     protected function _read($uid, &$cas_token, &$exists=true)
     {
@@ -106,25 +123,8 @@ class MemcachedSession extends SessionBase
         return $val;
     }
 
-    /** @see SessionBase#_add($uid, $val, &$errno=self::OK) */
-    protected function _add($uid, $val, &$errno=self::OK)
-    {
-        $r = $this->_mem->add($uid, $val, $this->_ttl);
-        if ($r == true) {
-            return true;
-        }
-
-        if ($this->_mem->getResultCode() == Memcached::RES_NOTSTORED) {
-            $errno = self::CAS_FAILED;
-        } else {
-            $errno = self::OPT_FAILED;
-        }
-        
-        return false;
-    }
-
-    /** @see SessionBase#_write($uid, $val, $cas_token, &$errno=self::OK) */
-    protected function _write($uid, $val, $cas_token, &$errno=self::OK)
+    /** @see SessionBase#_update($uid, $val, $cas_token, &$errno=self::OK) */
+    protected function _update($uid, $val, $cas_token, &$errno=self::OK)
     {
         # directly abort for no cas token
         if ($cas_token == null) {
@@ -149,8 +149,8 @@ class MemcachedSession extends SessionBase
         return false;
     }
     
-    /** @see SessionBase#_destroy($uid)*/
-    protected function _destroy($uid)
+    /** @see SessionBase#_delete($uid)*/
+    protected function _delete($uid)
     {
         # print("delete: {$uid}\n");
         return $this->_mem->delete($uid);
