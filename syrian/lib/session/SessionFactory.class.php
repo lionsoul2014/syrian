@@ -359,8 +359,8 @@ abstract class SessionBase
             }
         }
 
-        print("#_reload: ");
-        print_r($this->_sess_data);
+        # print("#_reload: ");
+        # print_r($this->_sess_data);
 
         return true;
     }
@@ -407,8 +407,8 @@ abstract class SessionBase
             }
         }
 
-        print("#_update: ");
-        print_r($_sess_data);
+        # print("#_update: ");
+        # print_r($_sess_data);
 
         return $_sess_data;
     }
