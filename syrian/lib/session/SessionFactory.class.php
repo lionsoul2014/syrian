@@ -255,6 +255,7 @@ abstract class SessionBase
         $errno = self::OK;
         $this->setClientItem(self::FIELD_AT, time());
         $this->incClientItem(self::FIELD_CT, 1);
+        # $this->set('at', microtime(true));
 
         // open the flush mark ONLY if everything are Ok
         $this->_need_flush = true;
@@ -300,9 +301,22 @@ abstract class SessionBase
         // 1. merge all the keys from both global _sess_data and local data.
         // 2. local data priority for conflicting fields.
         foreach ($data as $f => $val) {
-            if ($f != self::FIELD_CLIENT) {
-                # conflicting & missing fields
-                $this->_sess_data[$f] = $val;
+            if ($f == self::FIELD_CLIENT) {
+                continue;
+            }
+
+            # conflicting & missing fields
+            $this->_sess_data[$f] = $val;
+        }
+
+        // check and apply the session log.
+        foreach ($this->_sess_log as $f => $log) {
+            if (isset($log[self::LOG_DEL])) {
+                unset($this->_sess_data[$f]);
+            } else if (isset($log[self::LOG_SET])) {
+                $this->_sess_data[$f] = $log[self::LOG_SET];
+            } else if (isset($log[self::LOG_INC])) {
+                // $this->_sess_data[$f] = $log[self::LOG_INC];
             }
         }
 
@@ -316,10 +330,14 @@ abstract class SessionBase
         $_cur_clients = &$this->_sess_data[self::FIELD_CLIENT];
         foreach ($_cur_clients as $k => $v) {
             if (isset($_new_clients[$k])) {
-                // both own the client, task newly loaded priority
-                // and use the current client status.
-                $_cur_clients[$k] = $_new_clients[$k];
-                $_cur_clients[$k][self::FIELD_ST] = $v[self::FIELD_ST];
+                // both own the client:
+                if ($k == $this->_sess_seed) {
+                    // keep the $_cur_clients[$k] priority
+                } else {
+                    // newly loaded data priority but keep the current status.
+                    $_cur_clients[$k] = $_new_clients[$k];
+                    $_cur_clients[$k][self::FIELD_ST] = $v[self::FIELD_ST];
+                }
             } else if ($k == $this->_sess_seed 
                 && $this->_create_new == true) {
                 // force keep the current newly register client.
@@ -341,8 +359,8 @@ abstract class SessionBase
             }
         }
 
-        // print("#_reload: ");
-        // print_r($this->_sess_data);
+        print("#_reload: ");
+        print_r($this->_sess_data);
 
         return true;
     }
@@ -389,8 +407,8 @@ abstract class SessionBase
             }
         }
 
-        // print("#_update: ");
-        // print_r($_sess_data);
+        print("#_update: ");
+        print_r($_sess_data);
 
         return $_sess_data;
     }
@@ -404,6 +422,7 @@ abstract class SessionBase
         }
 
         $_sess_data = null;
+        $this->reload();
 
         /* invoke the #_add to create an add atomic operation */
         if ($this->_row_exists == false) {
@@ -697,6 +716,7 @@ abstract class SessionBase
     {
         $this->_need_flush = true;
         $this->_sess_data[$key] = $val;
+        $this->_track($key, self::LOG_SET, $val);
         return $this;
     }
 
@@ -705,9 +725,43 @@ abstract class SessionBase
         if (isset($this->_sess_data[$key])) {
             $this->_need_flush = true;
             unset($this->_sess_data[$key]);
+            $this->_track($key, self::LOG_DEL, true);
         }
         return $this;
     }
+
+
+    /* session data operation log.
+     * a way to ensure the success of the data updates
+     * during a CAS operation env. 
+     * log item:
+     * ['#field' => [
+     *  'S' => 'val',
+     *  'I' => '+offset',
+     *  'D' => true | false,
+     * ]]
+     *
+     * @Note: increase is an operation that cannot be
+     * precisely controlled, so deprecated it.
+     * do not rely on the data managed by the inc operation.
+     */
+    const LOG_INC = 'I';    # increase operation
+    const LOG_SET = 'S';    # set operation
+    const LOG_DEL = 'D';    # delete operation
+    protected $_sess_log  = [];
+    private function _track($f, $opt, $val)
+    {
+        if (!isset($this->_sess_log[$f])) {
+            $this->_sess_log[$f] = array();
+        }
+
+        if ($opt == self::LOG_INC) {
+            // do nothing right now
+        } else {
+            $this->_sess_log[$f][$opt] = $val;
+        }
+    }
+
 
     public function __destruct()
     {
