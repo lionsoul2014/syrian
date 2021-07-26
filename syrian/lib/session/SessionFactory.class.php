@@ -27,14 +27,21 @@ abstract class SessionBase
     const STATUS_OK = 1;
 
     const FIELD_CLIENT = '__clients';   # client list
+    const FIELD_RG = 'rg';              # register time
     const FIELD_AR = 'ar';              # address
     const FIELD_AT = 'at';              # last access time
     const FIELD_CT = 'ct';              # counter
     const FIELD_ST = 'st';              # status
     const FIELD_UA = 'ua';              # user-agent
 
+
+    /* empty session data structure */
+    private static $_empty_sess_data = [
+        self::FIELD_CLIENT => array()
+    ];
+
     /* session global vars */
-    protected $_sess_data = [];
+    protected $_sess_data = null;
     protected $_sess_name = null;
     protected $_sess_id   = null;
     protected $_sess_uid  = null;
@@ -110,6 +117,9 @@ abstract class SessionBase
                 $this->_cookie_domain = substr($host, strpos($host, '.'));
             }
         }
+
+        # default the clients to an empty array
+        $this->_sess_data = self::$_empty_sess_data;
     }
 
     /* 
@@ -160,11 +170,13 @@ abstract class SessionBase
             )));
 
             # track the seed for the newly created session pack
+            $c_time = time();
             $this->_create_new = true;
             $this->_sess_data[self::FIELD_CLIENT] = array(
                 $seed => array(
                     self::FIELD_AR => $addr,
-                    self::FIELD_AT => time(),
+                    self::FIELD_RG => $c_time,
+                    self::FIELD_AT => $c_time,
                     self::FIELD_CT => 0,
                     self::FIELD_ST => self::STATUS_OK,
                     self::FIELD_UA => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
@@ -224,7 +236,6 @@ abstract class SessionBase
             $this->_sess_uid   = $obj->uid;
             $this->_sess_seed  = $obj->seed;
             $this->_create_new = false;
-            $this->_sess_data[self::FIELD_CLIENT] = array();
             $this->reload();
         }
 
@@ -273,7 +284,13 @@ abstract class SessionBase
 
         $_data_str = $this->_read($this->_sess_uid, 
             $this->_cas_token, $this->_row_exists);
-        if (strlen($_data_str) < 3 
+        if ($this->_row_exists == false) {
+            // use an empty array instead if row not exists:
+            // 1, first start the session
+            // 2, the data were removed from the driver
+            // to force to remove the current none-newly-register clients.
+            $data = self::$_empty_sess_data;
+        } else if (strlen($_data_str) < 3 
             || ($data = json_decode($_data_str, true)) == null) {
             return false;
         }
@@ -299,8 +316,10 @@ abstract class SessionBase
         $_cur_clients = &$this->_sess_data[self::FIELD_CLIENT];
         foreach ($_cur_clients as $k => $v) {
             if (isset($_new_clients[$k])) {
-                // both own client, task newly loaded priority
+                // both own the client, task newly loaded priority
+                // and use the current client status.
                 $_cur_clients[$k] = $_new_clients[$k];
+                $_cur_clients[$k][self::FIELD_ST] = $v[self::FIELD_ST];
             } else if ($k == $this->_sess_seed 
                 && $this->_create_new == true) {
                 // force keep the current newly register client.
@@ -312,7 +331,7 @@ abstract class SessionBase
             }
         }
 
-        // append the newly registered clients
+        // append the newly registered clients by the other process
         foreach ($_new_clients as $k => $v) {
             if (isset($_cur_clients[$k])) {
                 // do nothing here since both own client alreay merged
@@ -321,6 +340,9 @@ abstract class SessionBase
                 $_cur_clients[$k] = $v;
             }
         }
+
+        // print("#_reload: ");
+        // print_r($this->_sess_data);
 
         return true;
     }
@@ -336,8 +358,13 @@ abstract class SessionBase
         $_sess_data = $this->_sess_data;
 
         // clean up the removed clients
+        // check and clean up the expired clients 
+        //  and that could be a case.
+        $c_time = time();
         foreach ($_sess_data[self::FIELD_CLIENT] as $seed => $conf) {
             if ($conf[self::FIELD_ST] == self::STATUS_RM) {
+                unset($_sess_data[self::FIELD_CLIENT][$seed]);
+            } else if ($c_time - $conf[self::FIELD_AT] > $this->_ttl) {
                 unset($_sess_data[self::FIELD_CLIENT][$seed]);
             }
         } 
@@ -349,7 +376,7 @@ abstract class SessionBase
             $_client_size = count($_client_list);
             for ($i = $this->_max_clients; $i < $_client_size; $i++) {
                 $seed = null;
-                $time = time();
+                $time = $c_time;
                 foreach ($_client_list as $s => $c) {
                     if ($c[self::FIELD_AT] < $time) {
                         $time = $c[self::FIELD_AT];
@@ -361,6 +388,9 @@ abstract class SessionBase
                 unset($_client_list[$seed]);
             }
         }
+
+        // print("#_update: ");
+        // print_r($_sess_data);
 
         return $_sess_data;
     }
@@ -456,6 +486,39 @@ abstract class SessionBase
                 false, true
             );
         }
+    }
+
+    /* destroy all the register clients.
+     * this function will make sure all clients removed.
+     * this should be calling from the expert manager ONLY */
+    public function destroyAll()
+    {
+        if ($this->_sess_uid == null) {
+            return false;
+        }
+
+        $this->_row_exists = true;
+        $this->_need_flush = true;
+        $this->_create_new = false;
+
+        do {
+            # mark all the clients as removed
+            $_client_list = &$this->_sess_data[self::FIELD_CLIENT];
+            foreach ($_client_list as $k => $v) {
+                $_client_list[$k][self::FIELD_ST] = self::STATUS_RM;
+            }
+
+            # flush the changes
+            # and return false if operation failed.
+            if ($this->flush() == false) {
+                return false;
+            }
+        } while (count($this->_sess_data[self::FIELD_CLIENT]) > 0);
+
+        // remove the row from the driver
+        $this->_delete($this->_sess_uid);
+
+        return true;
     }
 
     /**
@@ -555,12 +618,6 @@ abstract class SessionBase
         return $this;
     }
 
-    /* get the size of the session data */
-    public function size()
-    {
-        return count($this->_sess_data);
-    }
-
     /* return the seed of the session */
     public function getSeed()
     {
@@ -568,12 +625,18 @@ abstract class SessionBase
     }
 
 
-    /* return the clients number with removed clients ignored */
-    public function getClientSize()
+    /* return the clients number with removed clients ignored 
+     * count ONLY the status=OK clients if ok_only set to true.
+     *
+     * @param   $ok_only 
+    */
+    public function getClientSize($ok_only=false)
     {
         $size = 0;
-        foreach ($this->_sess_data[self::FIELD_CLIENT]) as $conf) {
-            if ($conf[self::FIELD_ST] == self::STATUS_OK) {
+        foreach ($this->_sess_data[self::FIELD_CLIENT] as $conf) {
+            if ($ok_only == false) {
+                $size++;
+            } else if ($conf[self::FIELD_ST] == self::STATUS_OK) {
                 $size++;
             }
         }
