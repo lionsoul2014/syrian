@@ -629,8 +629,7 @@ abstract class SessionBase
      * and used for data retrieving and stored.
      * @Note this method should be invoke before the #start
      * And this usually use in an debug mode or for experts operations.
-     * set the uid after #start may cause the invalid result from #_read.
-    */
+     * set the uid after #start may cause the invalid result from #_read. */
     public function setUid($uid)
     {
         $this->_sess_uid = $uid;
@@ -641,6 +640,12 @@ abstract class SessionBase
     public function getSeed()
     {
         return $this->_sess_seed;
+    }
+
+    /* return the maximum clients number */
+    public function getMaxClients()
+    {
+        return $this->_max_clients;
     }
 
 
