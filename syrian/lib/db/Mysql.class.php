@@ -373,16 +373,18 @@ class Mysql implements Idb
      * @param   $_where
      * @param   $_group
      * @param   $srw    separate read/write
+     * @param   $_default default value to return it failed
      * @return  int
     */
-    public function count( $_table, $_field = 0, $_where = NULL, $_group = NULL, $srw = NULL )
+    public function count(
+        $_table, $_field = 0, $_where = NULL, $_group = NULL, $srw = NULL, $_default=0)
     {
         $_query = 'SELECT count(' . $_field . ') FROM ' . $_table;
         if ( $_where != NULL ) $_query .= ' WHERE ' . $_where;
         if ( $_group != NULL ) $_query .= ' GROUP BY '. $_group;
         if ( ($_ret = $this->getOneRow($_query, MYSQLI_NUM, $srw)) != FALSE )
             return intval($_ret[0]);
-        return 0;
+        return $_default;
     }
 
     /**

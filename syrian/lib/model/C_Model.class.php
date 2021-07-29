@@ -370,14 +370,15 @@ class C_Model implements IModel
      *
      * @param   $_where
      * @param   $_group
+     * @param   $_default
      * @return  int
     */
-    public function totals( $_where = NULL, $_group = NULL )
+    public function totals( $_where = NULL, $_group = NULL, $_default=0 )
     {
         if ( is_array( $_where ) ) $_where = $this->getSqlWhere($_where);
         if ( is_array( $_group ) ) $_group = implode(',', $_group);
 
-        return $this->db->count($this->table, 0, $_where, $_group, $this->_srw);
+        return $this->db->count($this->table, 0, $_where, $_group, $this->_srw, $_default);
     }
 
     /**
