@@ -12,13 +12,13 @@ abstract class SessionBase
 {
     /* error constants for #start */
     const OK = 0x00;
-    const EMPTY_SESS_ID  = 0x01;
-    const DECODE_FAILED  = 0x02;
-    const FIELD_MISSING  = 0x03;
-    const INVALID_SIGN   = 0x04;
-    const INVALID_SEED   = 0x05;
-    const INVALID_ADDR   = 0x06;
-    const CLIENT_MISSING = 0x07;
+    const EMPTY_SESS_ID = 0x01;
+    const DECODE_FAILED = 0x02;
+    const FIELD_MISSING = 0x03;
+    const INVALID_SIGN  = 0x04;
+    const INVALID_SEED  = 0x05;
+    const INVALID_ADDR  = 0x06;
+    const EMPTY_CLIENTS = 0x07;
 
     const CAS_FAILED = 100;  # operation failed cus of CAS failed.
     const OPT_FAILED = 101;  # the other operation failed
@@ -237,12 +237,12 @@ abstract class SessionBase
             $this->_sess_seed  = $obj->seed;
             $this->_create_new = false;
             $this->reload();
-        }
 
-        # client field checking
-        if (!isset($this->_sess_data[self::FIELD_CLIENT])) {
-            $errno = self::CLIENT_MISSING;
-            return false;
+            # client size checking
+            if ($this->getClientSize() == 0) {
+                $errno = self::EMPTY_CLIENTS;
+                return false;
+            }
         }
 
         # client seed & status checking
