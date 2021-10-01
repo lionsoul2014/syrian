@@ -104,10 +104,11 @@ class StringUtil
         $buff = [];
         foreach ( $data as $key => $val ) {
             $type = gettype($val);
+            $togo = true;
             switch ( $type[0] ) {
             case 'o':   //object
             case 'r':   //resource
-                continue;
+                $togo = false;
                 break;
             case 'b':   //boolean
                 $val = $val ? 'true' : 'false';
@@ -123,6 +124,11 @@ class StringUtil
             case 'a':
                 $val = self::array2Json($val);
                 break;
+            }
+
+            # check and continue the loop
+            if ($togo == false) {
+                continue;
             }
 
             //check and append the key
