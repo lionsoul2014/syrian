@@ -169,4 +169,3 @@ class MemcachedCache implements ICache
         return $this;
     }
 }
-?>

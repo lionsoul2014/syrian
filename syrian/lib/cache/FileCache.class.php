@@ -81,4 +81,3 @@ class FileCache implements ICache
         return @unlink($_cache_file);
     }
 }
-?>

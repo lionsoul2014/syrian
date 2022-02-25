@@ -35,7 +35,7 @@ interface ICache
 class CacheFactory
 {
     /**
-     * all the loaded classed
+     * all the loaded class
      *
      * @access  private
     */
@@ -62,4 +62,3 @@ class CacheFactory
         return new $_class($_conf);
     }
 }
-?>

@@ -159,4 +159,3 @@ class NFileCache implements ICache
         return @unlink($_cache_file);
     }
 }
-?>

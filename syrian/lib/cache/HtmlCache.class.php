@@ -49,4 +49,3 @@ class HtmlCache
         return file_put_contents($_html_file, $_ret['body']);
     }
 }
-?>

@@ -24,4 +24,3 @@ class AgentCache
         //header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $_cache_time) . ' GMT');
     }
 }
-?>
