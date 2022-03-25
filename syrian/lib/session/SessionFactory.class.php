@@ -40,6 +40,10 @@ abstract class SessionBase
         self::FIELD_CLIENT => array()
     ];
 
+    /* signature config */ 
+    protected $_sign_private_key = "private_key";
+    protected $_sign_hash_algo = null;
+
     /* session global vars */
     protected $_sess_data = null;
     protected $_sess_name = null;
@@ -89,6 +93,14 @@ abstract class SessionBase
 
         if (isset($conf['max_clients'])) {
             $this->_max_clients = $conf['max_clients'];
+        }
+
+        if (isset($conf['private_key'])) {
+            $this->_sign_private_key = $conf['private_key'];
+        }
+
+        if (isset($conf['hash_algo'])) {
+            $this->_sign_hash_algo = $conf['hash_algo'];
         }
 
         # check and get the cookie domain name
@@ -155,8 +167,9 @@ abstract class SessionBase
             # check and generate the uid
             if ($uid == null) {
                 $uid = build_signature(array(
+                    $this->_sign_private_key, 
                     '_sess_uid', $seed, $addr, mt_rand(0,13333), mt_rand(0, 13331)
-                ));
+                ), null, $this->_sign_hash_algo);
             }
 
             $this->_cas_token = null;
@@ -166,7 +179,10 @@ abstract class SessionBase
                 'uid'  => $this->_sess_uid,
                 'seed' => $seed,
                 'addr' => $addr,
-                'sign' => build_signature(array('_sess_id', $this->_sess_uid, $seed, $addr))
+                'sign' => build_signature(array(
+                    $this->_sign_private_key, 
+                    '_sess_id', $this->_sess_uid, $seed, $addr
+                ), null, $this->_sign_hash_algo)
             )));
 
             # track the seed for the newly created session pack
@@ -225,7 +241,9 @@ abstract class SessionBase
 
             # 3, sign checking
             if (strcmp($obj->sign, build_signature(array(
-                '_sess_id', $obj->uid, $obj->seed, $obj->addr))) != 0) {
+                $this->_sign_private_key, 
+                '_sess_id', $obj->uid, $obj->seed, $obj->addr), 
+                    null, $this->_sign_hash_algo)) != 0) {
                 $this->destroy();   # destroy the error session
                 $errno = self::INVALID_SIGN;
                 return false;
