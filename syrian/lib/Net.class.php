@@ -84,4 +84,3 @@ class Net
         return $ret;
     }
 }
-?>

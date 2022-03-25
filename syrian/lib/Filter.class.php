@@ -220,4 +220,3 @@ class Filter
         return $_data;
     }
 }
-?>

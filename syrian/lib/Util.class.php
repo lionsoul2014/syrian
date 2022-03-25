@@ -524,7 +524,7 @@ class Util
         }
 
         //define the device part
-        $device    = 'x';
+        $device = 'x';
         if ( stripos($uAgent, 'Android') !== false )        $device = 'a';    //Android
         else if ( stripos($uAgent, 'iPhone') !== false )    $device = 'i';    //ios
         else if ( stripos($uAgent, 'Linux') !== false )     $device = 'l';    //linux
@@ -534,5 +534,30 @@ class Util
         return ($isMobile?'m':'p') . $device;
     }
 
+    /** 
+     * user agent equal compare: make sure the system/and kernel is the same, sample:
+     * Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.82 Safari/537.36
+     * Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0
+     * Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36
+     * Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36
+    */
+    public static function agentEqual($agentA, $agentB, $strict=false)
+    {
+        if ($strict) {
+            return strcmp($agentA, $agentB) == 0;
+        }
+
+        // get the system info
+        $pattern = '/\([a-zA-Z0-9-;_\.:\/\s]+\)/';
+        if (preg_match($pattern, $agentA, $mA) != 1) {
+            return false;
+        }
+
+        if (preg_match($pattern, $agentB, $mB) != 1) {
+            return false;
+        }
+
+        return strcmp($mA[0], $mB[0]) == 0;
+    }
+
 }
-?>
