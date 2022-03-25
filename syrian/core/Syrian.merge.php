@@ -923,9 +923,10 @@ function bkdr_hash($str)
  *
  * @param   $factors all the arguments that will join to the encryption
  * @param   $timer the unix time stamp that will store in the signature
+ * @param   $hash  the hash function to use
  * @return  String
 */
-function build_signature(array $factors, $timer=null)
+function build_signature(array $factors, $timer=null, $hash_algo=null)
 {
     $seeds = '=~!@#$%^&*()_+{}|\;:\',./<>"%%`~?~';
     $s_len = 33;
@@ -964,7 +965,7 @@ function build_signature(array $factors, $timer=null)
     }
 
     $encrypt[] = '$';
-    $sign_val = sha1(implode('', $encrypt));
+    $sign_val = hash($hash_algo ?? 'sha1', implode('', $encrypt));
     if ( $timer == null ) {
         return $sign_val;
     }
@@ -980,10 +981,11 @@ function build_signature(array $factors, $timer=null)
  * @param   $factors
  * @param   $signature
  * @param   $expired self-define signature expired time in seconds
+ * @param   $hash the hash function to use
  * @return  bool
  * @see     #build_signature
 */
-function valid_signature($factors, $signature, $expired=-1)
+function valid_signature($factors, $signature, $expired=-1, $hash_alg=null)
 {
     $sign_len = strlen($signature);
     if ( $sign_len != 40 && $sign_len != 48 ) {
@@ -991,7 +993,7 @@ function valid_signature($factors, $signature, $expired=-1)
     }
 
     $timer = $sign_len == 48 ? hexdec(substr($signature, 40)) : null;
-    $sign_val = build_signature($factors, $timer);
+    $sign_val = build_signature($factors, $timer, $hash_alg);
     if ( strncmp($sign_val, $signature, 40) != 0 ) {
         return false;
     }
