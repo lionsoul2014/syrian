@@ -40,9 +40,18 @@ abstract class SessionBase
         self::FIELD_CLIENT => array()
     ];
 
+    /* global common config */
+    protected $_config;
+    protected $_ttl;
+    protected $_cookie_domain;
+
     /* signature config */ 
-    protected $_sign_private_key = "private_key";
-    protected $_sign_hash_algo = null;
+    protected $_sign_private_key;
+    protected $_sign_hash_algo;
+
+    /* maximum parallel clients, -1 for not limits 
+     * @Note: set this before calling #start() */
+    protected $_max_clients = -1;
 
     /* session global vars */
     protected $_sess_data = null;
@@ -50,12 +59,8 @@ abstract class SessionBase
     protected $_sess_id   = null;
     protected $_sess_uid  = null;
     protected $_sess_seed = null;
-
-    /* common config item */
-    protected $_ttl = 1800;             # default expire time to 30 mins
-    protected $_cookie_domain = '';
-    protected $_create_new = false;     # the first time create the session ?
-    protected $_need_flush = false;     # default flush mark to false
+    protected $_create_new  = false;     # the first time create the session ?
+    protected $_need_flush  = false;     # default flush mark to false
     protected $_max_retries = 3;
 
     /* CAS operation token*/
@@ -64,10 +69,6 @@ abstract class SessionBase
     /* is the data row exists in the driver
      * this should be defined after calling the #_read implementation. */
     protected $_row_exists = true;
-
-    /* maximum parallel clients, -1 for not limits 
-     * @Note: set this before calling #start() */
-    protected $_max_clients = -1;
 
 
     /**
@@ -86,22 +87,12 @@ abstract class SessionBase
             throw new Exception("Missing session_name config item");
         }
 
+        $this->_config = $conf;
         $this->_sess_name = $conf['session_name'];
-        if (isset($conf['ttl'])) {
-            $this->_ttl = $conf['ttl'];
-        }
-
-        if (isset($conf['max_clients'])) {
-            $this->_max_clients = $conf['max_clients'];
-        }
-
-        if (isset($conf['private_key'])) {
-            $this->_sign_private_key = $conf['private_key'];
-        }
-
-        if (isset($conf['hash_algo'])) {
-            $this->_sign_hash_algo = $conf['hash_algo'];
-        }
+        $this->_ttl = $conf['ttl'] ?? 1800;                     // default to 30 mins
+        $this->_max_clients = $conf['max_clients'] ?? 3;        // default to 3
+        $this->_sign_private_key = $conf['private_key'] ?? 'private_key';
+        $this->_sign_hash_algo = $conf['hash_algo'] ?? 'sha1';  // default to sha1
 
         # check and get the cookie domain name
         if (isset($conf['cookie_domain'])) {
@@ -288,7 +279,8 @@ abstract class SessionBase
             time() + $this->_ttl, 
             '/', 
             $this->_cookie_domain, 
-            false, true
+            $this->_config['cookie_secure'] ?? false,
+            $this->_config['cookie_httponly'] ?? true
         );
 
         return true;
