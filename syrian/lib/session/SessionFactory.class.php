@@ -19,6 +19,7 @@ abstract class SessionBase
     const INVALID_SEED  = 0x05;
     const INVALID_ADDR  = 0x06;
     const EMPTY_CLIENTS = 0x07;
+    const NON_HTTPS_REQ = 0x08;
 
     const CAS_FAILED = 100;  # operation failed cus of CAS failed.
     const OPT_FAILED = 101;  # the other operation failed
@@ -44,6 +45,8 @@ abstract class SessionBase
     protected $_config;
     protected $_ttl;
     protected $_cookie_domain;
+    protected $_is_https;
+    protected $_https_only;
 
     /* signature config */ 
     protected $_sign_private_key;
@@ -93,6 +96,7 @@ abstract class SessionBase
         $this->_max_clients = $conf['max_clients'] ?? 3;        // default to 3
         $this->_sign_private_key = $conf['private_key'] ?? 'private_key';
         $this->_sign_hash_algo = $conf['hash_algo'] ?? 'sha1';  // default to sha1
+        $this->_https_only = $conf['https_only'] ?? false;
 
         # check and get the cookie domain name
         if (isset($conf['cookie_domain'])) {
@@ -146,6 +150,17 @@ abstract class SessionBase
     */
     public function start($create_new=false, $uid=null, &$errno=self::OK)
     {
+        # https only checking
+        if ($this->_https_only) {
+            if ($_SERVER['REQUEST_SCHEME'] == 'https' 
+                || (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on')) {
+                // it is a https request
+            } else {
+                $errno = self::NON_HTTPS_REQ;
+                return false;
+            }
+        }
+
         # necessary resets the need flush mark
         $this->_need_flush = false;
         $this->_row_exists = true;
@@ -279,8 +294,8 @@ abstract class SessionBase
             time() + $this->_ttl, 
             '/', 
             $this->_cookie_domain, 
-            $this->_config['cookie_secure'] ?? false,
-            $this->_config['cookie_httponly'] ?? true
+            $this->_https_only,
+            true    // force to httponly
         );
 
         return true;
