@@ -43,11 +43,11 @@ class SimpleLogger
             throw new Exception("invalid log level {$level}");
         }
 
-	if (count($args) > 0) {
-	    printf("%sT%s  [%5s]  %s\n", date('Y-m-d'), date('H:i:s'), $l, vsprintf($format, $args));
-	} else {
-	    printf("%sT%s  [%5s]  %s\n", date('Y-m-d'), date('H:i:s'), $l, $format);
-	}
+        if (count($args) > 0) {
+            printf("%sT%s [%5s] %s  %s\n", date('Y-m-d'), date('H:i:s'), $l, $this->sys, vsprintf($format, $args));
+        } else {
+            printf("%sT%s [%5s] %s  %s\n", date('Y-m-d'), date('H:i:s'), $l, $this->sys, $format);
+        }
     }
 
     public function debugf($format, ...$args)
