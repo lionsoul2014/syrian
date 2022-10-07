@@ -5,7 +5,8 @@ class SimpleLogger
 {
     const DEBUG = 0;
     const INFO  = 1;
-    const ERROR = 2;
+    const WARN  = 2;
+    const ERROR = 3;
 
     private $sys;
     private $level;
@@ -32,13 +33,16 @@ class SimpleLogger
         switch ($level) {
         case self::DEBUG:
             $l = 'DEBUG';
-	    break;
+            break;
         case self::INFO:
             $l = 'INFO';
-	    break;
+            break;
+        case self::WARN:
+            $l = 'WARN';
+            break;
         case self::ERROR:
             $l = 'ERROR';
-	    break;
+            break;
         default:
             throw new Exception("invalid log level {$level}");
         }
@@ -58,6 +62,11 @@ class SimpleLogger
     public function infof($format, ...$args)
     {
         $this->printf(self::INFO, $format, $args);
+    }
+
+    public function warnf($format, ...$args)
+    {
+        $this->printf(self::WARN, $format, $args);
     }
 
     public function errorf($format, ...$args)
