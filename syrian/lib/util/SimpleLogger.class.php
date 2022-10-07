@@ -52,6 +52,11 @@ class SimpleLogger
 
     public function printf($level, $format, $args) 
     {
+        # log level checking
+        if ($level < $this->level) {
+            return false;
+        }
+
         switch ($level) {
         case self::DEBUG:
             $l = 'DEBUG';
@@ -74,6 +79,8 @@ class SimpleLogger
         } else {
             printf("%sT%s [%5s] %s  %s\n", date('Y-m-d'), date('H:i:s'), $l, $this->sys, $format);
         }
+
+        return true;
     }
 
     public function debugf($format, ...$args)
