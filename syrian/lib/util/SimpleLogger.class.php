@@ -32,15 +32,22 @@ class SimpleLogger
         switch ($level) {
         case self::DEBUG:
             $l = 'DEBUG';
+	    break;
         case self::INFO:
             $l = 'INFO';
+	    break;
         case self::ERROR:
             $l = 'ERROR';
+	    break;
         default:
-            throw new Exception("invalid log level {$level}")
+            throw new Exception("invalid log level {$level}");
         }
 
-        printf("%s  [%-5s]  %s", date('Y-m-dTH:i:s'), $l, sprintf($tpl, $args));
+	if (count($args) > 0) {
+            printf("%sT%s  [%5s]  %s\n", date('Y-m-d'), date('H:i:s'), $l, sprintf($tpl, ...$args));
+	} else {
+            printf("%sT%s  [%5s]  %s\n", date('Y-m-d'), date('H:i:s'), $l, $tpl);
+	}
     }
 
     public function debugf($tpl, ...$args)
