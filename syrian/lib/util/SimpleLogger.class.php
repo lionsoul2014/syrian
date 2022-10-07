@@ -27,7 +27,7 @@ class SimpleLogger
         return $this;
     }
 
-    public function printf($level, $tpl, ...$args) 
+    public function printf($level, $format, $args) 
     {
         switch ($level) {
         case self::DEBUG:
@@ -44,25 +44,25 @@ class SimpleLogger
         }
 
 	if (count($args) > 0) {
-            printf("%sT%s  [%5s]  %s\n", date('Y-m-d'), date('H:i:s'), $l, sprintf($tpl, ...$args));
+	    printf("%sT%s  [%5s]  %s\n", date('Y-m-d'), date('H:i:s'), $l, vsprintf($format, $args));
 	} else {
-            printf("%sT%s  [%5s]  %s\n", date('Y-m-d'), date('H:i:s'), $l, $tpl);
+	    printf("%sT%s  [%5s]  %s\n", date('Y-m-d'), date('H:i:s'), $l, $format);
 	}
     }
 
-    public function debugf($tpl, ...$args)
+    public function debugf($format, ...$args)
     {
-        $this->printf(self::DEBUG, $tpl, $args);
+	$this->printf(self::DEBUG, $format, $args);
     }
 
-    public function infof($tpl, ...$args)
+    public function infof($format, ...$args)
     {
-        $this->printf(self::INFO, $tpl, $args);
+        $this->printf(self::INFO, $format, $args);
     }
 
-    public function errorf($tpl, ...$args)
+    public function errorf($format, ...$args)
     {
-        $this->printf(self::ERROR, $tpl, $args);
+        $this->printf(self::ERROR, $format, $args);
     }
 
 }
