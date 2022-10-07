@@ -24,7 +24,29 @@ class SimpleLogger
 
     public function setLevel($level)
     {
-        $this->level = $level;
+        if (is_integer($level)) {
+            $this->level = $level;
+        } else if (is_string($level)) {
+            switch (strtolower($level)) {
+            case 'debug':
+                $this->level = self::DEBUG;
+                break;
+            case 'info':
+                $this->level = self::INFO;
+                break;
+            case 'warn':
+                $this->level = self::WARN;
+                break;
+            case 'error':
+                $this->level = self::ERROR;
+                break;
+            default:
+                throw new Exception("invalid level `{$level}`");
+            }
+        } else if ($level != NULL && $level != false) {
+            throw new Exception("invalid level type: integer or string expected");
+        }
+
         return $this;
     }
 
