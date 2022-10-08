@@ -938,6 +938,9 @@ function build_signature(array $factors, $timer=null, $hash_algo=null)
     foreach ( $factors as $val ) {
         $encrypt[] = $val;
         $slen = strlen($val);
+        if ($slen == 0) {
+            continue;
+        }
 
         // $hval = 0;
         // for ( $i = 0; $i < $slen; $i++ ) {
