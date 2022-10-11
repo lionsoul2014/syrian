@@ -15,7 +15,7 @@ const SR_FLUSH_MODE  = 'flush_mode';
 const SR_IGNORE_MODE = 'ignore_mode';
 
 //sapi mode define
-define('SR_CLI_MODE', strncmp(php_sapi_name(), 'cli', 3)=='cli');
+define('SR_CLI_MODE', strncmp(php_sapi_name(), 'cli', 3)==0);
 
 //check and define the including components
 //0x01: Function
