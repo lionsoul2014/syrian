@@ -785,9 +785,13 @@ function controller(
      * get and check the existence of the controller main file
     */
     $_ctrl_file = SR_CTRLPATH;
-    if ( $uri->package != null ) $_ctrl_file .= "{$uri->package}/";
-    $_ctrl_file .= "{$uri->module}/main.php";
+    if ( $uri->package != null ) {
+        $_ctrl_file .= "{$uri->package}/";
+    }
 
+    $module_uc = ucfirst($uri->module);
+    $_ctrl_file .= "{$module_uc}Controller.php";
+    // $_ctrl_file .= "{$uri->module}/main.php";
     if ( ! file_exists($_ctrl_file) ) {
         throw new Exception("Unable to locate the controller with request uri {$uri->uri}", 404);
     }
