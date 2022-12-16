@@ -2197,7 +2197,7 @@ EOF;
                 $val = '{}';
                 break;
             case 'r':   //resource
-                continue;
+                # continue;
                 break;
             case 'b':   //boolean
                 $val = $val ? 'true' : 'false';
