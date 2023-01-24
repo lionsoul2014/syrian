@@ -97,7 +97,7 @@ class Lunar
          $sky = array('庚','辛','壬','癸','甲','乙','丙','丁','戊','己');
          $earth = array('申','酉','戌','亥','子','丑','寅','卯','辰','巳','午','未');
          $year = $year.'';
-         return $sky[$year{3}].$earth[$year%12];
+         return $sky[$year[3]].$earth[$year%12];
     }
     
     /**
