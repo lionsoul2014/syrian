@@ -17,6 +17,12 @@ import('model.IModel');
 
 class SparkModel implements IModel
 {
+    const QueryType = 'query';
+    const MergeType = 'merge';
+
+    const DisplayQueryOnly = 'query_only';
+    const DisplayMergeOnly = 'merge_only';
+    const DisplayAll       = 'all';
 
     /**
      * spark server restful api base url
@@ -294,11 +300,20 @@ class SparkModel implements IModel
      * @param   $_order
      * @param   $_limit
      * @param   $_group
-     * @return  String query DSL
+     * @param   $type
+     * @param   $merge
+     * @return  String query DSL is encode=true or array
     */
-    protected function getQueryDSL($_filter, $_match, $_order, $_group, $_limit)
+    protected function getQueryDSL(
+        $type, $_filter, $_match, $_order, $_group, $_limit, $merge=null, $encode=true)
     {
         $queryDSL = array();
+
+        // type and merge define
+        $queryDSL['type'] = $type;
+        if ($merge != null) {
+            $queryDSL['merge'] = $merge;
+        }
 
         /*
          * filter condition parse
@@ -310,9 +325,7 @@ class SparkModel implements IModel
             $queryDSL['filter'] = $this->parseSQLCompatibleQuery($_filter);
         }
 
-        /*
-         * query match check and define
-        */
+        // query match check and define
         if ( $_match == null ) {
             // default to with no match
         } else if ( isset($_match['field']) && isset($_match['query']) ) {
@@ -374,7 +387,7 @@ class SparkModel implements IModel
         if ( $from >= 0 ) $queryDSL['from'] = $from;
         if ( $size >  0 ) $queryDSL['size'] = $size;
 
-        return json_encode($queryDSL);
+        return $encode ? json_encode($queryDSL) : $queryDSL;
     }
 
     /**
@@ -555,7 +568,7 @@ class SparkModel implements IModel
     */
     public function totals($_where=null, $_group=null)
     {
-        $_DSL = $this->getQueryDSL($_where, null, null, $_group, null);
+        $_DSL = $this->getQueryDSL(self::QueryType, $_where, null, null, $_group, null);
         $json = $this->_request('POST', $_DSL, "_count?dbName={$this->database}");
         if ($json == false) {
             return false;
@@ -588,7 +601,7 @@ class SparkModel implements IModel
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&{$_src}";
-        $_DSL = $this->getQueryDSL($_where, null, $_order, $_group, $_limit);
+        $_DSL = $this->getQueryDSL(self::QueryType, $_where, null, $_order, $_group, $_limit);
         $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
         if ($json == false) {
             return false;
@@ -676,7 +689,7 @@ class SparkModel implements IModel
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&{$_src}";
-        $_DSL = $this->getQueryDSL($_filter, $_match, $_order, $_group, $_limit);
+        $_DSL = $this->getQueryDSL(self::QueryType, $_filter, $_match, $_order, $_group, $_limit);
         $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
         if ($json == false) {
             return false;
@@ -767,6 +780,126 @@ class SparkModel implements IModel
     }
 
     /**
+     * merge all the specified searches and return the best one.
+     * input like:
+     * [
+     *  {
+     *      type   => query type,
+     *      merge  => merge config,
+     *      filter => filter define,
+     *      match  => match define,
+     *      order  => order define,
+     *      limit  => limit define,
+     *      group  => group define
+     *  }
+     * ]
+     *
+     * @return  Mixed(Array or false)
+    */
+    public function mergeSearch(
+        $_fields, $queryList, $_order, $_limit, $_group=null)
+    {
+        // make the query DSL
+        $queryDSL = array();
+        foreach ($queryList as $q) {
+            $queryDSL[] = $this->getQueryDSL(
+                $q['type']   ?? self::QueryType,
+                $q['filter'] ?? null,
+                $q['match']  ?? null,
+                $q['order']  ?? null,
+                $q['group']  ?? null,
+                $q['limit']  ?? null,
+                null,  // force merge to null
+                false  // force not encode
+            );
+        }
+
+        // append the final merge query DSL
+        $queryDSL[] = $this->getQueryDSL(
+            self::MergeType, null, null, $_order, $_group, $_limit, null, false
+        );
+
+        $_src = $this->getQueryFieldArgs($_fields);
+        $args = "dbName={$this->database}&{$_src}&_display=merge_only";
+        $json = $this->_request('POST', json_encode($queryDSL), "_search?{$args}", null, true);
+        if ($json == false) {
+            return false;
+        }
+
+        /*
+         * api return:
+         * [
+         *   {
+         *      "type": "merge",
+         *      "took": 0.00025,
+         *      "scanned": 2,
+         *      "total": 2,
+         *      "hits": [
+         *          {
+         *              "_db": "corpus",
+         *              "_id": 2,
+         *              "_score": null,
+         *              "_qm_rate": null,
+         *              "_dm_rate": null,
+         *              "_match": {
+         *                  "tokens": []
+         *              },
+         *              "_source": {
+         *              }
+         *          },
+         *          {
+         *              "_db": "corpus",
+         *              "_id": 1,
+         *              "_score": null,
+         *              "_qm_rate": null,
+         *              "_dm_rate": null,
+         *              "_match": {
+         *                  "tokens": []
+         *              },
+         *              "_source": {
+         *              }
+         *          }
+         *      ]
+         *  }
+         * ]
+        */
+
+        if (empty($json)) {
+            return false;
+        }
+
+        $fJson = $json[0];
+        if (! isset($fJson['hits']) || empty($fJson['hits'])) {
+            return false;
+        }
+
+        //----------------------------------------------------
+        // pre-process the returning data
+
+        $ret = array(
+            'took'  => $fJson['took'],
+            'total' => $fJson['total']
+        );
+
+        if ($_fields != false) {
+            $ret['hits'] = $fJson['hits'];
+        } else {
+            $ret['hits'] = array();
+            foreach ($fJson['hits'] as $hit) {
+                $ret['hits'][] = array(
+                    '_db'      => $hit['_db'],
+                    '_id'      => $hit['_id'],
+                    '_score'   => $hit['_score'],
+                    '_qm_rate' => $hit['_qm_rate'],
+                    '_dm_rate' => $hit['_dm_rate']
+                );
+            }
+        }
+
+        return $ret;
+    }
+
+    /**
      * get a specified record from the specified table
      *
      * @param   $Id
@@ -777,7 +910,7 @@ class SparkModel implements IModel
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&{$_src}";
-        $_DSL = $this->getQueryDSL($_where, null, null, null, 10);
+        $_DSL = $this->getQueryDSL(self::QueryType, $_where, null, null, null, 10);
         $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
         if ($json == false) {
             return false;
@@ -1297,7 +1430,7 @@ class SparkModel implements IModel
     }
 
     /*
-     * do final elasticsearch http query
+     * do final spark http query
      *
      * @param   $method (uppercase)
      * @param   $dsl
@@ -1425,7 +1558,7 @@ EOF;
     */
     protected function _InitFromConfigByKey($section)
     {
-        //Load the elasticsearch config
+        //Load the spark config
         $conf = config("database#{$section}");
         if ( $conf == false ) {
             throw new Exception("Invalid db section {$section}");    
