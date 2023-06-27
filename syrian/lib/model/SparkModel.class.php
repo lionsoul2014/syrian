@@ -418,15 +418,15 @@ class SparkModel implements IModel
     protected function getQuerySets($json, $srcMode)
     {
         $ret = array();
-        if ( $srcMode == true ) {
-            foreach ( $json['hits'] as $hit ) {
+        if ($srcMode == true) {
+            foreach ($json['hits'] as $hit) {
                 $ret[] = $hit['_source'];
             }
         } else {
             $ret['took']  = $json['took'];
             $ret['total'] = $json['total'];
             $ret['hits']  = array();
-            foreach ( $json['hits'] as $hit ) {
+            foreach ($json['hits'] as $hit) {
                 $ret['hits'][] = array(
                     '_db'       => $hit['_db'],
                     '_id'       => $hit['_id'],
@@ -478,7 +478,7 @@ class SparkModel implements IModel
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&{$_src}";
         $json = $this->_request('POST', $dsl, "_search?{$args}", null, true);
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -532,13 +532,18 @@ class SparkModel implements IModel
          *
         */
 
-        if ( ! isset($json['hits']) || empty($json['hits']) ) {
+        if (empty($json)) {
+            return false;
+        }
+
+        $fJson = $json[0];
+        if (! isset($fJson['hits']) || empty($fJson['hits'])) {
             return false;
         }
 
         return $format ? $this->getQuerySets(
-            $json, $_fields===false ? false : true
-        ) : $json['hits'];
+            $fJson, $_fields===false ? false : true
+        ) : $fJson['hits'];
     }
 
     /**
@@ -552,7 +557,7 @@ class SparkModel implements IModel
     {
         $_DSL = $this->getQueryDSL($_where, null, null, $_group, null);
         $json = $this->_request('POST', $_DSL, "_count?dbName={$this->database}");
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -585,7 +590,7 @@ class SparkModel implements IModel
         $args = "dbName={$this->database}&{$_src}";
         $_DSL = $this->getQueryDSL($_where, null, $_order, $_group, $_limit);
         $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -639,12 +644,17 @@ class SparkModel implements IModel
          *
         */
 
-        if ( ! isset($json['hits']) || empty($json['hits']) ) {
+        if (empty($json)) {
+            return false;
+        }
+
+        $fJson = $json[0];
+        if (! isset($fJson['hits']) || empty($fJson['hits'])) {
             return false;
         }
 
         return $this->getQuerySets(
-            $json, $_fields===false ? false : true
+            $fJson, $_fields===false ? false : true
         );
     }
 
@@ -668,7 +678,7 @@ class SparkModel implements IModel
         $args = "dbName={$this->database}&{$_src}";
         $_DSL = $this->getQueryDSL($_filter, $_match, $_order, $_group, $_limit);
         $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -721,7 +731,12 @@ class SparkModel implements IModel
          * }
         */
 
-        if ( ! isset($json['hits']) || empty($json['hits']) ) {
+        if (empty($json)) {
+            return false;
+        }
+
+        $fJson = $json[0];
+        if (! isset($fJson['hits']) || empty($fJson['hits'])) {
             return false;
         }
 
@@ -729,21 +744,21 @@ class SparkModel implements IModel
         // pre-process the returning data
 
         $ret = array(
-            'took'  => $json['took'],
-            'total' => $json['total']
+            'took'  => $fJson['took'],
+            'total' => $fJson['total']
         );
 
-        if ( $_fields != false ) {
-            $ret['hits'] = $json['hits'];
+        if ($_fields != false) {
+            $ret['hits'] = $fJson['hits'];
         } else {
             $ret['hits'] = array();
-            foreach ( $json['hits'] as $hit ) {
+            foreach ($fJson['hits'] as $hit) {
                 $ret['hits'][] = array(
-                    '_db'       => $hit['_db'],
-                    '_id'       => $hit['_id'],
-                    '_score'    => $hit['_score'],
-                    '_qm_rate'  => $hit['_qm_rate'],
-                    '_dm_rate'  => $hit['_dm_rate']
+                    '_db'      => $hit['_db'],
+                    '_id'      => $hit['_id'],
+                    '_score'   => $hit['_score'],
+                    '_qm_rate' => $hit['_qm_rate'],
+                    '_dm_rate' => $hit['_dm_rate']
                 );
             }
         }
@@ -764,7 +779,7 @@ class SparkModel implements IModel
         $args = "dbName={$this->database}&{$_src}";
         $_DSL = $this->getQueryDSL($_where, null, null, null, 10);
         $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -818,17 +833,22 @@ class SparkModel implements IModel
          *
         */
 
-        if ( ! isset($json['hits']) || empty($json['hits']) ) {
+        if (empty($json)) {
             return false;
         }
 
-        $hit = $json['hits'][0];
+        $fJson = $json[0];
+        if (! isset($fJson['hits']) || empty($fJson['hits'])) {
+            return false;
+        }
+
+        $hit = $fJson['hits'][0];
         return $_fields == false ? array(
-            '_db'       => $hit['_db'],
-            '_id'       => $hit['_id'],
-            '_score'    => $hit['_score'],
-            '_qm_rate'  => $hit['_qm_rate'],
-            '_dm_rate'  => $hit['_dm_rate']
+            '_db'      => $hit['_db'],
+            '_id'      => $hit['_id'],
+            '_score'   => $hit['_score'],
+            '_qm_rate' => $hit['_qm_rate'],
+            '_dm_rate' => $hit['_dm_rate']
         ) : $hit['_source'];
     }
 
@@ -838,7 +858,7 @@ class SparkModel implements IModel
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&id={$id}&{$_src}";
         $json = $this->_request('GET', null, "_get?{$args}", null, true);
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -860,11 +880,11 @@ class SparkModel implements IModel
          * }
         */
 
-        if ( isset($json['error']) || $json['found'] == false ) {
+        if (isset($json['error']) || $json['found'] == false) {
             return false;
         }
 
-        if ( $_fields == false ) {
+        if ($_fields == false) {
             return array(
                 '_db'       => $json['_db'],
                 '_id'       => $json['_id'],
@@ -901,7 +921,7 @@ class SparkModel implements IModel
         $this->stdDataTypes($data);
         $_DSL = json_encode($data);
         $json = $this->_request('POST', $_DSL, "_index?dbName={$this->database}&id={$id}");
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -914,7 +934,7 @@ class SparkModel implements IModel
          *  "created": true
          * }
         */
-        if ( isset($json->error) ) {
+        if (isset($json->error)) {
             return false;
         }
 
@@ -949,7 +969,7 @@ class SparkModel implements IModel
 
         $_DSL = implode("\n", $workload);
         $json = $this->_request('POST', $_DSL, '_bulk');
-        if ( $json == false || ! isset($json->items) ) {
+        if ($json == false || ! isset($json->items)) {
             return false;
         }
 
@@ -982,8 +1002,8 @@ class SparkModel implements IModel
         */
 
         $ok_count = 0;
-        foreach ( $json->items as $item ) {
-            if ( isset($item->_id) ) {
+        foreach ($json->items as $item) {
+            if (isset($item->_id)) {
                 $ok_count++;
             }
         }
@@ -1313,7 +1333,7 @@ class SparkModel implements IModel
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_HEADER, 0);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            'Content-Type: text/plain', 
+            'Content-Type: application/json', 
             'User-Agent: spark php client/1.0'
         ));
 
@@ -1340,15 +1360,14 @@ EOF;
         }
 
         $json = json_decode($ret, $_assoc);
-        if ( $json == null ) {
+        if ($json == null) {
             return false;
         }
 
         // check and do the error analysis and record
-        $has_error = $chk_error && ($_assoc 
-            ? isset($json['error']) : isset($json->error));
-        if ( $has_error ) {
-            if ( $_assoc ) {
+        $has_error = $chk_error && ($_assoc ? isset($json['error']) : isset($json->error));
+        if ($has_error) {
+            if ($_assoc) {
                 $jError = $json['error'];
                 $this->lastErrno = $jError['status'];
                 $this->lastError = $jError['message'];
@@ -1419,4 +1438,3 @@ EOF;
     }
 
 }
-?>
