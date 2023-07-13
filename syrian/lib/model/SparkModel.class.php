@@ -1478,14 +1478,18 @@ class SparkModel implements IModel
         $ret = curl_exec($curl);
         curl_close($curl);
 
-        if ( $this->_debug ) {
+        if ($this->_debug !== false) {
             $output = <<<EOF
 url: {$baseUrl}
 method: {$method}
 DSL: {$dsl}
 return: {$ret}\n
 EOF;
-            echo $output;
+            if (is_string($this->_debug)) {
+                call_user_func($this->_debug, $output);
+            } else {
+                echo $output;
+            }
         }
 
         if ( $ret == false ) {

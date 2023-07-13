@@ -510,4 +510,3 @@ class Mysql implements Idb
         $this->release();
     }
 }
-?>

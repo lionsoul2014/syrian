@@ -1479,4 +1479,3 @@ class ViewModel implements IModel
     }
 
 }
-?>
