@@ -292,6 +292,84 @@ class SparkModel implements IModel
     }
 
     /**
+     * filter the input query to get the final spark query compatible DSL
+     *
+     * @param   $query query raw input
+     * @param   $encode bool
+     * @return  String query DSL if encode=true or array
+    */
+    protected function queryFilter($query, $encode=true)
+    {
+        /*
+         * filter condition parse
+         * default to the sql compatible style syntax parser
+         * and default to the match_all spark query with empty filter
+         * and if there is no complex fulltext query defined
+        */
+        if (isset($query['filter'])) {
+            $query['filter'] = $this->parseSQLCompatibleQuery($query['filter']);
+        }
+
+        // query match check and override
+        if (isset($query['match'])) {
+            $_match = &$query['match'];
+            if (isset($_match['field']) && isset($_match['query'])) {
+                $_match['query'] = array(
+                    $_match['field'] => $_match['query']
+                );
+
+                unset($_match['field']);
+            }
+        }
+
+        /*
+         * check and create the sorting
+         * order with a style like array(
+         *  array(Id => desc),
+         *  array(_score => desc)
+         * )
+        */
+        if (isset($query['order']) || isset($query['sort'])) {
+            $sort = array();
+            foreach (($query['order'] ?? $query['sort']) as $k => $v ) {
+                $sort[] = array($k => $v);
+            }
+
+            unset($query['order']);
+            $query['sort'] = $sort;
+        }
+
+
+        /*
+         * check and define the limit
+         * limit often with style like '0,20'
+        */
+        if (isset($query['limit'])) {
+            $_limit = $query['limit'];
+            if (is_long($_limit)) {
+                $query['size'] = $_limit;
+            } else if (is_string($_limit)) {
+                $parts = explode(',', $_limit);
+                if (count($parts) == 1) {
+                    $query['size'] = intval($parts[0]);
+                } else {
+                    $query['from'] = intval($parts[0]);
+                    $query['size'] = intval($parts[1]);
+                }
+            } else if (is_array($_limit)) {
+                if (count($_limit) == 1) {
+                    $query['size'] = $_limit[0];
+                } else {
+                    $query['from'] = $_limit[0];
+                    $query['size'] = $_limit[1];
+                }
+            }
+        }
+
+        return $encode ? json_encode($query) : $query;
+    }
+
+    /**
      * get the query DSL
      * parse the sql compatible syntax, orde, limit to get the final spark query DSL
      *
@@ -307,87 +385,15 @@ class SparkModel implements IModel
     protected function getQueryDSL(
         $type, $_filter, $_match, $_order, $_group, $_limit, $merge=null, $encode=true)
     {
-        $queryDSL = array();
-
-        // type and merge define
-        $queryDSL['type'] = $type;
-        if ($merge != null) {
-            $queryDSL['merge'] = $merge;
-        }
-
-        /*
-         * filter condition parse
-         * default to the sql compatible style syntax parser
-         * and default to the match_all spark query with empty filter
-         * and if there is no complex fulltext query defined
-        */
-        if ( $_filter != null ) {
-            $queryDSL['filter'] = $this->parseSQLCompatibleQuery($_filter);
-        }
-
-        // query match check and define
-        if ( $_match == null ) {
-            // default to with no match
-        } else if ( isset($_match['field']) && isset($_match['query']) ) {
-            $queryDSL['match'] = array(
-                'min_score' => isset($_match['min_score']) ? $_match['min_score'] : 0,
-                'query' => array(
-                    array($_match['field'] => $_match['query'])
-                )
-            );
-        } else {
-            throw new Exception("Missing key 'field' or 'query' for match define");
-        }
-
-        /*
-         * check and create the sorting
-         * order with a style like array(
-         *  array(Id => desc),
-         *  array(_score => desc)
-         * )
-        */
-        if ( $_order != null ) {
-            $sort = array();
-            foreach ( $_order as $field => $order ) {
-                $sort[] = array($field => $order);
-            }
-
-            $queryDSL['sort'] = $sort;
-        }
-
-
-        /*
-         * check and define the limit
-         * limit often with style like '0,20'
-        */
-        $from = 0;
-        $size = 0;
-        if ( is_long($_limit) ) {
-            $size = $_limit;
-        } else if ( is_string($_limit) ) {
-            $parts = explode(',', $_limit);
-            if ( count($parts) == 1 ) {
-                $size = intval($parts[0]);
-            } else {
-                $from = intval($parts[0]);
-                $size = intval($parts[1]);
-            }
-        } else if ( is_array($_limit) ) {
-            if ( count($_limit) == 1 ) {
-                $size = $_limit[0];
-            } else {
-                $from = $_limit[0];
-                $size = $_limit[1];
-            }
-        }
-
-        // check and append the group field
-        // check and define the from, size attributes
-        if ( $_group != null) $queryDSL['group'] = $_group;
-        if ( $from >= 0 ) $queryDSL['from'] = $from;
-        if ( $size >  0 ) $queryDSL['size'] = $size;
-
-        return $encode ? json_encode($queryDSL) : $queryDSL;
+        return $this->queryFilter(array(
+            'type'   => $type,
+            'filter' => $_filter,
+            'match'  => $_match,
+            'order'  => $_order,
+            'group'  => $_group,
+            'limit'  => $_limit,
+            'merge'  => $merge,
+        ), $encode);
     }
 
     /**
@@ -802,22 +808,16 @@ class SparkModel implements IModel
         // make the query DSL
         $queryDSL = array();
         foreach ($queryList as $q) {
-            $queryDSL[] = $this->getQueryDSL(
-                $q['type']   ?? self::QueryType,
-                $q['filter'] ?? null,
-                $q['match']  ?? null,
-                $q['order']  ?? null,
-                $q['group']  ?? null,
-                $q['limit']  ?? null,
-                null,  // force merge to null
-                false  // force not encode
-            );
+            $queryDSL[] = $this->queryFilter($q, false);
         }
 
         // append the final merge query DSL
-        $queryDSL[] = $this->getQueryDSL(
-            self::MergeType, null, null, $_order, $_group, $_limit, null, false
-        );
+        $queryDSL[] = $this->queryFilter(array(
+            'type'  => self::MergeType,
+            'order' => $_order,
+            'group' => $_group,
+            'limit' => $_limit
+        ), false);
 
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&{$_src}&_display=merge_only";
