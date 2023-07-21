@@ -447,11 +447,12 @@ class SparkModel implements IModel
             $ret['hits']  = array();
             foreach ($json['hits'] as $hit) {
                 $ret['hits'][] = array(
-                    '_db'       => $hit['_db'],
-                    '_id'       => $hit['_id'],
-                    '_score'    => $hit['_score'],
-                    '_qm_rate'  => $hit['_qm_rate'],
-                    '_dm_rate'  => $hit['_dm_rate']
+                    '_db'      => $hit['_db'],
+                    '_id'      => $hit['_id'],
+                    '_check'   => $hit['_check'] ?? 0,
+                    '_score'   => $hit['_score'],
+                    '_qm_rate' => $hit['_qm_rate'],
+                    '_dm_rate' => $hit['_dm_rate']
                 );
             }
         }
@@ -775,6 +776,7 @@ class SparkModel implements IModel
                 $ret['hits'][] = array(
                     '_db'      => $hit['_db'],
                     '_id'      => $hit['_id'],
+                    '_check'   => $hit['_check'] ?? 0,
                     '_score'   => $hit['_score'],
                     '_qm_rate' => $hit['_qm_rate'],
                     '_dm_rate' => $hit['_dm_rate']
@@ -889,6 +891,7 @@ class SparkModel implements IModel
                 $ret['hits'][] = array(
                     '_db'      => $hit['_db'],
                     '_id'      => $hit['_id'],
+                    '_check'   => $hit['_check'] ?? 0,
                     '_score'   => $hit['_score'],
                     '_qm_rate' => $hit['_qm_rate'],
                     '_dm_rate' => $hit['_dm_rate']
@@ -979,6 +982,7 @@ class SparkModel implements IModel
         return $_fields == false ? array(
             '_db'      => $hit['_db'],
             '_id'      => $hit['_id'],
+            '_check'   => $hit['_check'] ?? 0,
             '_score'   => $hit['_score'],
             '_qm_rate' => $hit['_qm_rate'],
             '_dm_rate' => $hit['_dm_rate']
@@ -1021,6 +1025,7 @@ class SparkModel implements IModel
             return array(
                 '_db'       => $json['_db'],
                 '_id'       => $json['_id'],
+                '_check'    => $json['_check'] ?? 0,
                 '_score'    => 0.0,
                 '_qm_rate'  => 1.0,
                 '_dm_rate'  => 1.0
