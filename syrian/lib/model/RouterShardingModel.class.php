@@ -1271,8 +1271,12 @@ class RouterShardingModel implements IModel
         /// }
 
         // @Note since 2023/11/24
+        /// solution 1:
+        /// $uuid |= $rone;
+        /// solution 2:
         /// $nstr  = sprintf("%d:%d:%s", $rone, $uuid_index++, SR_NODE_NAME);
         /// $uuid |= hexdec(substr($nstr, 0, 2)) & 0xFF;
+        /// solution 3:
         $uuid |= (($rone & 0xF8) | ($sharding_idx++ % 0x07));
         /// printf("%d: %d (%.7f) -> %d\n", $tsec, $msec, $time, (($ltwo << 8) | $rone));
         /// printf("%d, %d -> %d\n", $tsec, $msec, $uuid);
