@@ -1241,16 +1241,16 @@ class RouterShardingModel implements IModel
         }
 
         $uuid = 0x00;
-        $tArr = explode(' ', microtime());
-        $tsec = $tArr[1];
-        $msec = $tArr[0];
-        if ( ($sIdx = strpos($msec, '.')) !== false ) {
-            $msec = substr($msec, $sIdx + 1);
-        }
+        $time = microtime(true);
+        $tArr = explode('.', sprintf('%.07f', $time));
+        $tsec = intval($tArr[0]);
+        $msec = intval($tArr[1]);
+        /// printf("%.07f -> %d: %d\n", $time, $tsec, $msec);
 
-        $msec  = ($msec & 0x0000FFFF);  // only keep 2 bytes
-        $uuid  = ($tsec << 32);         // timestamp
-        $uuid |= ($msec << 16);         // microtime
+        $ltwo  = ($msec >> 8) & 0xFFFF;  // left two bytes
+        $rone  = ($msec & 0xFF);         // right one byte
+        $uuid  = ($tsec << 32);          // timestamp
+        $uuid |= ($ltwo << 16);          // microtime
 
         // check and append the node sharding index
         if ( isset($data[$router]) ) {
@@ -1262,15 +1262,20 @@ class RouterShardingModel implements IModel
         $sharding_idx = $routerVal % $sharding_len;
         $uuid |= (($sharding_idx & 0xFF) << 8);
 
-        // check and append the serial no
-        if ( defined('SR_NODE_NAME') ) {
-            /// $nstr  = substr(md5(SR_NODE_NAME), 0, 2);
-            $nstr  = sprintf("%d:%s", $uuid_index++, SR_NODE_NAME);
-            $uuid |= hexdec(substr($nstr, 0, 2)) & 0xFF;  // node name based serial no
-            /// $uuid |= ($uuid_index++) % 0xFF;
-        } else {
-            $uuid |= mt_rand(0, 0xFF);      // ramdom node serial
-        }
+        // @Deprecated check and append the serial no
+        /// if ( defined('SR_NODE_NAME') ) {
+        ///     $nstr  = sprintf("%d:%s", $uuid_index++, SR_NODE_NAME);
+        ///     $uuid |= hexdec(substr($nstr, 0, 2)) & 0xFF;  // node name based serial no
+        /// } else {
+        ///     $uuid |= mt_rand(0, 0xFF);      // ramdom node serial
+        /// }
+
+        // @Note since 2023/11/24
+        /// $nstr  = sprintf("%d:%d:%s", $rone, $uuid_index++, SR_NODE_NAME);
+        /// $uuid |= hexdec(substr($nstr, 0, 2)) & 0xFF;
+        $uuid |= (($rone & 0xF8) | ($sharding_idx++ % 0x07));
+        /// printf("%d: %d (%.7f) -> %d\n", $tsec, $msec, $time, (($ltwo << 8) | $rone));
+        /// printf("%d, %d -> %d\n", $tsec, $msec, $uuid);
 
         return $uuid;
     }
