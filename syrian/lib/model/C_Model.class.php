@@ -718,7 +718,7 @@ class C_Model implements IModel
             /*
              * @Note added at 2016/08/04
              * if the sync_w attribtues is marked as true that means
-             * no matter there is data that is going to inserted to the fragment no not
+             * no matter there is data that is going to inserted to the fragment or not
              * we will do the insert operation for the current fragment
              *
              * @Note added at 2020/02/15
