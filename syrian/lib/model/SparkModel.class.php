@@ -17,6 +17,12 @@ import('model.IModel');
 
 class SparkModel implements IModel
 {
+    const QueryType = 'query';
+    const MergeType = 'merge';
+
+    const DisplayQueryOnly = 'query_only';
+    const DisplayMergeOnly = 'merge_only';
+    const DisplayAll       = 'all';
 
     /**
      * spark server restful api base url
@@ -286,44 +292,34 @@ class SparkModel implements IModel
     }
 
     /**
-     * get the query DSL
-     * parse the sql compatible syntax, orde, limit to get the final spark query DSL
+     * filter the input query to get the final spark query compatible DSL
      *
-     * @param   $_where
-     * @param   $_match
-     * @param   $_order
-     * @param   $_limit
-     * @param   $_group
-     * @return  String query DSL
+     * @param   $query query raw input
+     * @param   $encode bool
+     * @return  String query DSL if encode=true or array
     */
-    protected function getQueryDSL($_filter, $_match, $_order, $_group, $_limit)
+    protected function queryFilter($query, $encode=true)
     {
-        $queryDSL = array();
-
         /*
          * filter condition parse
          * default to the sql compatible style syntax parser
          * and default to the match_all spark query with empty filter
          * and if there is no complex fulltext query defined
         */
-        if ( $_filter != null ) {
-            $queryDSL['filter'] = $this->parseSQLCompatibleQuery($_filter);
+        if (isset($query['filter'])) {
+            $query['filter'] = $this->parseSQLCompatibleQuery($query['filter']);
         }
 
-        /*
-         * query match check and define
-        */
-        if ( $_match == null ) {
-            // default to with no match
-        } else if ( isset($_match['field']) && isset($_match['query']) ) {
-            $queryDSL['match'] = array(
-                'min_score' => isset($_match['min_score']) ? $_match['min_score'] : 0,
-                'query' => array(
-                    array($_match['field'] => $_match['query'])
-                )
-            );
-        } else {
-            throw new Exception("Missing key 'field' or 'query' for match define");
+        // query match check and override
+        if (isset($query['match'])) {
+            $_match = &$query['match'];
+            if (isset($_match['field']) && isset($_match['query'])) {
+                $_match['query'] = array(
+                    $_match['field'] => $_match['query']
+                );
+
+                unset($_match['field']);
+            }
         }
 
         /*
@@ -333,13 +329,14 @@ class SparkModel implements IModel
          *  array(_score => desc)
          * )
         */
-        if ( $_order != null ) {
+        if (isset($query['order']) || isset($query['sort'])) {
             $sort = array();
-            foreach ( $_order as $field => $order ) {
-                $sort[] = array($field => $order);
+            foreach (($query['order'] ?? $query['sort']) as $k => $v ) {
+                $sort[] = array($k => $v);
             }
 
-            $queryDSL['sort'] = $sort;
+            unset($query['order']);
+            $query['sort'] = $sort;
         }
 
 
@@ -347,34 +344,56 @@ class SparkModel implements IModel
          * check and define the limit
          * limit often with style like '0,20'
         */
-        $from = 0;
-        $size = 0;
-        if ( is_long($_limit) ) {
-            $size = $_limit;
-        } else if ( is_string($_limit) ) {
-            $parts = explode(',', $_limit);
-            if ( count($parts) == 1 ) {
-                $size = intval($parts[0]);
-            } else {
-                $from = intval($parts[0]);
-                $size = intval($parts[1]);
-            }
-        } else if ( is_array($_limit) ) {
-            if ( count($_limit) == 1 ) {
-                $size = $_limit[0];
-            } else {
-                $from = $_limit[0];
-                $size = $_limit[1];
+        if (isset($query['limit'])) {
+            $_limit = $query['limit'];
+            if (is_long($_limit)) {
+                $query['size'] = $_limit;
+            } else if (is_string($_limit)) {
+                $parts = explode(',', $_limit);
+                if (count($parts) == 1) {
+                    $query['size'] = intval($parts[0]);
+                } else {
+                    $query['from'] = intval($parts[0]);
+                    $query['size'] = intval($parts[1]);
+                }
+            } else if (is_array($_limit)) {
+                if (count($_limit) == 1) {
+                    $query['size'] = $_limit[0];
+                } else {
+                    $query['from'] = $_limit[0];
+                    $query['size'] = $_limit[1];
+                }
             }
         }
 
-        // check and append the group field
-        // check and define the from, size attributes
-        if ( $_group != null) $queryDSL['group'] = $_group;
-        if ( $from >= 0 ) $queryDSL['from'] = $from;
-        if ( $size >  0 ) $queryDSL['size'] = $size;
+        return $encode ? json_encode($query) : $query;
+    }
 
-        return json_encode($queryDSL);
+    /**
+     * get the query DSL
+     * parse the sql compatible syntax, orde, limit to get the final spark query DSL
+     *
+     * @param   $_where
+     * @param   $_match
+     * @param   $_order
+     * @param   $_limit
+     * @param   $_group
+     * @param   $type
+     * @param   $merge
+     * @return  String query DSL is encode=true or array
+    */
+    protected function getQueryDSL(
+        $type, $_filter, $_match, $_order, $_group, $_limit, $merge=null, $encode=true)
+    {
+        return $this->queryFilter(array(
+            'type'   => $type,
+            'filter' => $_filter,
+            'match'  => $_match,
+            'order'  => $_order,
+            'group'  => $_group,
+            'limit'  => $_limit,
+            'merge'  => $merge,
+        ), $encode);
     }
 
     /**
@@ -418,21 +437,22 @@ class SparkModel implements IModel
     protected function getQuerySets($json, $srcMode)
     {
         $ret = array();
-        if ( $srcMode == true ) {
-            foreach ( $json['hits'] as $hit ) {
+        if ($srcMode == true) {
+            foreach ($json['hits'] as $hit) {
                 $ret[] = $hit['_source'];
             }
         } else {
             $ret['took']  = $json['took'];
             $ret['total'] = $json['total'];
             $ret['hits']  = array();
-            foreach ( $json['hits'] as $hit ) {
+            foreach ($json['hits'] as $hit) {
                 $ret['hits'][] = array(
-                    '_db'       => $hit['_db'],
-                    '_id'       => $hit['_id'],
-                    '_score'    => $hit['_score'],
-                    '_qm_rate'  => $hit['_qm_rate'],
-                    '_dm_rate'  => $hit['_dm_rate']
+                    '_db'      => $hit['_db'],
+                    '_id'      => $hit['_id'],
+                    '_check'   => $hit['_check'] ?? 0,
+                    '_score'   => $hit['_score'],
+                    '_qm_rate' => $hit['_qm_rate'],
+                    '_dm_rate' => $hit['_dm_rate']
                 );
             }
         }
@@ -478,7 +498,7 @@ class SparkModel implements IModel
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&{$_src}";
         $json = $this->_request('POST', $dsl, "_search?{$args}", null, true);
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -532,13 +552,18 @@ class SparkModel implements IModel
          *
         */
 
-        if ( ! isset($json['hits']) || empty($json['hits']) ) {
+        if (empty($json)) {
+            return false;
+        }
+
+        $fJson = $json[0];
+        if (! isset($fJson['hits']) || empty($fJson['hits'])) {
             return false;
         }
 
         return $format ? $this->getQuerySets(
-            $json, $_fields===false ? false : true
-        ) : $json['hits'];
+            $fJson, $_fields===false ? false : true
+        ) : $fJson['hits'];
     }
 
     /**
@@ -550,9 +575,9 @@ class SparkModel implements IModel
     */
     public function totals($_where=null, $_group=null)
     {
-        $_DSL = $this->getQueryDSL($_where, null, null, $_group, null);
+        $_DSL = $this->getQueryDSL(self::QueryType, $_where, null, null, $_group, null);
         $json = $this->_request('POST', $_DSL, "_count?dbName={$this->database}");
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -583,9 +608,9 @@ class SparkModel implements IModel
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&{$_src}";
-        $_DSL = $this->getQueryDSL($_where, null, $_order, $_group, $_limit);
+        $_DSL = $this->getQueryDSL(self::QueryType, $_where, null, $_order, $_group, $_limit);
         $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -639,12 +664,17 @@ class SparkModel implements IModel
          *
         */
 
-        if ( ! isset($json['hits']) || empty($json['hits']) ) {
+        if (empty($json)) {
+            return false;
+        }
+
+        $fJson = $json[0];
+        if (! isset($fJson['hits']) || empty($fJson['hits'])) {
             return false;
         }
 
         return $this->getQuerySets(
-            $json, $_fields===false ? false : true
+            $fJson, $_fields===false ? false : true
         );
     }
 
@@ -666,9 +696,9 @@ class SparkModel implements IModel
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&{$_src}";
-        $_DSL = $this->getQueryDSL($_filter, $_match, $_order, $_group, $_limit);
+        $_DSL = $this->getQueryDSL(self::QueryType, $_filter, $_match, $_order, $_group, $_limit);
         $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -721,7 +751,12 @@ class SparkModel implements IModel
          * }
         */
 
-        if ( ! isset($json['hits']) || empty($json['hits']) ) {
+        if (empty($json)) {
+            return false;
+        }
+
+        $fJson = $json[0];
+        if (! isset($fJson['hits']) || empty($fJson['hits'])) {
             return false;
         }
 
@@ -729,21 +764,137 @@ class SparkModel implements IModel
         // pre-process the returning data
 
         $ret = array(
-            'took'  => $json['took'],
-            'total' => $json['total']
+            'took'  => $fJson['took'],
+            'total' => $fJson['total']
         );
 
-        if ( $_fields != false ) {
-            $ret['hits'] = $json['hits'];
+        if ($_fields != false) {
+            $ret['hits'] = $fJson['hits'];
         } else {
             $ret['hits'] = array();
-            foreach ( $json['hits'] as $hit ) {
+            foreach ($fJson['hits'] as $hit) {
                 $ret['hits'][] = array(
-                    '_db'       => $hit['_db'],
-                    '_id'       => $hit['_id'],
-                    '_score'    => $hit['_score'],
-                    '_qm_rate'  => $hit['_qm_rate'],
-                    '_dm_rate'  => $hit['_dm_rate']
+                    '_db'      => $hit['_db'],
+                    '_id'      => $hit['_id'],
+                    '_check'   => $hit['_check'] ?? 0,
+                    '_score'   => $hit['_score'],
+                    '_qm_rate' => $hit['_qm_rate'],
+                    '_dm_rate' => $hit['_dm_rate']
+                );
+            }
+        }
+
+        return $ret;
+    }
+
+    /**
+     * merge all the specified searches and return the best one.
+     * input like:
+     * [
+     *  {
+     *      type   => query type,
+     *      merge  => merge config,
+     *      filter => filter define,
+     *      match  => match define,
+     *      order  => order define,
+     *      limit  => limit define,
+     *      group  => group define
+     *  }
+     * ]
+     *
+     * @return  Mixed(Array or false)
+    */
+    public function mergeSearch(
+        $_fields, $queryList, $_order, $_limit, $_group=null)
+    {
+        // make the query DSL
+        $queryDSL = array();
+        foreach ($queryList as $q) {
+            $queryDSL[] = $this->queryFilter($q, false);
+        }
+
+        // append the final merge query DSL
+        $queryDSL[] = $this->queryFilter(array(
+            'type'  => self::MergeType,
+            'order' => $_order,
+            'group' => $_group,
+            'limit' => $_limit
+        ), false);
+
+        $_src = $this->getQueryFieldArgs($_fields);
+        $args = "dbName={$this->database}&{$_src}&_display=merge_only";
+        $json = $this->_request('POST', json_encode($queryDSL), "_search?{$args}", null, true);
+        if ($json == false) {
+            return false;
+        }
+
+        /*
+         * api return:
+         * [
+         *   {
+         *      "type": "merge",
+         *      "took": 0.00025,
+         *      "scanned": 2,
+         *      "total": 2,
+         *      "hits": [
+         *          {
+         *              "_db": "corpus",
+         *              "_id": 2,
+         *              "_score": null,
+         *              "_qm_rate": null,
+         *              "_dm_rate": null,
+         *              "_match": {
+         *                  "tokens": []
+         *              },
+         *              "_source": {
+         *              }
+         *          },
+         *          {
+         *              "_db": "corpus",
+         *              "_id": 1,
+         *              "_score": null,
+         *              "_qm_rate": null,
+         *              "_dm_rate": null,
+         *              "_match": {
+         *                  "tokens": []
+         *              },
+         *              "_source": {
+         *              }
+         *          }
+         *      ]
+         *  }
+         * ]
+        */
+
+        if (empty($json)) {
+            return false;
+        }
+
+        $fJson = $json[0];
+        if (! isset($fJson['hits']) || empty($fJson['hits'])) {
+            return false;
+        }
+
+        //----------------------------------------------------
+        // pre-process the returning data
+
+        $ret = array(
+            'took'  => $fJson['took'],
+            'total' => $fJson['total']
+        );
+
+        if ($_fields != false) {
+            $ret['hits'] = $fJson['hits'];
+        } else {
+            $ret['hits'] = array();
+            foreach ($fJson['hits'] as $hit) {
+                $ret['hits'][] = array(
+                    '_db'      => $hit['_db'],
+                    '_id'      => $hit['_id'],
+                    '_check'   => $hit['_check'] ?? 0,
+                    '_score'   => $hit['_score'],
+                    '_qm_rate' => $hit['_qm_rate'],
+                    '_dm_rate' => $hit['_dm_rate']
                 );
             }
         }
@@ -762,9 +913,9 @@ class SparkModel implements IModel
     {
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&{$_src}";
-        $_DSL = $this->getQueryDSL($_where, null, null, null, 10);
+        $_DSL = $this->getQueryDSL(self::QueryType, $_where, null, null, null, 10);
         $json = $this->_request('POST', $_DSL, "_search?{$args}", null, true);
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -818,17 +969,23 @@ class SparkModel implements IModel
          *
         */
 
-        if ( ! isset($json['hits']) || empty($json['hits']) ) {
+        if (empty($json)) {
             return false;
         }
 
-        $hit = $json['hits'][0];
+        $fJson = $json[0];
+        if (! isset($fJson['hits']) || empty($fJson['hits'])) {
+            return false;
+        }
+
+        $hit = $fJson['hits'][0];
         return $_fields == false ? array(
-            '_db'       => $hit['_db'],
-            '_id'       => $hit['_id'],
-            '_score'    => $hit['_score'],
-            '_qm_rate'  => $hit['_qm_rate'],
-            '_dm_rate'  => $hit['_dm_rate']
+            '_db'      => $hit['_db'],
+            '_id'      => $hit['_id'],
+            '_check'   => $hit['_check'] ?? 0,
+            '_score'   => $hit['_score'],
+            '_qm_rate' => $hit['_qm_rate'],
+            '_dm_rate' => $hit['_dm_rate']
         ) : $hit['_source'];
     }
 
@@ -838,7 +995,7 @@ class SparkModel implements IModel
         $_src = $this->getQueryFieldArgs($_fields);
         $args = "dbName={$this->database}&id={$id}&{$_src}";
         $json = $this->_request('GET', null, "_get?{$args}", null, true);
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -860,14 +1017,15 @@ class SparkModel implements IModel
          * }
         */
 
-        if ( isset($json['error']) || $json['found'] == false ) {
+        if (isset($json['error']) || $json['found'] == false) {
             return false;
         }
 
-        if ( $_fields == false ) {
+        if ($_fields == false) {
             return array(
                 '_db'       => $json['_db'],
                 '_id'       => $json['_id'],
+                '_check'    => $json['_check'] ?? 0,
                 '_score'    => 0.0,
                 '_qm_rate'  => 1.0,
                 '_dm_rate'  => 1.0
@@ -901,7 +1059,7 @@ class SparkModel implements IModel
         $this->stdDataTypes($data);
         $_DSL = json_encode($data);
         $json = $this->_request('POST', $_DSL, "_index?dbName={$this->database}&id={$id}");
-        if ( $json == false ) {
+        if ($json == false) {
             return false;
         }
 
@@ -914,7 +1072,7 @@ class SparkModel implements IModel
          *  "created": true
          * }
         */
-        if ( isset($json->error) ) {
+        if (isset($json->error)) {
             return false;
         }
 
@@ -949,7 +1107,7 @@ class SparkModel implements IModel
 
         $_DSL = implode("\n", $workload);
         $json = $this->_request('POST', $_DSL, '_bulk');
-        if ( $json == false || ! isset($json->items) ) {
+        if ($json == false || ! isset($json->items)) {
             return false;
         }
 
@@ -982,8 +1140,8 @@ class SparkModel implements IModel
         */
 
         $ok_count = 0;
-        foreach ( $json->items as $item ) {
-            if ( isset($item->_id) ) {
+        foreach ($json->items as $item) {
+            if (isset($item->_id)) {
                 $ok_count++;
             }
         }
@@ -1277,7 +1435,7 @@ class SparkModel implements IModel
     }
 
     /*
-     * do final elasticsearch http query
+     * do final spark http query
      *
      * @param   $method (uppercase)
      * @param   $dsl
@@ -1313,7 +1471,7 @@ class SparkModel implements IModel
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl, CURLOPT_HEADER, 0);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            'Content-Type: text/plain', 
+            'Content-Type: application/json', 
             'User-Agent: spark php client/1.0'
         ));
 
@@ -1325,14 +1483,18 @@ class SparkModel implements IModel
         $ret = curl_exec($curl);
         curl_close($curl);
 
-        if ( $this->_debug ) {
+        if ($this->_debug !== false) {
             $output = <<<EOF
 url: {$baseUrl}
 method: {$method}
 DSL: {$dsl}
 return: {$ret}\n
 EOF;
-            echo $output;
+            if (is_string($this->_debug)) {
+                call_user_func($this->_debug, $output);
+            } else {
+                echo $output;
+            }
         }
 
         if ( $ret == false ) {
@@ -1340,15 +1502,14 @@ EOF;
         }
 
         $json = json_decode($ret, $_assoc);
-        if ( $json == null ) {
+        if ($json == null) {
             return false;
         }
 
         // check and do the error analysis and record
-        $has_error = $chk_error && ($_assoc 
-            ? isset($json['error']) : isset($json->error));
-        if ( $has_error ) {
-            if ( $_assoc ) {
+        $has_error = $chk_error && ($_assoc ? isset($json['error']) : isset($json->error));
+        if ($has_error) {
+            if ($_assoc) {
                 $jError = $json['error'];
                 $this->lastErrno = $jError['status'];
                 $this->lastError = $jError['message'];
@@ -1406,7 +1567,7 @@ EOF;
     */
     protected function _InitFromConfigByKey($section)
     {
-        //Load the elasticsearch config
+        //Load the spark config
         $conf = config("database#{$section}");
         if ( $conf == false ) {
             throw new Exception("Invalid db section {$section}");    
@@ -1419,4 +1580,3 @@ EOF;
     }
 
 }
-?>

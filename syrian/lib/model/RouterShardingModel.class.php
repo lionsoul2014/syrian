@@ -1228,8 +1228,13 @@ class RouterShardingModel implements IModel
     */
     protected function genUInt64UUID($data, $router=null)
     {
+        static $uuid_index = -1;
+        if ($uuid_index < 0) {
+            $uuid_index = 0;
+        }
+
         // +-4Bytes-+-2Bytes-+-1Byte-+-1Byte-+
-        // timestamp + microtime + Node name
+        // timestamp + microtime + shard_idx + Node name
         $sharding_len = count($this->shardings);
         if ( $sharding_len > 255 ) {
             throw new Exception("sharding length greater than 255");
@@ -1259,8 +1264,10 @@ class RouterShardingModel implements IModel
 
         // check and append the serial no
         if ( defined('SR_NODE_NAME') ) {
-            $nstr  = substr(md5(SR_NODE_NAME), 0, 2);
-            $uuid |= hexdec($nstr) & 0xFF;  // node name serial no
+            /// $nstr  = substr(md5(SR_NODE_NAME), 0, 2);
+            $nstr  = sprintf("%d:%s", $uuid_index++, SR_NODE_NAME);
+            $uuid |= hexdec(substr($nstr, 0, 2)) & 0xFF;  // node name based serial no
+            /// $uuid |= ($uuid_index++) % 0xFF;
         } else {
             $uuid |= mt_rand(0, 0xFF);      // ramdom node serial
         }
@@ -1343,4 +1350,3 @@ class RouterShardingModel implements IModel
     }
 
 }
-?>

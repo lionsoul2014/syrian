@@ -29,6 +29,16 @@ class Mysql implements Idb
         // check the default magic quotes for GPC data
         $this->_escape = version_compare(PHP_VERSION, '7.4.0', '<')
             ? get_magic_quotes_gpc() : false;
+
+        // @Note: added at 2023/07/17:
+        // use the normal errors instead of the exceptions since php 8.1.
+        // use the traditional way since we will check the error code when it is necessary.
+        if (version_compare(PHP_VERSION, '8.1.0', '<')) {
+            // normal errors generate
+        } else {
+            // still use the normal errors
+            mysqli_report(MYSQLI_REPORT_OFF);
+        }
     }
 
     /*
@@ -41,21 +51,21 @@ class Mysql implements Idb
     private static function connect( &$conf, $retry = 0 )
     {
         $_link = mysqli_connect($conf['host'], $conf['user'], $conf['pass'], $conf['db'], $conf['port']);
-        while ( $_link == FALSE && $retry > 0 ) {
+        while ($_link == FALSE && $retry > 0) {
             //sleep for 1 sec
             usleep(1000000);
             $_link = mysqli_connect($conf['host'], $conf['user'], $conf['pass'], $conf['db'], $conf['port']);
             $retry--;
         }
 
-        if ( $_link == FALSE ) {
+        if ($_link == FALSE) {
             throw new Exception("Unable to connect to the database server.\n");
         }
         
         $_charset = $conf['charset'];
-        mysqli_query( $_link, 'SET NAMES \''.$_charset.'\'');
-        mysqli_query( $_link, 'SET CHARACTER_SET_CLIENT = \''.$_charset.'\'');
-        mysqli_query( $_link, 'SET CHARACTER_SET_RESULTS = \''.$_charset.'\'');
+        mysqli_query($_link, "SET NAMES '{$_charset}'");
+        mysqli_query($_link, "SET CHARACTER_SET_CLIENT='{$_charset}'");
+        mysqli_query($_link, "SET CHARACTER_SET_RESULTS='{$_charset}'");
 
         return $_link;
     }
@@ -70,13 +80,13 @@ class Mysql implements Idb
      * @param   $_srw   start the read write separate ?
      * @return  mixed
      */
-    private function query( &$_query, $opt, $_srw )
+    private function query(&$_query, $opt, $_srw)
     {
         //connect to the database server as necessary
         $_sidx = 0;
-        if ( $_srw == false || $opt == Idb::WRITE_OPT ) {
-            if ( $this->_link == NULL ) {
-                $conf   = isset($this->_host['__w']) ? $this->_host['__w'] : $this->_host;
+        if ($_srw == false || $opt == Idb::WRITE_OPT) {
+            if ($this->_link == NULL) {
+                $conf = isset($this->_host['__w']) ? $this->_host['__w'] : $this->_host;
                 $this->_hostCache[0] = $conf;
                 $this->_link = self::connect($conf);
             }
@@ -86,16 +96,16 @@ class Mysql implements Idb
             //@Note: added at 2015-04-01
             //  for model separateed read and write but without
             //  a standart read and write db connection configuration ...
-            if ( isset($this->_host['__r']) ) {
-                if ( $this->rlink == NULL ) {
-                    $conf   = $this->_host['__r'][$this->_rsidx];
+            if (isset($this->_host['__r'])) {
+                if ($this->rlink == NULL) {
+                    $conf = $this->_host['__r'][$this->_rsidx];
                     $this->_hostCache[1] = $conf;
                     $this->rlink = self::connect($conf);
                 }
                 $_sidx = 1;
                 $this->clink = $this->rlink;
             } else {
-                if ( $this->_link == NULL ) {
+                if ($this->_link == NULL) {
                     $this->_hostCache[2] = $this->_host;
                     $this->_link = self::connect($this->_host);
                 }
@@ -105,8 +115,8 @@ class Mysql implements Idb
         }
 
         //print the query string for debug    
-        if ( $this->_debug !== false ) {
-            if ( is_string($this->_debug) ) {
+        if ($this->_debug !== false) {
+            if (is_string($this->_debug)) {
                 call_user_func(
                     $this->_debug, 
                     ($_sidx === 0 ? 'Master' : 'Slave') . "#query: {$_query}");
@@ -124,9 +134,9 @@ class Mysql implements Idb
          * 2006: lost connect with mysql (invalid session)
         */
         $query_ret = mysqli_query($this->clink, $_query);
-        if ( $query_ret === false 
-            && SR_CLI_MODE == true && mysqli_errno($this->clink) == 2006 ) {
-            switch ( $_sidx ) {
+        if ($query_ret === false 
+            && SR_CLI_MODE == true && mysqli_errno($this->clink) == 2006) {
+            switch ($_sidx) {
             case 0:
             case 2:
                 $this->_link = NULL;
@@ -510,4 +520,3 @@ class Mysql implements Idb
         $this->release();
     }
 }
-?>

@@ -1611,4 +1611,3 @@ class C_Model implements IModel
     }
 
 }
-?>
