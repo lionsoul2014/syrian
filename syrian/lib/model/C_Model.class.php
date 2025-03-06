@@ -1452,9 +1452,9 @@ class C_Model implements IModel
         */
         $prefix = NULL;
         if ( defined('SR_NODE_NAME') ) {
-            $prefix = substr(md5(SR_NODE_NAME), 0, 4);
+            $prefix = substr(md5(SR_NODE_NAME), 0, 8);
         } else {
-            $prefix = sprintf("%04x", mt_rand(0, 0xffff));
+            $prefix = sprintf("%04x%04x", mt_rand(0, 0xffff), mt_rand(0, 0xffff));
         }
 
         $tArr = explode(' ', microtime());
@@ -1465,10 +1465,11 @@ class C_Model implements IModel
         }
 
         return sprintf(
-            "%08x%08x%0s%04x",
+            "%08x%08x%0s%04x%04x",
             $tsec,
             $msec,
             $prefix,
+            mt_rand(0, 0xffff),
             mt_rand(0, 0xffff)
         );
     }
