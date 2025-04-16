@@ -1251,10 +1251,10 @@ class C_Model implements IModel
 
     //delete by primary key
     //@frament suports
-    public function deleteById( $id )
+    public function deleteById($id, $affected_rows=true)
     {
         return $this->delete(
-            array($this->primary_key => "='{$id}'")
+            array($this->primary_key => "='{$id}'"), true, $affected_rows
         );
     }
 
