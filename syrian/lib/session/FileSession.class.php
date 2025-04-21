@@ -29,6 +29,8 @@ class FileSession extends SessionBase
         if (isset($conf['file_ext'])) {
             $this->_ext = $conf['file_ext'];
         }
+
+        parent::__construct($conf);
     }
 
     /** @see SessionBase#_add($uid, $val, &$errno=self::OK) */
