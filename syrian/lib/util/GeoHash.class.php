@@ -171,7 +171,7 @@ class GeoHash {
 	private function _binCombine($binFirst, $binSecond) {
 		$result = '';
 		$i = 0;
-		while (isset($binFirst{$i}) || isset($binSecond{$i})) {
+		while (isset($binFirst[$i]) || isset($binSecond[$i])) {
 			$result .= (isset($binFirst[$i]) ? $binFirst[$i] : '') 
                 . (isset($binSecond[$i]) ? $binSecond[$i] : '');
 			++$i;
