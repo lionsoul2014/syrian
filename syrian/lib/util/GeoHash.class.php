@@ -102,7 +102,7 @@ class GeoHash {
 		if (strpos($this->_borderChars[$evenOrOdd][$direction], $lastChar) !== false) {
 			$baseHash = $this->_calcNeighbor($baseHash, $direction);
 		}
-		if (isset($baseHash{0})) {
+		if (isset($baseHash[0])) {
 			return $baseHash . $this->_neighborChars[$evenOrOdd][$direction][strpos($this->_charPool, $lastChar)];
 		} else {
 			return '';
