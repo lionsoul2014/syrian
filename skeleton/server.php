@@ -31,7 +31,7 @@ require(BASEPATH . 'core/Syrian.php');
 //-----------------------------------------------------------------
 
 import('core.Function', false);
-date_default_timezone_set('PRC');
+date_default_timezone_set('Asia/Shanghai');
 
 /*
  * create the request input and output 

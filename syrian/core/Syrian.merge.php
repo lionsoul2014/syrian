@@ -1126,6 +1126,37 @@ function get_post_raw_data_json($assoc=false)
     return json_decode(file_get_contents("php://input"), $assoc);
 }
 
+/**
+ * return the running mode.
+ * to check if we need to cache the tpl compile ?
+ *  enable it only on a production mode.
+*/
+const SR_MODE_DEBUG = 0;
+const SR_MODE_PROD  = 1;
+function get_running_mode()
+{
+    if (defined('SR_DEBUG') == false) {
+        return SR_MODE_PROD;
+    }
+
+    $mv = strtolower(SR_DEBUG);
+    if ($mv == 'true' || $mv == '1' || $mv == 'yes') {
+        return SR_MODE_DEBUG;
+    }
+
+    return SR_MODE_PROD;
+}
+
+function if_debug_mode()
+{
+    return get_running_mode() == SR_MODE_DEBUG;
+}
+
+function if_prod_mode()
+{
+    return get_running_mode() == SR_MODE_PROD;
+}
+
 
 
 
