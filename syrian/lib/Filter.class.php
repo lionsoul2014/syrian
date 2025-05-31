@@ -80,7 +80,7 @@ class Filter
     
     public static function isMobile( $_val )
     {
-        return (preg_match('/^1[3|5|4|7|8][0-9]{9}$/', $_val) == 1);
+        return (preg_match('/^1[3|4|5|6|7|8|9][0-9]{9}$/', $_val) == 1);
     }
     
     public static function isTel( $_val )

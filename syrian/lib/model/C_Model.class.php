@@ -36,9 +36,14 @@ class C_Model implements IModel
 
     /**
      * UID strategy
-     * optional value: uint64, hex32str
+     * optional value: uint64, uint64_fb, hex32str
     */
     protected   $uid_strategy = 'hex32str';
+
+    /**
+     * UID base field for strategy: uint64_fb
+    */
+    protected   $uid_base_field = null;
 
 
     /**
@@ -1430,8 +1435,10 @@ class C_Model implements IModel
     */
     public function genUUID($data)
     {
-        if ( $this->uid_strategy[0] == 'u' ) {  // uint64
+        if ($this->uid_strategy == 'uint64') {          // uint64
             return $this->genUInt64UUID($data);
+        } else if ($this->uid_strategy == 'uint64_fb') {  // fuint64
+            return $this->genBasedUInt64UUID($data);
         } else {    // default to hex 32 string
             return $this->genHStr32UUID($data);
         }
@@ -1508,6 +1515,32 @@ class C_Model implements IModel
 
         return $uuid;
     }
+
+    public function genBasedUInt64UUID($data)
+    {
+        if ($this->uid_base_field == null) {
+            throw new Exception('fb_uint64 uuid gen: uid_base_field expected');
+        }
+
+        if (!isset($data[$this->uid_base_field])) {
+            throw new Exception("fb_uint64 uuid gen: {$this->uid_base_field} expected");
+        }
+
+        $tArr = explode(' ', microtime());
+        $tsec = $tArr[1];
+        $msec = "{$tArr[0]}";
+        if (($sIdx = strpos($msec, '.')) !== false) {
+            $msec = substr($msec, $sIdx + 1);
+        }
+
+        $seed_str = sprintf(
+            '%s%d%04d', 
+            "{$data[$this->uid_base_field]}", strrev($msec), mt_rand(0xFFFF, 0xFFFFFF)
+        );
+
+        return ($tsec << 32) | intval(substr($seed_str, 0, 9));
+    }
+
 
     /**
      * destruct method for the model
