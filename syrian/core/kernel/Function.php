@@ -187,6 +187,7 @@ function import($cls_path, $_inc=true)
  * and return the return of the included file as the final result
  *
  * @param   $config_path
+ * @param   $_args dynamic calling args
  * @param   $_inc @see #import
  * @param   $cache cache the file incldue ?
  *
@@ -194,7 +195,7 @@ function import($cls_path, $_inc=true)
  * $conf = config('db.hosts');
  * $mysql = config('db.hosts#mysql');
 */
-function config($config_path, $_inc=false, $cache=true)
+function config($config_path, $_args=[], $_inc=false, $cache=true)
 {
     static $_loadedConf = array();
 
