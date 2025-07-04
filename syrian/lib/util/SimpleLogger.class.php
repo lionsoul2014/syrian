@@ -85,7 +85,7 @@ class SimpleLogger
 
     public function debugf($format, ...$args)
     {
-	$this->printf(self::DEBUG, $format, $args);
+	    $this->printf(self::DEBUG, $format, $args);
     }
 
     public function infof($format, ...$args)
