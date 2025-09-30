@@ -88,47 +88,48 @@ class MemcachedCache implements ICache
         }
     }
 
-    public function baseKey($bk= NULL){
+    public function baseKey($bk=NULL) 
+    {
         if ($bk != NULL) $this->_baseKey = $bk;
-        $this->_key = $this->_baseKey . $this->_fname;
+        $this->_key = "{$this->_baseKey}{$this->_fname}";
         return $this;
     }
 
+    public function factor($_factor) 
+    {
+        return $this;
+    }
 
-    public function fname($fname= NULL){
+    public function fname($fname=NULL) 
+    {
         if ($fname != NULL) $this->_fname = $fname;
-
-        $this->_key = $this->_baseKey . $this->_fname;
+        $this->_key = "{$this->_baseKey}{$this->_fname}";
         return $this;
     }
 
     //set the global time to live seconds
-    public function setTtl($_ttl = NULL)
+    public function setTtl($_ttl) 
     {
-        if( ( $_ttl = intval($_ttl)) < 0)
-            $_ttl = 0;
-        
-        $this->_ttl = $_ttl;
+        $this->_ttl = $_ttl < 0 ? 0 : $_ttl;
         return $this;
     }
 
     // we don't need the $_time param, just for implements ICache
-    public function get($_time=NULL, $callback=null) {
+    public function get($_time=NULL, $callback=null) 
+    {
         if ( $this->_key == '' ) return false;
         return $this->getByKey($this->_key, $callback);
     }
 
-
     public function getByKey($_key, $callback=null) 
     {
         $ret = $this->_mem->get($_key);
-        if ( $ret != false && $callback != null ) {
+        if ($ret != false && $callback != null) {
             return $callback($ret);
         }
 
         return $ret;
     }
-
 
     public function set($_data, $_ttl=NULL, $mode=NULL)
     {
@@ -138,9 +139,33 @@ class MemcachedCache implements ICache
 
     public function setByKey($_key, $_data, $_ttl=NULL)
     {
-        if ( $_ttl === NULL || ($_ttl = intval($_ttl) ) < 0 ) 
-            $_ttl = $this->_ttl;
-        return $this->_mem->set($_key, $_data, $_ttl);
+        return $this->_mem->set(
+            $_key, $_data, $_ttl === NULL ? $this->_ttl : $_ttl
+        );
+    }
+
+    public function inc($offset, $ttl=NULL, $initial_val=0)
+    {
+        return $this->incByKey($this->_key, $offset, $ttl, $initial_val);
+    }
+
+    public function incByKey($key, $offset, $ttl=NULL, $initial_val=0)
+    {
+        return $this->_mem->increment(
+            $key, $offset, $initial_val, $ttl===NULL ? $this->_ttl : $ttl
+        );
+    }
+
+    public function dec($offset, $ttl=NULL, $initial_val=0)
+    {
+        return $this->decByKey($this->_key, $offset, $ttl, $initial_val);
+    }
+
+    public function decByKey($key, $offset, $ttl=NULL, $initial_val=0)
+    {
+        return $this->_mem->decrement(
+            $key, $offset, $initial_val, $ttl===NULL ? $this->_ttl : $ttl
+        );
     }
 
     public function exists()
@@ -159,13 +184,4 @@ class MemcachedCache implements ICache
         $this->_mem->delete($_key); 
     }
 
-
-    /**
-     * implements functions
-     *
-     * */
-    public function factor($_factor) 
-    {
-        return $this;
-    }
 }

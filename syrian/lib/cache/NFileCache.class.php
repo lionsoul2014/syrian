@@ -143,6 +143,16 @@ class NFileCache implements ICache
         return $ret;
     }
 
+    public function inc($offset, $ttl=NULL, $initial_val=0)
+    {
+        return false;
+    }
+
+    public function dec($offset, $ttl=NULL, $initial_val=0)
+    {
+        return false;
+    }
+
     public function exists()
     {
         $_cache_file = $this->getCacheFile();

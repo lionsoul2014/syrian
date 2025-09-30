@@ -7,18 +7,20 @@
 */
 interface ICache
 {
-   // public function get( $baseId, $_factor, $_time );
-   // public function set( $baseId, $_factor, $_content );
-   // public function remove( $baseId, $_factor );
+    // public function get( $baseId, $_factor, $_time );
+    // public function set( $baseId, $_factor, $_content );
+    // public function remove( $baseId, $_factor );
     
-   public function baseKey( $_baseKey );
-   public function factor ( $_factor );
-   public function fname  ( $_fname ); 
-   public function get    ( $_time=NULL, $callback=null);
-   public function set    ( $_content, $_ttl=NULL, $mode=NULL);
-   public function setTtl ( $_ttl );
-   public function exists ();
-   public function remove ();
+    public function baseKey($_baseKey);
+    public function factor($_factor);
+    public function fname($_fname); 
+    public function get($_time=NULL, $callback=null);
+    public function set($_content, $_ttl=NULL, $mode=NULL);
+    public function inc($offset, $ttl=NULL, $initial_val=0);
+    public function dec($offset, $ttl=NULL, $initial_val=0);
+    public function setTtl($_ttl);
+    public function exists();
+    public function remove();
 }
 
  //----------------------------------------------------

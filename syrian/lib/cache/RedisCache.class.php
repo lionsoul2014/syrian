@@ -47,31 +47,31 @@ class RedisCache implements ICache
      *
      * @return boolean
     **/
-    public function set( $data, $ttl = NULL, $mode = NULL)
+    public function set($data, $ttl=NULL, $mode=NULL)
     {
         return $this->setByKey($this->_key, $data, $ttl);
     }
 
     public function getByKey($key, $callback=null)
     {
-        if ( $key == '' )          return false;
-        if ( !$this->_conn($key) ) return false;
+        if ($key == '')          return false;
+        if (!$this->_conn($key)) return false;
 
         $ret = $this->_redis->get($this->_key);
-        if ( $ret != false && $callback != null ) {
+        if ($ret != false && $callback != null) {
             return $callback($ret);
         }
 
         return $ret;
     }
 
-    public function setByKey($key, $data, $ttl)
+    public function setByKey($key, $data, $ttl=NULL)
     {
-        if ( $key == '' )          return false;
-        if ( !$this->_conn($key) ) return false;
+        if ($key == '')          return false;
+        if (!$this->_conn($key)) return false;
 
-        $_ttl = intval($ttl) > 0 ? intval($ttl) : $this->_ttl;
-        if ( $_ttl > 0 ) {
+        $_ttl = $ttl === NULL ? $this->_ttl : $ttl;
+        if ($_ttl > 0) {
             $ret = $this->_redis->set($key, $data, $_ttl);
         } else {
             $ret = $this->_redis->set($key, $data);
@@ -80,43 +80,48 @@ class RedisCache implements ICache
         return $ret;
     }
 
+    public function inc($offset, $ttl=NULL, $initial_val=0)
+    {
+        // @TODO: implement this
+        return false;
+    }
+
+    public function dec($offset, $ttl=NULL, $initial_val=0)
+    {
+        // @TODO: implement this
+        return false;
+    }
+
     //----------------- base functoins --------------
 
-    public function baseKey( $baseKey )
+    public function baseKey($baseKey)
     {
-        if ( $baseKey != NULL ) $this->_baseKey = $baseKey;
-        $this->_key = $this->_prefix . $this->_baseKey . $this->_fname;
-
+        if ($baseKey != NULL) $this->_baseKey = $baseKey;
+        $this->_key = "{$this->_prefix}{$this->_baseKey}{$this->_fname}";
         return $this;
     }
 
-    public function factor( $factor )
+    public function factor($factor)
     {
         return $this;
     }
 
-    public function fname( $fname )
+    public function fname($fname)
     {
-        if ( $fname != NULL ) $this->_fname = $fname;
-        $this->_key = $this->_prefix . $this->_baseKey . $this->_fname;
-        
+        if ($fname != NULL) $this->_fname = $fname;
+        $this->_key = "{$this->_prefix}{$this->_baseKey}{$this->_fname}";
         return $this;
     }
 
-    public function setTtl ( $ttl ) 
+    public function setTtl($ttl) 
     {
-        if( ($_ttl = intval($_ttl)) < 0 ) {
-            $_ttl = 0;
-        }
-        $this->_ttl = $_ttl;
-        
+        $this->_ttl = $_ttl < 0 ? 0 $_ttl;
         return $this;
     }
 
     public function exists()
     {
         if ( !$this->_conn() ) return false;
-
         return $this->_redis->exists($this->_key);
     }
 
@@ -127,9 +132,8 @@ class RedisCache implements ICache
 
     public function removeByKey($key = null)
     {
-        if ( $key == '' )          return false;
-        if ( !$this->_conn($key) ) return false;
-
+        if ($key == '')          return false;
+        if (!$this->_conn($key)) return false;
         return ($this->_redis->delete($key)) > 0;
     }
 
@@ -142,10 +146,10 @@ class RedisCache implements ICache
     **/
     public function mRemove( $keys )
     {
-        if ( empty($keys) ) return false;
+        if (empty($keys)) return false;
 
         $_sn = 0;
-        foreach ( $keys as $key ) {
+        foreach ($keys as $key) {
             $this->removeByKey($key) && $_sn++;
         }
         
@@ -170,9 +174,8 @@ class RedisCache implements ICache
         $server = $this->_serverList[self::_hash($_key) % count($this->_serverList)];
 
         $_k = sha1("{$server[0]}@{$server[1]}");
-        if ( isset($_connServer[$_k]) ) {
+        if (isset($_connServer[$_k])) {
             $this->_redis = $_connServer[$_k];
-
             if ( $this->_redis->isConnected() ) {
                 return true;
             }
@@ -218,4 +221,5 @@ class RedisCache implements ICache
         
         return ($hval & 0x7FFFFFFF);
     }
+
 }
