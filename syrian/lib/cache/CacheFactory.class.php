@@ -10,6 +10,8 @@ interface ICache
     // public function get( $baseId, $_factor, $_time );
     // public function set( $baseId, $_factor, $_content );
     // public function remove( $baseId, $_factor );
+
+    public function driver();   // return the original driver
     
     public function baseKey($_baseKey);
     public function factor($_factor);

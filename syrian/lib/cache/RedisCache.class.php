@@ -29,6 +29,11 @@ class RedisCache implements ICache
         $this->_serverList = $conf['servers'];
     }
 
+    public function driver()
+    {
+        return $this->_redis;
+    }
+
     //----------------- string functoins --------------
 
     public function get($time=NULL, $callback=null)

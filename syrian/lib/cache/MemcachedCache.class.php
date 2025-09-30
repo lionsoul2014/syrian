@@ -88,6 +88,11 @@ class MemcachedCache implements ICache
         }
     }
 
+    public function driver()
+    {
+        return $this->_mem;
+    }
+
     public function baseKey($bk=NULL) 
     {
         if ($bk != NULL) $this->_baseKey = $bk;

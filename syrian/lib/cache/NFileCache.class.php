@@ -26,6 +26,11 @@ class NFileCache implements ICache
         }
     }
 
+    public function driver()
+    {
+        return $this;
+    }
+
     //set the baseKey
     public function baseKey( $_baseKey )
     {
