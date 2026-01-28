@@ -31,7 +31,7 @@ class Utf8String
 
     public static function getCharBytes($char)
     {
-        return self::charBytes($char);
+        return self::charBytes($char, 0);
     }
 
     /**
