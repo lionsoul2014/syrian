@@ -541,4 +541,15 @@ class StringUtil
         return $str;
     }
 
+    public static function trim($str)
+    {
+        if (function_exists("mb_trim")) {
+            $nStr = mb_trim($str);
+        } else {
+            $nStr = preg_replace("/(^\s+)|(\s+$)/u", "", $str);
+        }
+
+        return trim($nStr);
+    }
+
 }
